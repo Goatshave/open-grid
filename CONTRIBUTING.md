@@ -51,4 +51,12 @@ examples and the complete validation commands.
 - Include reproducible evidence for performance claims. Do not commit
   `.benchmark-results/` or `.release/` artifacts.
 
+## Dependency Updates
+
+Dependabot groups routine npm minor and patch updates and groups GitHub Actions
+updates separately. Major npm updates stay isolated for explicit review. The
+`compatibility/` fixtures are excluded from automated version updates because
+their pinned versions define the supported framework lower bounds; update those
+pins only when the documented compatibility contract changes.
+
 By participating, you agree to follow [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
