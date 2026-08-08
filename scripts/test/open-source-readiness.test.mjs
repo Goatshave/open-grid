@@ -66,6 +66,11 @@ test("general CI and dependency updates cover the public repository", () => {
   assert.match(dependabot, /package-ecosystem: npm/);
   assert.match(dependabot, /package-ecosystem: github-actions/);
   assert.equal((dependabot.match(/interval: weekly/g) ?? []).length, 2);
+  assert.match(dependabot, /exclude-paths:\n      - "compatibility\/\*\*"/);
+  assert.match(dependabot, /npm-minor-patch:[\s\S]*update-types:\n          - minor\n          - patch/);
+  assert.match(dependabot, /github-actions:[\s\S]*patterns:\n          - "\*"/);
+  assert.match(dependabot, /open-pull-requests-limit: 3/);
+  assert.match(dependabot, /open-pull-requests-limit: 1/);
 });
 
 test("documentation Pages workflow builds and deploys the public site", () => {
