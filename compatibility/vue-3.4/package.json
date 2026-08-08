@@ -9,7 +9,7 @@
   "dependencies": {
     "@open-grid/core": "workspace:*",
     "@open-grid/vue-ui": "workspace:*",
-    "vue": "3.4.38"
+    "vue": "3.5.41"
   },
   "devDependencies": {
     "typescript": "5.7.2"
