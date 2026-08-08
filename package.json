@@ -92,7 +92,7 @@
     "@axe-core/playwright": "4.12.1",
     "@jridgewell/trace-mapping": "^0.3.31",
     "@playwright/test": "^1.62.1",
-    "@types/node": "^22.10.2",
+    "@types/node": "^26.1.2",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "vitepress": "^1.6.4",
