@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@open-grid/core": ["packages/core/src/index.ts"],
+      "@open-grid/react": ["packages/react/src/index.ts"],
+      "@open-grid/react-ui": ["packages/react-ui/src/index.tsx"],
+      "@open-grid/vue": ["packages/vue/src/index.ts"],
+      "@open-grid/vue-ui": ["packages/vue-ui/src/index.ts"],
+      "@open-grid/svelte": ["packages/svelte/src/index.ts"],
+      "@open-grid/svelte-ui": ["packages/svelte-ui/src/index.ts"],
+      "@open-grid/virtual": ["packages/virtual/src/index.ts"],
+      "@open-grid/primitives": ["packages/primitives/src/index.ts"],
+      "@open-grid/theme/tokens": ["packages/theme/src/tokens.ts"],
+      "@open-grid/example-shared-server": ["examples/shared-server/src/index.ts"]
+    },
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
+  }
+}

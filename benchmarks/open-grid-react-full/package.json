@@ -1,0 +1,25 @@
+{
+  "name": "@open-grid/benchmark-open-grid-react-full",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4306",
+    "build": "tsc --noEmit && vite build --sourcemap hidden",
+    "preview": "vite preview --host 127.0.0.1 --port 4306"
+  },
+  "dependencies": {
+    "@open-grid/benchmark-shared": "workspace:*",
+    "@open-grid/core": "workspace:*",
+    "@open-grid/react-ui": "workspace:*",
+    "@open-grid/theme": "workspace:*",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "vite": "6.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "typescript": "5.7.2"
+  }
+}

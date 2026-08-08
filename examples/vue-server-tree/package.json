@@ -1,0 +1,23 @@
+{
+  "name": "@open-grid/example-vue-server-tree",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@open-grid/core": "workspace:*",
+    "@open-grid/example-shared-server": "workspace:*",
+    "@open-grid/theme": "workspace:*",
+    "@open-grid/vue": "workspace:*",
+    "@open-grid/vue-ui": "workspace:*",
+    "vite": "^6.0.3",
+    "vue": "^3.5.41"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

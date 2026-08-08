@@ -1,0 +1,27 @@
+{
+  "name": "@open-grid/example-react-basic",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@open-grid/core": "workspace:*",
+    "@open-grid/react": "workspace:*",
+    "@open-grid/react-ui": "workspace:*",
+    "@open-grid/theme": "workspace:*",
+    "@vitejs/plugin-react": "^4.3.4",
+    "lucide-react": "^1.25.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "vite": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "typescript": "^5.7.2"
+  }
+}

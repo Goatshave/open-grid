@@ -1,0 +1,17 @@
+{
+  "name": "@open-grid/compat-vue-3-4",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@open-grid/core": "workspace:*",
+    "@open-grid/vue-ui": "workspace:*",
+    "vue": "3.4.38"
+  },
+  "devDependencies": {
+    "typescript": "5.7.2"
+  }
+}

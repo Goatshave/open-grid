@@ -1,0 +1,23 @@
+{
+  "name": "@open-grid/benchmark-open-grid-svelte",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4305",
+    "build": "vite build --sourcemap hidden",
+    "preview": "vite preview --host 127.0.0.1 --port 4305"
+  },
+  "dependencies": {
+    "@open-grid/benchmark-shared": "workspace:*",
+    "@open-grid/core": "workspace:*",
+    "@open-grid/svelte-ui": "workspace:*",
+    "@open-grid/theme": "workspace:*",
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "svelte": "^5.15.0",
+    "vite": "^6.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

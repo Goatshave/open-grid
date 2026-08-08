@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Open Grid</title>
+  <rect width="128" height="128" rx="20" fill="#102a24"/>
+  <path d="M25 28h78v72H25z" fill="none" stroke="#66d9b1" stroke-width="8"/>
+  <path d="M51 28v72M77 28v72M25 52h78M25 76h78" stroke="#d9fff1" stroke-width="6"/>
+  <path d="M77 52h26v24H77z" fill="#ff8a65"/>
+</svg>

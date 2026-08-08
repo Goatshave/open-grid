@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "profileId": "standard-client",
+  "phase": "settled-workload",
+  "implementations": [
+    {
+      "id": "open-grid-react-full",
+      "limits": {
+        "selfSizeBytes": 15500000,
+        "nodeCount": 545000,
+        "jsHeapUsedBytes": 13100000
+      }
+    },
+    {
+      "id": "open-grid-vue",
+      "limits": {
+        "selfSizeBytes": 14300000,
+        "nodeCount": 540000,
+        "jsHeapUsedBytes": 11550000
+      }
+    },
+    {
+      "id": "open-grid-svelte",
+      "limits": {
+        "selfSizeBytes": 13550000,
+        "nodeCount": 513000,
+        "jsHeapUsedBytes": 11150000
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "candidateId": "open-grid-svelte",
+      "baselineId": "open-grid-vue",
+      "metric": "selfSizeBytes",
+      "maxDelta": 262144
+    },
+    {
+      "candidateId": "open-grid-svelte",
+      "baselineId": "open-grid-vue",
+      "metric": "nodeCount",
+      "maxDelta": 0
+    },
+    {
+      "candidateId": "open-grid-svelte",
+      "baselineId": "open-grid-vue",
+      "metric": "jsHeapUsedBytes",
+      "maxDelta": 262144
+    }
+  ]
+}

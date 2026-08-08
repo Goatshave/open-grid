@@ -1,0 +1,50 @@
+{
+  "name": "@open-grid/svelte-ui",
+  "version": "0.1.0",
+  "description": "Optional styled Svelte data grid for Open Grid.",
+  "keywords": ["data-grid", "grid", "table", "svelte", "ui"],
+  "homepage": "https://goatshave.github.io/open-grid/svelte-ui",
+  "bugs": {
+    "url": "https://github.com/Goatshave/open-grid/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": ["dist/index.css", "src/index.css"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./DataGrid.svelte": {
+      "svelte": "./dist/DataGrid.svelte",
+      "types": "./dist/DataGrid.svelte.d.ts",
+      "import": "./dist/DataGrid.svelte"
+    },
+    "./css": "./dist/index.css"
+  },
+  "files": ["dist", "LICENSE"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean --external ./DataGrid.svelte && mkdir -p dist && cp src/DataGrid.svelte dist/DataGrid.svelte && cp src/DataGrid.svelte.d.ts dist/DataGrid.svelte.d.ts && cp ../react-ui/src/index.css dist/index.css",
+    "check": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@open-grid/core": "workspace:*",
+    "@open-grid/primitives": "workspace:*",
+    "@open-grid/svelte": "workspace:*",
+    "@open-grid/virtual": "workspace:*"
+  },
+  "peerDependencies": {
+    "svelte": "^4.2.20 || ^5.0.0"
+  },
+  "devDependencies": {
+    "svelte": "^5.15.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

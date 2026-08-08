@@ -1,0 +1,42 @@
+{
+  "name": "@open-grid/react",
+  "version": "0.1.0",
+  "description": "React adapter for Open Grid.",
+  "keywords": ["data-grid", "grid", "table", "react", "adapter"],
+  "homepage": "https://goatshave.github.io/open-grid/packages#react",
+  "bugs": {
+    "url": "https://github.com/Goatshave/open-grid/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "LICENSE"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean --external react",
+    "check": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@open-grid/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "react": "^18.3.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

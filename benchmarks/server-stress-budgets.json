@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "resultSchemaVersion": 1,
+  "profileId": "stress-client",
+  "fixtureFingerprint": "server-v1:100000:SBT-0001:SBT-100000:2000",
+  "minimumRuns": 10,
+  "minimumWarmups": 2,
+  "delayMs": 40,
+  "workload": {
+    "rowCount": 100000,
+    "filteredRowCount": 16667,
+    "groupedDisplayedRows": 100004,
+    "treeRowCount": 2000,
+    "sortFirstRowId": "SBT-100000"
+  },
+  "timing": {
+    "initialReadyMs": { "basis": "total", "maxMedianMs": 300, "maxP95Ms": 450 },
+    "pageMs": { "basis": "client-overhead", "maxMedianMs": 30, "maxP95Ms": 60 },
+    "sortMs": { "basis": "client-overhead", "maxMedianMs": 30, "maxP95Ms": 60 },
+    "filterMs": { "basis": "client-overhead", "maxMedianMs": 30, "maxP95Ms": 80 },
+    "cancelMs": { "basis": "client-overhead", "maxMedianMs": 30, "maxP95Ms": 60 },
+    "groupMs": { "basis": "client-overhead", "maxMedianMs": 120, "maxP95Ms": 180 },
+    "treeMs": { "basis": "client-overhead", "maxMedianMs": 30, "maxP95Ms": 60 },
+    "patchMs": { "basis": "client-overhead", "maxMedianMs": 30, "maxP95Ms": 70 }
+  },
+  "resources": {
+    "jsHeapUsedBytes": { "maxP95": 33554432 },
+    "domNodeCount": { "maxP95": 320 },
+    "transferredBytes": { "maxP95": 100000 },
+    "decodedBodyBytes": { "maxP95": 320000 }
+  }
+}

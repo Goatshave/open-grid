@@ -1,0 +1,256 @@
+name: Release Verification
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver release version to use for release planning, staging, and publish dry-run checks."
+        required: true
+        default: "0.0.0"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect release changes
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.filter.outputs.release }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Detect release-related changes
+        id: filter
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          release=false
+          while IFS= read -r file; do
+            case "$file" in
+              CHANGELOG.md|\
+              .github/workflows/release-publish.yml|\
+              .github/workflows/release-verify.yml|\
+              benchmarks/*|\
+              docs/release.md|\
+              e2e/*|\
+              examples/*|\
+              package.json|\
+              packages/*|\
+              playwright.config.ts|\
+              playwright.*.config.ts|\
+              playwright.smoke.config.ts|\
+              pnpm-lock.yaml|\
+              pnpm-workspace.yaml|\
+              scripts/release-*.mjs|\
+              scripts/benchmark-*.mjs|\
+              scripts/server-benchmark-*.mjs|\
+              tsconfig*.json)
+                release=true
+                break
+                ;;
+            esac
+          done < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+
+  release-artifacts:
+    name: Artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: changes
+    if: needs.changes.outputs.release == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Resolve release version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="$(node -p "require('./package.json').version")"
+          fi
+          echo "RELEASE_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Release policy
+        run: pnpm release:policy -- --version "$RELEASE_VERSION" --tag "open-grid-v$RELEASE_VERSION" --json
+
+      - name: Release readiness check
+        run: pnpm release:check -- --json
+
+      - name: Trusted publishing setup plan
+        run: pnpm release:trusted-publishing -- --version "$RELEASE_VERSION" --tag latest --repository-url git+https://github.com/example/open-grid.git --json
+
+      - name: First publish status summary
+        run: pnpm release:first-publish-status -- --version "$RELEASE_VERSION" --repository-url git+https://github.com/example/open-grid.git --skip-github-push --json
+
+      - name: Release plan
+        run: pnpm release:plan -- --version "$RELEASE_VERSION" --json
+
+      - name: Stage release tarballs
+        run: pnpm release:stage -- --version "$RELEASE_VERSION" --out-dir .release/"$RELEASE_VERSION"
+
+      - name: Publish dry-run
+        run: pnpm release:publish-dry-run -- --version "$RELEASE_VERSION" --json
+
+      - name: Upload staged tarballs
+        uses: actions/upload-artifact@v7
+        with:
+          name: open-grid-${{ env.RELEASE_VERSION }}-tarballs
+          path: .release/${{ env.RELEASE_VERSION }}/*.tgz
+          if-no-files-found: error
+
+  browser-budgets:
+    name: Performance - Browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: changes
+    if: needs.changes.outputs.release == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Benchmark bundle budgets
+        run: pnpm benchmark:bundle:run
+
+      - name: Benchmark structure budgets
+        run: pnpm benchmark:structure:e2e
+
+      - name: Benchmark heap budgets
+        run: pnpm benchmark:framework:heap:budget:measure && pnpm benchmark:framework:heap:budget:check
+
+  compute-budgets:
+    name: Performance - Core and Server
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: changes
+    if: needs.changes.outputs.release == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Benchmark massive core scale budgets
+        run: pnpm benchmark:core-filter:massive:run
+
+      - name: Benchmark server budgets
+        run: pnpm benchmark:server:budget:run
+
+  full-e2e:
+    name: Full E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: changes
+    if: needs.changes.outputs.release == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: pnpm e2e
+
+  required-gate:
+    name: Release Gate
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - changes
+      - release-artifacts
+      - browser-budgets
+      - compute-budgets
+      - full-e2e
+
+    steps:
+      - name: Verify required release jobs
+        env:
+          RELEASE_RELATED: ${{ needs.changes.outputs.release }}
+          ARTIFACTS_RESULT: ${{ needs.release-artifacts.result }}
+          BROWSER_RESULT: ${{ needs.browser-budgets.result }}
+          COMPUTE_RESULT: ${{ needs.compute-budgets.result }}
+          E2E_RESULT: ${{ needs.full-e2e.result }}
+        run: |
+          if [ "$RELEASE_RELATED" != "true" ]; then
+            exit 0
+          fi
+
+          test "$ARTIFACTS_RESULT" = "success"
+          test "$BROWSER_RESULT" = "success"
+          test "$COMPUTE_RESULT" = "success"
+          test "$E2E_RESULT" = "success"

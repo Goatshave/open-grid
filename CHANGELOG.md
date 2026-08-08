@@ -1,0 +1,174 @@
+# Changelog
+
+All notable Open Grid release changes should be documented here before a package version is tagged or published.
+
+## Unreleased
+
+## 0.1.0 - 2026-08-07
+
+- Define and continuously validate the framework support contract: React 18.2 through 19, Vue 3.4 and later Vue 3 releases, and Svelte 4.2.20 through 5.
+- Added a VitePress documentation site, package-specific documentation homepages, and GitHub Pages deployment workflow.
+
+- Add public CI for tests, typechecks, package/example builds, package-boundary checks, and cross-framework browser smoke; add weekly dependency update automation and a public documentation index.
+- Guard public documentation, community files, package metadata, CI, and dependency-update coverage with release contract tests.
+- Establish deterministic Open Grid bundle, DOM, heap, core-scale, server, and cross-framework regression gates for release verification.
+- Correct sticky-header body viewport accounting so standard/wide timing and stability repetitions pass 148/148 without relaxing bundle, DOM, scroll, or ratio gates.
+- Make six-profile baseline measurement balanced, resumable, source-bound, browser-isolated, crash-aware, and bounded by heap-workload, whole-run, and retry limits.
+- Add contributor, conduct, and security policies plus structured GitHub issue and pull-request templates for the public repository.
+- Show structured pending UI review checks, target URLs, and framework resume commands in smoke-review status output, while making framework-scoped status filtering preserve whole-report release readiness.
+- Let `OPEN_GRID_E2E_PORT_OFFSET` move the automated React, Vue, and Svelte UI smoke servers and test URLs without changing the canonical manual-preview and release-evidence URLs.
+- Complete actual Chrome 200% zoom, 390 CSS pixel, and keyboard-only reviews across React, Vue, and Svelte; stack mobile column-management rows to prevent clipped commands, add a shared 2px grid-entry focus ring, and lock both findings into browser regressions.
+- Complete a hands-on React, Vue, and Svelte functional release review covering all 21 manual checks, including real CSV downloads; subsequent keyboard and zoom/reflow review completed six more checks while leaving the six screen-reader and platform high-contrast checks pending.
+- Add a resumable guided manual UI review command that validates source and target contracts, confirms actual zoom and viewport settings, records per-check results and evidence atomically, reports progress, and appears in first-publish release gates.
+- Add text-preserving Paid, Sent, Draft, and Overdue markers to the React first-publish grid, share the marker foundation with cross-framework risk styling, and bind semantic marker checks to automated smoke and manual release evidence.
+- Improve first-publish risk scanning across React, Vue, and Svelte with text-preserving semantic markers for low, medium, and high values, contrast-aware light/dark colors, forced-colors fallback, and cross-framework browser coverage.
+- Simplify the React, Vue, and Svelte first-publish headers by keeping pinning in the action menu and product column panel, while retaining direct pin-button coverage in the server-side examples and locking the cleaner policy into UI smoke evidence.
+- Add typed runtime theme token adapters, correct styled-root token inheritance, and prove contrast-aware light/dark product overrides across the React, Vue, and Svelte reference grids.
+- Allow the full Playwright suite to move all canonical server and test URLs by one validated local port offset when another workspace is already using ports 4173-4187.
+- Add React, Vue, and Svelte 200%-equivalent reflow smoke coverage at 640x450 CSS pixels and DPR 2, including product-control clipping/overlap, column-panel expansion, and internal grid-scroll checks.
+- Keep the React, Vue, and Svelte first-publish grids in the 390px first viewport by collapsing product-owned column management behind a count-aware toolbar control, and hide idle diagnostic status chips while preserving active polite feedback.
+
+- Add a shared first-publish product workflow smoke across React, Vue, and Svelte covering search, valid async edit, sorting, preference reload, transient-state reset, and explicit preference restoration, and bind its inputs to manual release evidence.
+- Add typed `getHeaderClassName` product styling hooks across React, Vue, and Svelte, and demonstrate theme-aware risk-header treatment with cross-framework browser coverage.
+- Add typed `getCellClassName` product styling hooks across React, Vue, and Svelte, forward Svelte's root `class` prop, and demonstrate theme-aware high-risk cell treatment with cross-framework browser coverage.
+- Align product-owned row styling across React, Vue, and Svelte with `getRowClassName`, demonstrate token-based high-risk row treatment in the first-publish examples, and restore the missing Svelte `ariaLabel` declaration contract.
+- Add a persisted light/dark product-theme switch to the React, Vue, and Svelte first-publish examples, cover reload restoration in browser smoke tests, and extend dark tokens to controls that sit beside the semantic grid inside a themed product ancestor.
+- Expand the default theme into a semantic light/dark token contract, polish the shared styled-grid surface, and replace the React/Vue/Svelte first-publish engineering shells with denser operational layouts and Lucide controls.
+- Preserve each package README and LICENSE in staged publish tarballs, reject missing metadata before staging, stop before packing into non-empty output directories, and verify the final packed file boundary with release regressions.
+- Add install guidance and entry-point examples to every public package README, and require package identity plus an npm install command in the release readiness gate.
+- Add a shared `ariaLabel` grid contract across React, Vue, and Svelte, product-specific labels in the first-publish examples, Chromium accessibility-tree coverage for grid/header/focused-cell output, and a self-contained smoke build gate.
+- Add runnable Next.js, Nuxt, and SvelteKit server-export apps with shared filtering/query models, buffered and streaming CSV routes, production builds, responsive layouts, and Playwright workflow coverage.
+- Exercise real loading, error, retry, and invalid-edit states in the React, Vue, and Svelte forced-colors smoke gate, including reduced-motion spinner behavior and stronger system-color state cues.
+- Reject UI review reports that exceed the reserved GitHub workflow-dispatch budget, and validate the complete publish input payload against GitHub's 65,535-character limit before release.
+- Require the manual Release Publish workflow to receive, materialize, and validate the completed source-bound UI smoke report before npm publishing.
+- Bind structured UI review evidence to the current Git revision, workspace version, and SHA-256 UI source fingerprint, while requiring a clean source tree and a review date no more than seven days old for release approval.
+- Add a strict structured UI smoke evidence checker and include JSON report generation plus validation in release plans, preflights, and status handoffs.
+- Add cross-framework 390px reflow and forced-colors accessibility regressions, with explicit focus, selection, disabled-control, and status-state high-contrast styling.
+- Add structured manual accessibility checks and per-check evidence fields to UI smoke metadata, inspection reports, and first-publish status/preflight output.
+- Add automated Axe WCAG A/AA audits for the React, Vue, and Svelte reference UIs, correct the semantic grid boundary, and harden muted-text contrast and compact interaction target sizes.
+- Prepare release automation for package boundary checks, publish planning, staged tarball validation, public repository metadata injection, npm Trusted Publisher setup planning, npm publish dry-runs, guarded actual publish execution, trusted-publishing workflow wiring, and CI release verification.
+- Run Release Verification on pull requests that change the release changelog.
+- Run Release Verification on pull requests that change TypeScript config or e2e test files.
+- Run the npm Trusted Publisher setup preflight inside Release Verification.
+- Validate publish confirmation, provenance, and npm 11 requirements in the Trusted Publisher setup preflight.
+- Add root release tests for the Trusted Publisher setup preflight and run them through `pnpm test`.
+- Include the GitHub environment checklist and first-publish workflow inputs in the Trusted Publisher setup plan.
+- Report the Trusted Publisher setup context and Release Publish workflow input bundle from trusted-publishing text failure output.
+- Add a first-publish preflight command that runs trusted-publishing, policy, check, plan, repository staging, and repository-verified publish dry-run gates together.
+- Run the first-publish preflight in Release Verification with a synthetic non-placeholder GitHub repository URL.
+- Verify repository metadata during the Release Publish workflow dry-run before actual publishing.
+- Document the Trusted Publisher and first-publish preflight commands in the README development checklist.
+- Require the public repository URL before `pnpm release:publish` can leave dry-run mode.
+- Validate that the Release Publish workflow passes the public repository URL to the final publish command.
+- Validate npm dist-tags before publish dry-runs, guarded publish, first-publish preflight, and Release Publish workflow execution.
+- Verify that the Release Publish workflow requires `version` and `npm_tag` dispatch inputs before first publish.
+- Require `--provenance` before `pnpm release:publish` can leave dry-run mode.
+- Require an explicit `--out-dir` value before `pnpm release:stage` writes persistent tarballs.
+- Return JSON `failures` from `pnpm release:stage -- --json` when staging validation fails.
+- Report the release version, repository URL, output directory, and package count from release stage text failure output.
+- Support repository-verified `pnpm release:publish-dry-run -- --repository-url <public-git-url>` checks before first publish.
+- Preserve `pnpm release:plan -- --json` failure details in publish dry-run entrypoints and stop before staging when planning fails.
+- Preserve `pnpm release:stage -- --json` failure details in `pnpm release:publish-dry-run -- --json` output and stop before npm dry-runs when staging fails.
+- Preserve `pnpm release:stage -- --json` failure details in guarded `pnpm release:publish -- --dry-run --json` output.
+- Report the release version, npm tag, repository URL, output directory, and provenance flag from publish dry-run text failure output.
+- Report the release version, npm tag, repository URL, output directory, dry-run mode, and provenance flag from guarded publish text failure output.
+- Preserve failed child-step JSON results in `pnpm release:first-publish-preflight -- --json` output.
+- Preserve `pnpm release:check -- --json` child failure details in `pnpm release:first-publish-preflight -- --json` output.
+- Report the exact Release Publish workflow input bundle from trusted-publishing and first-publish preflight output.
+- Report the Release Publish workflow input bundle from first-publish preflight text failure output.
+- Support requested `--version` and `--tag` values in trusted-publishing output and first-publish preflight's trusted-publishing step.
+- Require the Release Publish workflow's trusted-publishing preflight to receive the resolved release version, npm tag, and repository URL.
+- Include the Trusted Publisher setup command in the release plan's prepublish gate list.
+- Require explicit `pnpm release:plan -- --version` values before planning.
+- Report the release version, root version, package count, publish order count, prepublish gate count, and workspace dependency rewrite count from release plan text failure output.
+- Cover explicit `pnpm release:policy -- --version/--tag` value guards in release tests.
+- Report the root version, publishable package count, example package count, and completed npm pack dry-run count from release readiness check text failure output.
+- Return JSON readiness context and failures from `pnpm release:check -- --json`.
+- Run release readiness checks in JSON mode from release workflows and guard that shape in the Trusted Publisher preflight.
+- Cover explicit `pnpm release:stage -- --version/--repository-url` value guards in release tests.
+- Cover explicit `pnpm release:first-publish-preflight -- --out-dir` value guards in release tests.
+- Cover explicit Trusted Publisher setup override value guards in release tests.
+- Cover explicit publish dry-run and guarded publish `--out-dir` plus guarded publish `--confirm` value guards in release tests.
+- Report the verified repository URL from guarded publish JSON and text output.
+- Report the repository URL from guarded publish text failure output.
+- Validate trusted-publishing release versions and require the Release Publish workflow to guard semver input before publishing.
+- Validate first-publish preflight release versions before running child release gates.
+- Validate default workspace release versions in trusted-publishing and first-publish preflight commands.
+- Validate publish dry-run and guarded publish release versions before running child release gates.
+- Report the release version, tag, expected tag, changelog date, and package count from release policy text failure output.
+- Run Release Verification on pull requests that change either release workflow, including the guarded publish workflow.
+- Share column resize keyboard target sizing across React, Vue, and Svelte UI renderers, including Shift+Arrow large-step coverage.
+- Share column resize pointer target sizing across React, Vue, and Svelte UI renderers.
+- Share column resize start sizing across React, Vue, and Svelte UI renderers.
+- Share column resize final sizing across React, Vue, and Svelte UI renderers.
+- Share pointer capture set/release helpers across React, Vue, and Svelte UI renderers.
+- Share pointer move/up listener cleanup across React, Vue, and Svelte UI renderers.
+- Share pointer up/cancel and move/up/cancel listener cleanup across React, Vue, and Svelte UI renderers.
+- Share passive scroll listener cleanup across React and Vue UI renderers.
+- Share ResizeObserver entry block-size resolution across React, Vue, and Svelte UI renderers.
+- Share browser export file downloads across React, Vue, and Svelte UI renderers.
+- Share focused-header keyboard column move direction across React, Vue, and Svelte UI renderers.
+- Share visible-column and grouped-column move helpers across React, Vue, and Svelte UI renderers.
+- Share the focused-cell DOM selector used for virtualized focus restoration through primitives.
+- Share focused-cell DOM focus helpers across React, Vue, and Svelte UI renderers.
+- Share focused-cell scroll position helper across React, Vue, and Svelte UI renderers.
+- Apply the shared DOM focus helper to header menu trigger focus restoration across React, Vue, and Svelte UI renderers.
+- Apply the shared DOM focus helper to cell editor autofocus across React, Vue, and Svelte UI renderers.
+- Share default-prevention-only event isolation across React, Vue, and Svelte UI renderers.
+- Share post-drag cell and header click suppression state across React, Vue, and Svelte UI renderers.
+- Share ResizeObserver entry inline-size resolution for React center-column virtualization measurement.
+- Apply measured center-column width caches to Vue and Svelte column virtualization.
+- Share measured column layout recalculation through `@open-grid/virtual`.
+- Share grid copy, paste, and Space row-selection keyboard shortcut action detection across React, Vue, and Svelte UI renderers.
+- Share browser clipboard text read/write helpers across React, Vue, and Svelte UI renderers.
+- Share focused-cell edit start guard logic across React, Vue, and Svelte UI renderers.
+- Share cell edit cancel guard logic across React, Vue, and Svelte UI renderers.
+- Share grid keyboard shortcut edit-state guard logic across React, Vue, and Svelte UI renderers.
+- Share cell pointer drag start guard logic across React, Vue, and Svelte UI renderers.
+- Share pointer drag continuation guard logic across React, Vue, and Svelte UI renderers.
+- Apply the shared pointer drag continuation guard to header drag threshold tracking across React, Vue, and Svelte UI renderers.
+- Share pointer drag end guard logic across React, Vue, and Svelte UI renderers.
+- Apply the shared pointer drag end guard to header drag completion across React, Vue, and Svelte UI renderers.
+- Share focused row-selection target lookup across React, Vue, and Svelte UI renderers.
+- Share grid keyboard focus movement detection across React, Vue, and Svelte UI renderers.
+- Share grid Enter/Escape edit action detection across React, Vue, and Svelte UI renderers.
+- Share pointer-inside-element hit testing for grouping-panel header drops across React, Vue, and Svelte UI renderers.
+- Share measured row block-size fallback calculation across React, Vue, and Svelte UI renderers.
+- Share virtual size offset calculation across React, Vue, and Svelte UI renderers.
+- Share virtual row position style calculation across React, Vue, and Svelte UI renderers.
+- Share column layout total width calculation across React, Vue, and Svelte UI renderers.
+- Share column layout id lookup map creation across React, Vue, and Svelte UI renderers.
+- Share center-column virtualization render item calculation across React, Vue, and Svelte UI renderers.
+- Share virtual row item mapping across React, Vue, and Svelte UI renderers.
+- Share focused-cell scroll restoration calculation across React, Vue, and Svelte UI renderers.
+- Share row and column virtualization option resolution across React, Vue, and Svelte UI renderers.
+- Share row and column virtualization option type contracts across React, Vue, and Svelte UI renderers.
+- Share pointer drag movement threshold detection across React, Vue, and Svelte UI renderers.
+- Share primary pointer button and active-drag detection across React, Vue, and Svelte UI renderers.
+- Share cell coordinate equality checks across React, Vue, and Svelte UI renderers.
+- Share default-prevention and propagation-stop event isolation across React, Vue, and Svelte UI renderers.
+- Share propagation-stop-only event isolation across React, Vue, and Svelte UI renderers.
+- Share column header text fallback labels across React, Vue, and Svelte UI renderers.
+- Share default cell display text formatting across React, Vue, and Svelte UI renderers.
+- Share header action menu popover and trigger DOM id generation across React, Vue, and Svelte UI renderers.
+- Share header action menu item filtering and action-item detection across React, Vue, and Svelte UI renderers.
+- Share cell edit validation message fallback text across React, Vue, and Svelte UI renderers.
+- Share cell edit text formatting, edit start, and fill-handle visibility decisions across React, Vue, and Svelte UI renderers.
+- Share header action menu keyboard action detection across React, Vue, and Svelte UI renderers.
+- Share cell editor Enter/Escape commit/cancel action detection across React, Vue, and Svelte UI renderers.
+- Share cell edit value parsing across React, Vue, and Svelte UI renderers.
+- Share select cell editor option value/disabled props and visible text across React, Vue, and Svelte UI renderers.
+- Share grouping panel empty placeholder props and message across React, Vue, and Svelte UI renderers.
+- Share direct header column pinning button visible text across React, Vue, and Svelte UI renderers.
+- Share header action menu trigger visible text across React, Vue, and Svelte UI renderers.
+- Share header sort indicator visible text across React, Vue, and Svelte UI renderers.
+- Share default header action menu item labels across React, Vue, and Svelte UI renderers.
+- Share group label cell decisions, group row labels, group cell indentation, and group count text across React, Vue, and Svelte UI renderers.
+- Share row expansion toggle visible text across React, Vue, and Svelte UI renderers.
+- Add explicit primitive coverage for selected-cell range selection attributes shared by React, Vue, and Svelte UI renderers.
+- Add explicit primitive coverage for header action menu enabled-item selection and grid interactive keyboard target selectors.
+
+## 0.0.0 - 2026-07-03
+
+- Established the current multi-package Open Grid workspace baseline.
+- Added release readiness gates for package manifests, example package boundaries, npm pack dry-runs, publish planning, staged tarball validation, and release verification workflow coverage.

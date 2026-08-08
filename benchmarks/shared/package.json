@@ -1,0 +1,61 @@
+{
+  "name": "@open-grid/benchmark-shared",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.mjs"
+    },
+    "./browser": {
+      "types": "./browser.d.ts",
+      "default": "./browser.mjs"
+    },
+    "./bundle-budget": {
+      "types": "./bundle-budget.d.ts",
+      "default": "./bundle-budget.mjs"
+    },
+    "./core-compute": {
+      "types": "./core-compute.d.ts",
+      "default": "./core-compute.mjs"
+    },
+    "./core-compute-budget": {
+      "types": "./core-compute-budget.d.ts",
+      "default": "./core-compute-budget.mjs"
+    },
+    "./structure-budget": {
+      "types": "./structure-budget.d.ts",
+      "default": "./structure-budget.mjs"
+    },
+    "./source-fingerprint": {
+      "types": "./source-fingerprint.d.ts",
+      "default": "./source-fingerprint.mjs"
+    },
+    "./results": {
+      "types": "./results.d.ts",
+      "default": "./results.mjs"
+    },
+    "./render-trace": {
+      "types": "./render-trace.d.ts",
+      "default": "./render-trace.mjs"
+    },
+    "./heap-profile": {
+      "types": "./heap-profile.d.ts",
+      "default": "./heap-profile.mjs"
+    },
+    "./heap-budget": {
+      "types": "./heap-budget.d.ts",
+      "default": "./heap-budget.mjs"
+    },
+    "./server": {
+      "types": "./server.d.ts",
+      "default": "./server.mjs"
+    },
+    "./server-results": {
+      "types": "./server-results.d.ts",
+      "default": "./server-results.mjs"
+    },
+    "./app.css": "./app.css"
+  }
+}

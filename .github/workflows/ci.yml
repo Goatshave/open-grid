@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm check
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Verify framework compatibility
+        run: pnpm compatibility:check
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build examples
+        run: pnpm build:examples
+
+      - name: Build documentation
+        run: pnpm docs:build
+
+      - name: Verify publishable package boundaries
+        run: pnpm release:check -- --json
+
+  browser-smoke:
+    name: UI Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run React, Vue, and Svelte smoke tests
+        run: pnpm e2e:smoke
+
+  required-gate:
+    name: Required Gate
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - quality
+      - browser-smoke
+
+    steps:
+      - name: Verify required CI jobs
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          UI_SMOKE_RESULT: ${{ needs.browser-smoke.result }}
+        run: |
+          test "$QUALITY_RESULT" = "success"
+          test "$UI_SMOKE_RESULT" = "success"

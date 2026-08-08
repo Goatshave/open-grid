@@ -1,0 +1,45 @@
+{
+  "name": "@open-grid/vue-ui",
+  "version": "0.1.0",
+  "description": "Optional styled Vue data grid for Open Grid.",
+  "keywords": ["data-grid", "grid", "table", "vue", "ui"],
+  "homepage": "https://goatshave.github.io/open-grid/vue-ui",
+  "bugs": {
+    "url": "https://github.com/Goatshave/open-grid/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": ["dist/index.css"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./css": "./dist/index.css"
+  },
+  "files": ["dist", "LICENSE"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean --external vue && mkdir -p dist && cp ../react-ui/src/index.css dist/index.css",
+    "check": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@open-grid/core": "workspace:*",
+    "@open-grid/primitives": "workspace:*",
+    "@open-grid/vue": "workspace:*",
+    "@open-grid/virtual": "workspace:*"
+  },
+  "peerDependencies": {
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "vue": "^3.5.41"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "@open-grid/svelte",
+  "version": "0.1.0",
+  "description": "Svelte adapter for Open Grid.",
+  "keywords": ["data-grid", "grid", "table", "svelte", "adapter"],
+  "homepage": "https://goatshave.github.io/open-grid/packages#svelte",
+  "bugs": {
+    "url": "https://github.com/Goatshave/open-grid/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "LICENSE"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "check": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@open-grid/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "svelte": "^4.2.20 || ^5.0.0"
+  },
+  "devDependencies": {
+    "svelte": "^5.15.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

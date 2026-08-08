@@ -1,0 +1,19 @@
+{
+  "name": "@open-grid/example-nuxt-server-export",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --host 127.0.0.1",
+    "build": "nuxt build",
+    "start": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@open-grid/example-shared-server": "workspace:*",
+    "nuxt": "^4.5.1",
+    "vue": "^3.5.41"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

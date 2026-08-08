@@ -1,0 +1,22 @@
+{
+  "name": "@open-grid/example-sveltekit-server-export",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --host 127.0.0.1",
+    "build": "svelte-kit sync && vite build",
+    "start": "node build/index.js"
+  },
+  "dependencies": {
+    "@open-grid/example-shared-server": "workspace:*",
+    "@sveltejs/adapter-node": "^5.5.7",
+    "@sveltejs/kit": "^2.70.2",
+    "svelte": "^5.56.8"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
+  }
+}

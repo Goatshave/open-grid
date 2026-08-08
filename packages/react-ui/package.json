@@ -1,0 +1,54 @@
+{
+  "name": "@open-grid/react-ui",
+  "version": "0.1.0",
+  "description": "Optional styled React data grid for Open Grid.",
+  "keywords": ["data-grid", "grid", "table", "react", "ui"],
+  "homepage": "https://goatshave.github.io/open-grid/react-ui",
+  "bugs": {
+    "url": "https://github.com/Goatshave/open-grid/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": ["dist/index.css", "dist/virtual.css", "src/index.css", "src/virtual.css"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./virtual": {
+      "types": "./dist/virtual.d.ts",
+      "import": "./dist/virtual.js"
+    },
+    "./css": "./dist/index.css",
+    "./virtual.css": "./dist/virtual.css"
+  },
+  "files": ["dist", "LICENSE"],
+  "scripts": {
+    "build": "tsup src/index.tsx src/virtual.tsx --format esm --dts --clean --external react --external react/jsx-runtime --external react-dom && mkdir -p dist && cp src/index.css src/virtual.css dist/",
+    "check": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@open-grid/core": "workspace:*",
+    "@open-grid/primitives": "workspace:*",
+    "@open-grid/react": "workspace:*",
+    "@open-grid/virtual": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

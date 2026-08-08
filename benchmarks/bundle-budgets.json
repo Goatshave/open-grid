@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "applications": [
+    {
+      "id": "open-grid-react",
+      "distDirectory": "benchmarks/open-grid-react/dist",
+      "limits": {
+        "javascriptGzipBytes": 73110,
+        "stylesheetGzipBytes": 5000,
+        "totalGzipBytes": 75433
+      }
+    },
+    {
+      "id": "open-grid-react-full",
+      "distDirectory": "benchmarks/open-grid-react-full/dist",
+      "limits": {
+        "javascriptGzipBytes": 84662,
+        "stylesheetGzipBytes": 5000,
+        "totalGzipBytes": 89803
+      }
+    },
+    {
+      "id": "open-grid-vue",
+      "distDirectory": "benchmarks/open-grid-vue/dist",
+      "limits": {
+        "javascriptGzipBytes": 63100,
+        "stylesheetGzipBytes": 5000,
+        "totalGzipBytes": 68064
+      }
+    },
+    {
+      "id": "open-grid-svelte",
+      "distDirectory": "benchmarks/open-grid-svelte/dist",
+      "limits": {
+        "javascriptGzipBytes": 63046,
+        "stylesheetGzipBytes": 5000,
+        "totalGzipBytes": 68181
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "candidateId": "open-grid-svelte",
+      "baselineId": "open-grid-vue",
+      "metric": "totalGzipBytes",
+      "maxDeltaBytes": 512
+    }
+  ]
+}

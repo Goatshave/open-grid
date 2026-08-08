@@ -1,0 +1,117 @@
+.og-grid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 180px;
+  overflow: hidden;
+  border: 1px solid var(--og-border-color);
+  border-radius: var(--og-radius-lg, var(--og-radius));
+  background: var(--og-surface);
+  box-shadow: var(--og-shadow-sm, 0 1px 2px rgb(16 24 40 / 6%));
+}
+
+.og-grid__scroller {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  contain: strict;
+}
+
+.og-grid__scroller:focus-visible {
+  outline: 2px solid var(--og-focus);
+  outline-offset: -2px;
+}
+
+.og-grid__canvas {
+  min-width: 100%;
+}
+
+.og-grid__header {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--og-surface-muted);
+}
+
+.og-grid__row {
+  display: flex;
+  min-width: 100%;
+  background: var(--og-surface);
+}
+
+.og-grid__body {
+  position: relative;
+  contain: layout;
+}
+
+.og-grid__body[data-content-visibility="true"] > .og-grid__row {
+  content-visibility: auto;
+  contain-intrinsic-block-size: var(--og-row-height);
+}
+
+.og-grid__header-cell,
+.og-grid__cell {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  overflow: hidden;
+  contain: layout paint;
+  padding: 0 12px;
+}
+
+.og-grid__header-cell {
+  min-height: var(--og-header-height);
+  background: var(--og-surface-muted);
+}
+
+.og-grid__cell {
+  min-height: var(--og-row-height);
+  background: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.og-grid__row[aria-selected="true"] {
+  background: var(--og-surface-selected, color-mix(in srgb, var(--og-accent) 8%, var(--og-surface)));
+}
+
+.og-grid__body .og-grid__row:not([aria-selected="true"]):hover {
+  background: var(--og-surface-subtle, var(--og-surface));
+}
+
+.og-grid__body [data-pinned] {
+  background: inherit;
+}
+
+.og-grid__cell[data-focused="true"] {
+  outline: 2px solid var(--og-focus);
+  outline-offset: -2px;
+}
+
+.og-grid__header-button {
+  contain: size layout;
+  width: 100%;
+  height: var(--og-header-height);
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.og-grid__empty-cell {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  min-height: 96px;
+  padding: 0 16px;
+  color: var(--og-text-muted);
+}

@@ -1,0 +1,153 @@
+name: Release Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver release version to publish."
+        required: true
+        default: "0.0.0"
+        type: string
+      npm_tag:
+        description: "npm dist-tag to assign to published packages."
+        required: true
+        default: "latest"
+        type: string
+      repository_url:
+        description: "Public git repository URL to embed in published package metadata."
+        required: true
+        type: string
+      confirm_publish:
+        description: "Type publish-open-grid to publish packages to npm."
+        required: true
+        default: "false"
+        type: string
+      ui_smoke_report:
+        description: "Completed .release/ui-smoke-report.json content. Use gh -F ui_smoke_report=@.release/ui-smoke-report.json."
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: release-publish-${{ github.event.inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish release packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: npm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install npm 11 CLI
+        run: |
+          npm install -g npm@11
+          npm --version
+
+      - name: Resolve release inputs
+        run: |
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
+          echo "NPM_TAG=${{ github.event.inputs.npm_tag }}" >> "$GITHUB_ENV"
+          echo "REPOSITORY_URL=${{ github.event.inputs.repository_url }}" >> "$GITHUB_ENV"
+
+      - name: Require release version
+        run: |
+          [[ "$RELEASE_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]
+
+      - name: Require npm dist-tag
+        run: |
+          [[ "$NPM_TAG" =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]]
+          [[ ! "$NPM_TAG" =~ ^v?[0-9] ]]
+
+      - name: Require publish confirmation
+        run: test "${{ github.event.inputs.confirm_publish }}" = "publish-open-grid"
+
+      - name: Require public repository URL
+        run: |
+          test -n "$REPOSITORY_URL"
+          test "$REPOSITORY_URL" != "git+https://github.com/OWNER/REPO.git"
+
+      - name: Materialize manual UI evidence
+        env:
+          UI_SMOKE_REPORT: ${{ github.event.inputs.ui_smoke_report }}
+        run: |
+          mkdir -p .release
+          printf '%s' "$UI_SMOKE_REPORT" > .release/ui-smoke-report.json
+
+      - name: Validate manual UI evidence
+        run: pnpm release:ui-smoke-report-check -- --version "$RELEASE_VERSION" --tag "$NPM_TAG" --repository-url "$REPOSITORY_URL" --json
+
+      - name: Trusted publishing setup plan
+        run: pnpm release:trusted-publishing -- --version "$RELEASE_VERSION" --tag "$NPM_TAG" --repository-url "$REPOSITORY_URL" --json
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Check
+        run: pnpm check
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build examples
+        run: pnpm build:examples
+
+      - name: Benchmark bundle budgets
+        run: pnpm benchmark:bundle:run
+
+      - name: Benchmark structure budgets
+        run: pnpm benchmark:structure:e2e
+
+      - name: Benchmark heap budgets
+        run: pnpm benchmark:framework:heap:budget:measure && pnpm benchmark:framework:heap:budget:check
+
+      - name: Benchmark massive core scale budgets
+        run: pnpm benchmark:core-filter:massive:run
+
+      - name: Benchmark server budgets
+        run: pnpm benchmark:server:budget:run
+
+      - name: Release policy
+        run: pnpm release:policy -- --version "$RELEASE_VERSION" --tag "open-grid-v$RELEASE_VERSION" --json
+
+      - name: Release readiness check
+        run: pnpm release:check -- --json
+
+      - name: Release plan
+        run: pnpm release:plan -- --version "$RELEASE_VERSION" --json
+
+      - name: Stage release tarballs
+        run: pnpm release:stage -- --version "$RELEASE_VERSION" --out-dir .release/"$RELEASE_VERSION" --repository-url "$REPOSITORY_URL"
+
+      - name: Publish dry-run
+        run: pnpm release:publish -- --version "$RELEASE_VERSION" --tag "$NPM_TAG" --out-dir .release/"$RELEASE_VERSION" --repository-url "$REPOSITORY_URL" --dry-run --json
+
+      - name: Quick UI smoke tests
+        run: pnpm e2e:smoke
+
+      - name: End-to-end tests
+        run: pnpm e2e
+
+      - name: Publish to npm
+        run: pnpm release:publish -- --version "$RELEASE_VERSION" --tag "$NPM_TAG" --out-dir .release/"$RELEASE_VERSION" --repository-url "$REPOSITORY_URL" --provenance --confirm publish-open-grid --json

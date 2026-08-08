@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "profiles": [
+    {
+      "id": "standard-client",
+      "rowCount": 10000,
+      "columnCount": 20
+    },
+    {
+      "id": "wide-client",
+      "rowCount": 10000,
+      "columnCount": 100
+    }
+  ],
+  "applications": [
+    {
+      "id": "open-grid",
+      "url": "http://127.0.0.1:4301",
+      "limits": {
+        "standard-client": {
+          "mountedRowCount": 26,
+          "mountedCellCount": 416,
+          "domElementCount": 500,
+          "domNodeCount": 950
+        },
+        "wide-client": {
+          "mountedRowCount": 26,
+          "mountedCellCount": 546,
+          "domElementCount": 640,
+          "domNodeCount": 1230
+        }
+      }
+    },
+    {
+      "id": "open-grid-react-full",
+      "url": "http://127.0.0.1:4306",
+      "limits": {
+        "standard-client": {
+          "mountedRowCount": 27,
+          "mountedCellCount": 432,
+          "domElementCount": 570,
+          "domNodeCount": 1040
+        },
+        "wide-client": {
+          "mountedRowCount": 27,
+          "mountedCellCount": 567,
+          "domElementCount": 730,
+          "domNodeCount": 1340
+        }
+      }
+    },
+    {
+      "id": "open-grid-vue",
+      "url": "http://127.0.0.1:4304",
+      "limits": {
+        "standard-client": {
+          "mountedRowCount": 27,
+          "mountedCellCount": 432,
+          "domElementCount": 570,
+          "domNodeCount": 1080
+        },
+        "wide-client": {
+          "mountedRowCount": 27,
+          "mountedCellCount": 567,
+          "domElementCount": 730,
+          "domNodeCount": 1390
+        }
+      }
+    },
+    {
+      "id": "open-grid-svelte",
+      "url": "http://127.0.0.1:4305",
+      "limits": {
+        "standard-client": {
+          "mountedRowCount": 27,
+          "mountedCellCount": 432,
+          "domElementCount": 570,
+          "domNodeCount": 1120
+        },
+        "wide-client": {
+          "mountedRowCount": 27,
+          "mountedCellCount": 567,
+          "domElementCount": 730,
+          "domNodeCount": 1440
+        }
+      }
+    }
+  ],
+  "equalities": [
+    {
+      "profileId": "standard-client",
+      "applicationIds": [
+        "open-grid-react-full",
+        "open-grid-vue",
+        "open-grid-svelte"
+      ],
+      "metric": "mountedRowCount"
+    },
+    {
+      "profileId": "standard-client",
+      "applicationIds": [
+        "open-grid-react-full",
+        "open-grid-vue",
+        "open-grid-svelte"
+      ],
+      "metric": "mountedCellCount"
+    },
+    {
+      "profileId": "standard-client",
+      "applicationIds": [
+        "open-grid-react-full",
+        "open-grid-vue",
+        "open-grid-svelte"
+      ],
+      "metric": "domElementCount"
+    },
+    {
+      "profileId": "wide-client",
+      "applicationIds": [
+        "open-grid-react-full",
+        "open-grid-vue",
+        "open-grid-svelte"
+      ],
+      "metric": "mountedRowCount"
+    },
+    {
+      "profileId": "wide-client",
+      "applicationIds": [
+        "open-grid-react-full",
+        "open-grid-vue",
+        "open-grid-svelte"
+      ],
+      "metric": "mountedCellCount"
+    },
+    {
+      "profileId": "wide-client",
+      "applicationIds": [
+        "open-grid-react-full",
+        "open-grid-vue",
+        "open-grid-svelte"
+      ],
+      "metric": "domElementCount"
+    }
+  ],
+  "comparisons": [
+    {
+      "profileId": "standard-client",
+      "candidateId": "open-grid-svelte",
+      "baselineId": "open-grid-vue",
+      "metric": "domNodeCount",
+      "maxDelta": 64
+    },
+    {
+      "profileId": "wide-client",
+      "candidateId": "open-grid-svelte",
+      "baselineId": "open-grid-vue",
+      "metric": "domNodeCount",
+      "maxDelta": 64
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible Open Grid defect
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Search existing issues first. Security vulnerabilities must follow SECURITY.md.
+  - type: input
+    id: packages
+    attributes:
+      label: Affected package and version
+      placeholder: "@open-grid/react-ui 0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: framework
+    attributes:
+      label: Framework
+      options:
+        - React
+        - Vue
+        - Svelte
+        - Framework-agnostic core
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide a repository, sandbox, or exact runnable steps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include browser, OS, Node.js, package manager, and relevant framework versions.
+    validations:
+      required: true

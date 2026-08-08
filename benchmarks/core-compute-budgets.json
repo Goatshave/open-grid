@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "resultSchemaVersion": 5,
+  "minimumRuns": 10,
+  "minimumWarmups": 2,
+  "queries": ["Blocked", "Complete"],
+  "sortColumnId": "column_5",
+  "sortDirections": ["asc", "desc"],
+  "baselineProfile": {
+    "id": "stress-client",
+    "rowCount": 100000,
+    "columnCount": 20
+  },
+  "candidateProfile": {
+    "id": "massive-virtual",
+    "rowCount": 1000000,
+    "columnCount": 20
+  },
+  "workloads": {
+    "initial-row-model": {
+      "maxMedianPerRowRatio": 2,
+      "maxP95PerRowRatio": 2
+    },
+    "numeric-sort": {
+      "maxMedianPerRowRatio": 2,
+      "maxP95PerRowRatio": 2
+    },
+    "numeric-sort-flip": {
+      "maxMedianPerRowRatio": 2,
+      "maxP95PerRowRatio": 2
+    },
+    "global-filter": {
+      "maxMedianPerRowRatio": 2,
+      "maxP95PerRowRatio": 2
+    },
+    "column-filter": {
+      "maxMedianPerRowRatio": 2,
+      "maxP95PerRowRatio": 2
+    }
+  }
+}
