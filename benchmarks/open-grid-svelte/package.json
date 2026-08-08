@@ -15,7 +15,7 @@
     "@open-grid/theme": "workspace:*",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "svelte": "^5.15.0",
-    "vite": "^6.0.3"
+    "vite": "^8.2.0"
   },
   "devDependencies": {
     "typescript": "^5.7.2"
