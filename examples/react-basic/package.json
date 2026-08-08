@@ -14,7 +14,7 @@
     "@open-grid/react-ui": "workspace:*",
     "@open-grid/theme": "workspace:*",
     "@vitejs/plugin-react": "^4.3.4",
-    "lucide-react": "^1.25.0",
+    "lucide-react": "^1.28.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "vite": "^6.0.3"
