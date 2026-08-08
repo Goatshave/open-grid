@@ -76,7 +76,7 @@ test("general CI and dependency updates cover the public repository", () => {
 test("documentation Pages workflow builds and deploys the public site", () => {
   const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "pages.yml"), "utf8");
   assert.match(workflow, /^name: Documentation Pages$/m);
-  assert.match(workflow, /actions\/configure-pages@v5/);
+  assert.match(workflow, /actions\/configure-pages@v6/);
   assert.match(workflow, /run: pnpm docs:build/);
   assert.match(workflow, /actions\/upload-pages-artifact@v5/);
   assert.match(workflow, /actions\/deploy-pages@v5/);
