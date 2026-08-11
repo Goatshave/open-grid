@@ -762,9 +762,15 @@ importers:
       '@types/react':
         specifier: ^18.3.12
         version: 18.3.31
+      '@types/react-dom':
+        specifier: ^18.3.1
+        version: 18.3.1
       react:
         specifier: ^18.3.1
         version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.26)(typescript@5.9.3)(yaml@2.9.0)
@@ -914,6 +920,9 @@ importers:
         specifier: workspace:*
         version: link:../vue
     devDependencies:
+      '@vue/server-renderer':
+        specifier: ^3.5.41
+        version: 3.5.41
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.26)(typescript@5.9.3)(yaml@2.9.0)

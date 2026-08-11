@@ -19,21 +19,32 @@ regression safety, and dependable releases.
   unrelated changes.
 - [x] Open Grid-owned bundle, DOM, heap, core-scale, server, browser behavior, and
   accessibility regression coverage.
-- [ ] Complete the first npm publication and verify package installation from a clean
-  external consumer project.
-- [ ] Complete the first GitHub Pages deployment from `main`.
+- [x] Complete the first npm publication and continuously verify package installation,
+  ESM imports, TypeScript use, and a Svelte build from a clean external project.
+- [x] Complete the first GitHub Pages deployment from `main`.
 
-## After 0.1.0
+## Release-quality hardening
 
-- Stabilize API compatibility guarantees and publish an explicit deprecation policy.
-- Expand keyboard, screen-reader, forced-colors, and mobile reflow coverage from real
-  contributor and user reports.
-- Improve server-data adapters, streaming export ergonomics, and framework deployment
-  recipes.
-- Add focused performance profiles when product behavior requires them, using Open
-  Grid baselines and reviewed absolute limits.
-- Improve contributor onboarding, issue triage, release notes, and automated package
-  provenance.
+- [x] Publish the pre-1.0 compatibility and deprecation policy and check generated
+  declaration contracts in CI.
+- [x] Separate required package-owned bundle budgets from diagnostic framework app
+  bundle measurements.
+- [x] Install staged tarballs into a temporary external project before release and
+  verify imports, types, and framework compilation.
+- [x] Keep React 18/19, Vue 3.4+, and Svelte 4.2.20/5 compatibility checks explicit.
+- [x] Add direct React adapter and Vue UI rendering tests instead of allowing empty
+  package test suites.
+
+## 0.2.0 Direction
+
+- Define localization contracts for built-in labels, status text, and controls.
+- Expand typed custom renderer parity across React, Vue, and Svelte.
+- Add product toolbar and loading, error, and empty-state composition points without
+  coupling product UI to the grid core.
+- Version persisted preference migrations and document upgrade behavior.
+- Expand task-oriented API reference and integration examples from user reports.
+- Continue keyboard, screen-reader, forced-colors, mobile reflow, server-data, and
+  export improvements where real integration evidence identifies a gap.
 
 ## Performance Direction
 

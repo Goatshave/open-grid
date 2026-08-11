@@ -20,7 +20,7 @@ The release workflows enforce these Open Grid-owned contracts:
 
 | Gate | Command | Contract |
 | --- | --- | --- |
-| Bundle | `pnpm benchmark:bundle:run` | Absolute gzip ceilings for the minimal React and full React/Vue/Svelte benchmark builds, plus bounded framework deltas. |
+| Bundle | `pnpm benchmark:bundle:run` | Required gzip ceilings for Open Grid-owned runtime files in every public package. Framework-inclusive example app bundles remain visible as diagnostics and cannot fail a release. |
 | DOM structure | `pnpm benchmark:structure:run` | Mounted row/cell and document node ceilings for standard and wide workloads. |
 | Framework heap | `pnpm benchmark:framework:heap:budget:run` | React/Vue/Svelte retained heap and node-count ceilings after a settled workload. |
 | Core scale | `pnpm benchmark:core-filter:massive:run` | Deterministic 100,000- and 1,000,000-row core processing budgets. |
@@ -32,6 +32,11 @@ change is a policy change and must be reviewed with the implementation change th
 requires it. Browser or measurement-tool upgrades may require a coordinated baseline
 update when repeated runs show a stable measurement-definition shift across all
 renderers; unaffected metrics and relative limits should remain unchanged.
+
+Bundle targets declare `enforcement: "required"` or `"diagnostic"`. Required targets
+must measure artifacts owned and shipped by Open Grid. Diagnostic targets may include
+framework runtimes and example application code to expose integration changes, but
+their failures are reported separately and do not change the release result.
 
 ## Observational Measurements
 

@@ -4,6 +4,16 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Add generated public export and declaration contracts, including CSS entry points
+  and removal detection, plus a documented pre-1.0 compatibility and deprecation
+  policy enforced by CI and the protected publish workflow.
+- Verify staged tarballs in a clean external project through ESM imports, strict
+  TypeScript consumption, and a real Svelte/Vite build before publishing.
+- Enforce gzip budgets for Open Grid-owned package artifacts while retaining
+  framework-inclusive example bundle measurements as non-blocking diagnostics.
+- Remove Svelte 4 compatibility warnings and add direct React adapter and Vue UI
+  server-rendering tests.
+
 ## 0.1.0 - 2026-08-07
 
 - Define and continuously validate the framework support contract: React 18.2 through 19, Vue 3.4 and later Vue 3 releases, and Svelte 4.2.20 through 5.

@@ -61,6 +61,22 @@ pnpm release:publish-dry-run -- --version 0.1.0 --repository-url git+https://git
 
 `pnpm release:publish-dry-run` validates the resolved release version and npm dist-tag before running child release gates, creates publish-ready staged tarballs, reads the dependency-aware publish order from `pnpm release:plan`, and runs `npm publish --dry-run --access public` for every tarball in that order. Passing `--repository-url` stages tarballs with public repository metadata and verifies that every packed manifest has the matching repository URL and package directory before the npm dry-run command executes. Passing `--out-dir` reuses or writes a persistent staged tarball directory, and explicit `--out-dir` values must be non-empty before release gates run. When release planning or staging validation fails under `--json`, the dry-run output preserves the child `failures` entries and stops before later release gates or npm dry-run commands run, so CI can report the original blocker. Use `--markdown` when the final dry-run publish order, exact npm dry-run commands, or preserved failures need to be pasted into release approval notes. The guarded `pnpm release:publish -- --dry-run --json` entrypoint preserves release-plan and release-stage failures the same way before staging, reading tarballs, or running npm dry-runs. Non-JSON failure output reports the release version, npm tag, repository URL when supplied, output directory, and provenance flag before the failure list. It does not publish to npm. Use this gate to verify the final publish command shape before approving a release candidate.
 
+## External Consumer Smoke
+
+Verify the staged artifacts from outside the monorepo before publishing:
+
+```bash
+pnpm release:consumer-smoke
+pnpm release:consumer-smoke -- --version 0.1.0 --json
+pnpm release:consumer-smoke -- --version 0.1.0 --tarball-dir .release/0.1.0 --json
+```
+
+The command installs all ten tarballs into a temporary external project, imports every
+public package through ESM, typechecks a strict TypeScript consumer, and builds the
+published Svelte component and CSS with Vite. It removes its temporary workspace on
+completion unless `--keep-temp` is supplied. Release Verification and Release Publish
+reuse staged tarballs and require this check to pass.
+
 ## Actual Publish
 
 Use the guarded publish command only from the protected release workflow:
@@ -149,11 +165,11 @@ Future release versions must have their changelog section written before this co
 
 ## Release Verification Workflow
 
-The GitHub Actions workflow at `.github/workflows/release-verify.yml` runs release-only gates in CI without publishing packages. It starts for every pull request so its aggregate status can be required safely, then a native Git diff step checks whether the pull request touches the changelog, TypeScript configuration, packages, examples, e2e tests, release scripts, release documentation, Playwright configuration, benchmarks, workspace manifests, or either release workflow. Relevant changes run the verification flow against the workspace version; unrelated changes skip the expensive jobs and pass the aggregate gate immediately. General CI owns type checks, unit and release contract tests, example and documentation builds, publishable-boundary checks, and the quick React/Vue/Svelte smoke suite. Release Verification avoids repeating those checks and runs four independent jobs in parallel: release policy, readiness, planning, staging, publish dry-run, and tarball upload; Open Grid bundle, DOM structure, and framework heap budgets; massive core and browser-backed server budgets; and the full non-smoke E2E suite. A final `Release Gate` job fails unless all four relevant jobs succeed, so the PR check list retains detailed failures while exposing one stable aggregate release result. Superseded runs on the same ref are cancelled. Manual `workflow_dispatch` runs always execute the full suite and accept a semver `version` input, while pull requests use the workspace version. The release-artifact job uses a synthetic non-placeholder GitHub URL for Trusted Publisher and first-publish status validation, uploads the staged tarballs for inspection, and never treats a detached CI checkout as proof of real push readiness. Configure both `CI / Required Gate` and `Release Verification / Release Gate` as repository-wide required status checks.
+The GitHub Actions workflow at `.github/workflows/release-verify.yml` runs release-only gates in CI without publishing packages. It starts for every pull request so its aggregate status can be required safely, then a native Git diff step checks whether the pull request touches release or API contracts, TypeScript configuration, packages, examples, e2e tests, release scripts and documentation, Playwright configuration, benchmarks, workspace manifests, or either release workflow. Relevant changes run the verification flow against the workspace version; unrelated changes skip the expensive jobs and pass the aggregate gate immediately. General CI owns type checks, API declaration contracts, unit and release contract tests, compatibility checks, example and documentation builds, publishable-boundary checks, and the quick React/Vue/Svelte smoke suite. Release Verification avoids repeating those checks and runs four independent jobs in parallel: release policy, readiness, planning, staging, publish dry-run, external tarball consumption, and tarball upload; Open Grid bundle, DOM structure, and framework heap budgets; massive core and browser-backed server budgets; and the full non-smoke E2E suite. A final `Release Gate` job fails unless all four relevant jobs succeed, so the PR check list retains detailed failures while exposing one stable aggregate release result. Superseded runs on the same ref are cancelled. Manual `workflow_dispatch` runs always execute the full suite and accept a semver `version` input, while pull requests use the workspace version. The release-artifact job uses a synthetic non-placeholder GitHub URL for Trusted Publisher and first-publish status validation, uploads the staged tarballs for inspection, and never treats a detached CI checkout as proof of real push readiness. Configure both `CI / Required Gate` and `Release Verification / Release Gate` as repository-wide required status checks.
 
 ## Release Publish Workflow
 
-The GitHub Actions workflow at `.github/workflows/release-publish.yml` is a manual publish workflow. It requires and validates a semver `version`, validates the npm dist-tag, requires the public git `repository_url`, requires the exact confirmation input `publish-open-grid`, and requires the completed source-bound JSON report as `ui_smoke_report`; uses the protected `npm` environment; grants `id-token: write` for npm trusted publishing; installs npm CLI 11; materializes and validates the report without the development-only dirty-tree override; reruns the full release gates with the release readiness check in JSON mode; stages tarballs with the supplied repository URL; runs a repository-verified publish dry-run against those staged tarballs; runs `pnpm e2e:smoke` before the full e2e suite; and only then calls `pnpm release:publish -- --out-dir .release/<version> --repository-url <repository_url> --provenance --confirm publish-open-grid`.
+The GitHub Actions workflow at `.github/workflows/release-publish.yml` is a manual publish workflow. It requires and validates a semver `version`, validates the npm dist-tag, requires the public git `repository_url`, requires the exact confirmation input `publish-open-grid`, and requires the completed source-bound JSON report as `ui_smoke_report`; uses the protected `npm` environment; grants `id-token: write` for npm trusted publishing; installs npm CLI 11; materializes and validates the report without the development-only dirty-tree override; reruns the full release gates including API contracts and framework compatibility; stages tarballs with the supplied repository URL; runs a repository-verified publish dry-run and external consumer smoke against those staged tarballs; runs `pnpm e2e:smoke` before the full e2e suite; and only then calls `pnpm release:publish -- --out-dir .release/<version> --repository-url <repository_url> --provenance --confirm publish-open-grid`.
 
 After completing the report on the clean reviewed revision, supply the file contents through GitHub CLI:
 
@@ -171,12 +187,15 @@ Run the gates from the workspace root:
 pnpm check
 pnpm test
 pnpm build
+pnpm api:check
+pnpm compatibility:check
 pnpm build:examples
 pnpm test:release
 pnpm release:policy
 pnpm release:check
 pnpm release:stage
 pnpm release:publish-dry-run
+pnpm release:consumer-smoke
 pnpm release:github-push-preflight -- --repository-url <public-git-url>
 pnpm release:first-publish-status -- --repository-url <public-git-url> --check-auth
 pnpm release:first-publish-preflight -- --repository-url <public-git-url>

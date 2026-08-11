@@ -56,6 +56,7 @@ export default defineConfig({
         text: "Engineering",
         items: [
           { text: "Architecture", link: "/architecture" },
+          { text: "API stability", link: "/api-stability" },
           { text: "Performance", link: "/performance" },
           { text: "Roadmap", link: "/roadmap" },
         ],

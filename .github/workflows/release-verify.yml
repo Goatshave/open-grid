@@ -46,9 +46,12 @@ jobs:
           while IFS= read -r file; do
             case "$file" in
               CHANGELOG.md|\
+              api-contract/*|\
               .github/workflows/release-publish.yml|\
               .github/workflows/release-verify.yml|\
               benchmarks/*|\
+              docs/api-stability.md|\
+              docs/performance.md|\
               docs/release.md|\
               e2e/*|\
               examples/*|\
@@ -60,6 +63,7 @@ jobs:
               pnpm-lock.yaml|\
               pnpm-workspace.yaml|\
               scripts/release-*.mjs|\
+              scripts/api-contract.mjs|\
               scripts/benchmark-*.mjs|\
               scripts/server-benchmark-*.mjs|\
               tsconfig*.json)
@@ -125,6 +129,9 @@ jobs:
 
       - name: Publish dry-run
         run: pnpm release:publish-dry-run -- --version "$RELEASE_VERSION" --json
+
+      - name: Verify external package consumption
+        run: pnpm release:consumer-smoke -- --version "$RELEASE_VERSION" --tarball-dir .release/"$RELEASE_VERSION" --json
 
       - name: Upload staged tarballs
         uses: actions/upload-artifact@v7

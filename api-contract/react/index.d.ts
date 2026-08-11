@@ -1,0 +1,8 @@
+import { GridOptions, Grid, GridSelector, GridSelectorSubscriptionOptions } from '@open-grid/core';
+export { AccessorColumnOptions, AccessorFnColumnDef, AccessorKey, AccessorKeyColumnDef, AnyColumnDef, CellContext, CellCoordinate, CellEditEvent, CellEditEventParams, CellEditHistoryAction, CellEditHistoryState, CellEditPhase, CellFillOptions, CellInteractionEvent, CellInteractionEventParams, ClipboardCellContext, ClipboardCopyOptions, ClipboardPasteOptions, Column, ColumnDef, ColumnFilter, ColumnFiltersState, ColumnHelper, ColumnId, ColumnMovePosition, ColumnOrderState, ColumnPinningPosition, ColumnPinningState, ColumnResizeEvent, ColumnResizeEventParams, ColumnResizePhase, ColumnSizingState, ColumnVisibilityState, DisplayColumnDef, ExpandedState, FilterFn, FitColumnsToWidthOptions, Grid, GridCacheDiagnostics, GridCacheDiagnosticsEntry, GridCacheKey, GridOptions, GridSelector, GridSelectorListener, GridSelectorSubscriptionOptions, GridState, GroupColumnDef, GroupingState, Header, HeaderContext, HeaderGroup, PaginationState, Row, RowId, RowInteractionEvent, RowInteractionEventParams, RowModel, RowSelectionCleanupScope, RowSelectionState, SortFn, SortingRule, SortingState, Updater, createColumnHelper, createGrid, fitColumnsToWidth } from '@open-grid/core';
+
+type UseGridOptions<TData> = GridOptions<TData>;
+declare function useGrid<TData>(options: UseGridOptions<TData>): Grid<TData>;
+declare function useGridSelector<TData, TSelected>(grid: Grid<TData>, selector: GridSelector<TData, TSelected>, equalityFn?: NonNullable<GridSelectorSubscriptionOptions<TSelected>["equalityFn"]>): TSelected;
+
+export { type UseGridOptions, useGrid, useGridSelector };

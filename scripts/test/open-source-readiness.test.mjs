@@ -17,6 +17,9 @@ test("public repository documentation and community files stay complete", () => 
     "docs/index.md",
     "docs/getting-started.md",
     "docs/packages.md",
+    "docs/api-stability.md",
+    "docs/performance.md",
+    "api-contract/README.md",
     "docs/.vitepress/config.mts",
     ".github/workflows/pages.yml",
     ".github/ISSUE_TEMPLATE/bug.yml",
@@ -52,6 +55,8 @@ test("general CI and dependency updates cover the public repository", () => {
   assert.match(workflow, /run: pnpm check/);
   assert.match(workflow, /run: pnpm test/);
   assert.match(workflow, /run: pnpm build$/m);
+  assert.match(workflow, /run: pnpm api:check/);
+  assert.match(workflow, /run: pnpm compatibility:check/);
   assert.match(workflow, /run: pnpm build:examples/);
   assert.match(workflow, /run: pnpm docs:build/);
   assert.match(workflow, /run: pnpm release:check -- --json/);
@@ -107,4 +112,16 @@ test("framework peer ranges match the documented 0.1 compatibility contract", ()
 
   const ci = readFileSync(path.join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   assert.match(ci, /run: pnpm compatibility:check/);
+});
+
+test("release workflows enforce API and staged consumer contracts", () => {
+  const verification = readFileSync(path.join(repoRoot, ".github", "workflows", "release-verify.yml"), "utf8");
+  const publish = readFileSync(path.join(repoRoot, ".github", "workflows", "release-publish.yml"), "utf8");
+
+  assert.match(verification, /api-contract\/\*/);
+  assert.match(verification, /scripts\/api-contract\.mjs/);
+  assert.match(verification, /run: pnpm release:consumer-smoke/);
+  assert.match(publish, /run: pnpm api:check/);
+  assert.match(publish, /run: pnpm compatibility:check/);
+  assert.match(publish, /run: pnpm release:consumer-smoke/);
 });

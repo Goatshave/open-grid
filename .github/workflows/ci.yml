@@ -40,6 +40,9 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Verify public API contract
+        run: pnpm api:check
+
       - name: Verify framework compatibility
         run: pnpm compatibility:check
 

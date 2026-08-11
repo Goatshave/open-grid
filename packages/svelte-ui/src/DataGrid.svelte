@@ -1562,7 +1562,7 @@
       {/if}
     </div>
   {/if}
-  <div {...gridProps} class="og-grid__scroller" role="grid" bind:this={scrollerElement} on:keydown={handleGridKeyDown} on:scroll={syncFrame}>
+  <div {...gridProps} class="og-grid__scroller" role="grid" tabindex="0" bind:this={scrollerElement} on:keydown={handleGridKeyDown} on:scroll={syncFrame}>
     <div class="og-grid__canvas" style={getInlineSizeStyleText(totalMeasuredWidth)}>
       <div {...getGridHeaderProps()} class="og-grid__header" bind:this={headerElement}>
         {#each grid.getHeaderGroups() as headerGroup, headerRowIndex (headerGroup.id)}
@@ -1602,9 +1602,11 @@
                     class="og-grid__header-button"
                     on:click={(event) => handleHeaderClick(header.column, canSort, event)}
                     on:keydown={(event) => handleHeaderButtonKeyDown(header.column, event)}
-                  ><span class="og-grid__header-label">{getHeaderLabel(header)}</span><span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">{getHeaderSortIndicatorText(sortDirection, { visible: true })}</span></button><span
+                  ><span class="og-grid__header-label">{getHeaderLabel(header)}</span><span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">{getHeaderSortIndicatorText(sortDirection, { visible: true })}</span></button><!-- svelte-ignore a11y-no-noninteractive-tabindex a11y-no-noninteractive-element-interactions --><span
                     {...getResizeHandleProps(header.column, layout, $state.columnSizing)}
                     class="og-grid__resize-handle"
+                    role="separator"
+                    tabindex="0"
                     on:keydown={(event) => handleResizeKeyDown(header.column, Math.max(0, columnIndex), event)}
                     on:pointerdown={(event) => handleResizePointerDown(header.column, Math.max(0, columnIndex), event)}
                   ></span></div>
@@ -1724,6 +1726,8 @@
                           {...getHeaderActionMenuProps(header.column)}
                           class="og-grid__header-menu-popover"
                           id={menuId}
+                          role="menu"
+                          tabindex="-1"
                           on:pointerdown|stopPropagation={() => undefined}
                           on:keydown={(event) => {
                             const menuAction = getHeaderActionMenuKeyboardAction(event);
@@ -1770,9 +1774,12 @@
                     </span>
                   {/if}
                   {#if canInteract}
+                    <!-- svelte-ignore a11y-no-noninteractive-tabindex a11y-no-noninteractive-element-interactions -->
                     <span
                       {...getResizeHandleProps(header.column, layout, $state.columnSizing)}
                       class="og-grid__resize-handle"
+                      role="separator"
+                      tabindex="0"
                       on:keydown={(event) => handleResizeKeyDown(header.column, Math.max(0, columnIndex), event)}
                       on:pointerdown={(event) => handleResizePointerDown(header.column, Math.max(0, columnIndex), event)}
                     ></span>
@@ -1817,9 +1824,11 @@
         {/if}
       </div>
 
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <div
         {...getGridBodyProps({ virtualized: rowVirtualOptions.enabled, columnOrder: $state.columnOrder })}
         class="og-grid__body"
+        role="rowgroup"
         bind:this={bodyElement}
         style={getVirtualBodyStyleText(virtualRange)}
         on:focusin={handleSimpleBodyFocusIn}
@@ -1843,12 +1852,14 @@
                 columnVirtualized: columnVirtualOptions.enabled,
               })}
               class={["og-grid__row", getRowClassName?.(row)].filter(Boolean).join(" ")}
+              role="row"
               style={getVirtualRowStyleText(virtualItem)}
               use:measureVirtualRow={row.id}
             >{@html getSimpleCellsHtml(row, rowIndex, columnCellRenderItems, $state.columnSizing, bodyRowIndexOffset, getCellClassName)}</div>
           {/each}
         {:else}
           {#each visibleRowItems as { row, rowIndex, virtualItem } (row.id)}
+            <!-- svelte-ignore a11y-interactive-supports-focus -->
             <div
               {...getRowProps(row, rowIndex, { selected: grid.getIsRowSelected(row.id), rowIndexOffset: bodyRowIndexOffset })}
               {...getRowLayoutProps(row, {
@@ -1857,6 +1868,7 @@
                 columnVirtualized: columnVirtualOptions.enabled,
               })}
               class={["og-grid__row", getRowClassName?.(row)].filter(Boolean).join(" ")}
+              role="row"
               style={getVirtualRowStyleText(virtualItem)}
               use:measureVirtualRow={row.id}
               on:click={(event) => handleRowClick(row, rowIndex, event)}
@@ -1870,6 +1882,8 @@
                     {...getCellProps(row, column, rowIndex, columnIndex, { focusedCell: $state.focusedCell, editing, rangeSelected, rowIndexOffset: bodyRowIndexOffset })}
                     {...getCellLayoutProps({ invalid: Boolean(editing && editValidationMessage), pinnedEdge: layout.pinnedEdge })}
                     class={["og-grid__cell", getCellClassName?.({ grid, row, column, value: row.getValue(column.id) })].filter(Boolean).join(" ")}
+                    role="gridcell"
+                    tabindex={isCellCoordinateEqual($state.focusedCell, { rowId: row.id, columnId: column.id }) ? 0 : -1}
                     style={getColumnStyle(layout.size, layout, $state.columnSizing, beforeSpacerSize, afterSpacerSize)}
                     on:focus={() => grid.setFocusedCell({ rowId: row.id, columnId: column.id })}
                     on:pointerdown={(event) => handleCellPointerDown({ rowId: row.id, columnId: column.id }, event)}

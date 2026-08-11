@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "packages": [
+    {
+      "directory": "core",
+      "name": "@open-grid/core",
+      "exports": {
+        ".": {
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        }
+      }
+    },
+    {
+      "directory": "primitives",
+      "name": "@open-grid/primitives",
+      "exports": {
+        ".": {
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        }
+      }
+    },
+    {
+      "directory": "react",
+      "name": "@open-grid/react",
+      "exports": {
+        ".": {
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        }
+      }
+    },
+    {
+      "directory": "react-ui",
+      "name": "@open-grid/react-ui",
+      "exports": {
+        ".": {
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        },
+        "./css": "./dist/index.css",
+        "./virtual": {
+          "import": "./dist/virtual.js",
+          "types": "./dist/virtual.d.ts"
+        },
+        "./virtual.css": "./dist/virtual.css"
+      }
+    },
+    {
+      "directory": "svelte",
+      "name": "@open-grid/svelte",
+      "exports": {
+        ".": {
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        }
+      }
+    },
+    {
+      "directory": "svelte-ui",
+      "name": "@open-grid/svelte-ui",
+      "exports": {
+        ".": {
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        },
+        "./DataGrid.svelte": {
+          "import": "./dist/DataGrid.svelte",
+          "svelte": "./dist/DataGrid.svelte",
+          "types": "./dist/DataGrid.svelte.d.ts"
+        },
+        "./css": "./dist/index.css"
+      }
+    },
+    {
+      "directory": "theme",
+      "name": "@open-grid/theme",
+      "exports": {
+        ".": "./dist/index.css",
+        "./css": "./dist/index.css",
+        "./tokens": {
+          "import": "./dist/tokens.js",
+          "types": "./dist/tokens.d.ts"
+        }
+      }
+    },
+    {
+      "directory": "virtual",
+      "name": "@open-grid/virtual",
+      "exports": {
+        ".": {
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        }
+      }
+    },
+    {
+      "directory": "vue",
+      "name": "@open-grid/vue",
+      "exports": {
+        ".": {
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        }
+      }
+    },
+    {
+      "directory": "vue-ui",
+      "name": "@open-grid/vue-ui",
+      "exports": {
+        ".": {
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        },
+        "./css": "./dist/index.css"
+      }
+    }
+  ]
+}

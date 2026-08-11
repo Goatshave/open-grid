@@ -30,6 +30,7 @@ as the source-tree index when browsing the repository directly.
 ## Design and Operations
 
 - [Architecture](architecture.md)
+- [API stability](api-stability.md)
 - [Performance contract and evidence](performance.md)
 - [Roadmap](roadmap.md)
 - [Release process](release.md)
