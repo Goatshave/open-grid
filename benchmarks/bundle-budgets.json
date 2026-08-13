@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "applications": [
     { "id": "package-core", "distDirectory": "packages/core/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 23000 } },
-    { "id": "package-primitives", "distDirectory": "packages/primitives/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 14000 } },
+    { "id": "package-primitives", "distDirectory": "packages/primitives/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 14500 } },
     { "id": "package-virtual", "distDirectory": "packages/virtual/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 3500 } },
     { "id": "package-theme", "distDirectory": "packages/theme/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 2000 } },
     { "id": "package-react", "distDirectory": "packages/react/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 768 } },

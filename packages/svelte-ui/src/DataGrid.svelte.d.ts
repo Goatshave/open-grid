@@ -1,9 +1,10 @@
 import type { CellContext, CellFillOptions, ClipboardPasteOptions, ClipboardPasteResult, Column, Grid, GridOptions, HeaderContext, Row } from "@open-grid/core";
-import type { ColumnVirtualizationPrimitiveOptions, GridDensity, RowVirtualizationPrimitiveOptions } from "@open-grid/primitives";
+import type { ColumnVirtualizationPrimitiveOptions, GridDensity, GridLocalizationOverrides, RowVirtualizationPrimitiveOptions } from "@open-grid/primitives";
 import type { SvelteComponentTyped } from "svelte";
 
 export interface DataGridProps<TData = unknown> {
   ariaLabel?: string;
+  localization?: GridLocalizationOverrides;
   options: GridOptions<TData>;
   emptyState?: unknown;
   error?: boolean;

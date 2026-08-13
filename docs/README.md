@@ -9,6 +9,7 @@ as the source-tree index when browsing the repository directly.
 - [Documentation home](index.md)
 - [Getting started](getting-started.md)
 - [Package selection](packages.md)
+- [Localization](localization.md)
 - [Project overview](https://github.com/Goatshave/open-grid#readme)
 - [React UI](react-ui.md)
 - [Vue UI](vue-ui.md)

@@ -2,8 +2,8 @@ import * as react from 'react';
 import { CSSProperties, ReactNode } from 'react';
 import { GridOptions, Grid, Row, HeaderContext, CellContext, Column, CellFillOptions, ClipboardPasteOptions, ClipboardPasteResult, ExportFile } from '@open-grid/core';
 export { AccessorColumnOptions, AccessorFnColumnDef, AccessorKeyColumnDef, AnyColumnDef, CellContext, CellEditEvent, CellEditEventParams, CellEditHistoryAction, CellEditHistoryState, CellEditOption, CellEditParserContext, CellEditPhase, CellEditValidationContext, CellEditValidationResult, CellEditValidationState, CellEditingState, CellFillOptions, CellInteractionEvent, CellInteractionEventParams, CellRange, CellRangeSelectionState, ClipboardCellContext, ClipboardCopyOptions, ClipboardPasteCellContext, ClipboardPasteCommittedCell, ClipboardPasteOptions, ClipboardPasteResult, ClipboardPasteSkippedCell, ClipboardPasteSkippedReason, ClipboardPasteValidationError, ColumnDef, ColumnFiltersState, ColumnHelper, ColumnMovePosition, ColumnOrderState, ColumnPinningPosition, ColumnResizeEvent, ColumnResizeEventParams, ColumnResizePhase, DisplayColumnDef, ExpandedState, ExportFile, ExportFileOptions, FitColumnsToWidthOptions, GridCacheDiagnostics, GridCacheDiagnosticsEntry, GridCacheKey, GridOptions, GridState, GroupColumnDef, GroupingState, Header, HeaderContext, HeaderGroup, MoveFocusOptions, PaginationState, RowInteractionEvent, RowInteractionEventParams, RowSelectionCleanupScope, SortingState, createColumnHelper, fitColumnsToWidth } from '@open-grid/core';
-import { ColumnVirtualizationPrimitiveOptions, GridDensity, RowVirtualizationPrimitiveOptions } from '@open-grid/primitives';
-export { GRID_PREFERENCES_VERSION, GridDensity, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike, createGridPreferences, getBrowserGridPreferencesStorage, parseGridPreferences, readGridPreferences, removeGridPreferences, serializeGridPreferences, writeGridPreferences } from '@open-grid/primitives';
+import { ColumnVirtualizationPrimitiveOptions, GridLocalizationOverrides, GridDensity, RowVirtualizationPrimitiveOptions } from '@open-grid/primitives';
+export { DEFAULT_GRID_LOCALIZATION, GRID_PREFERENCES_VERSION, GridDensity, GridLocalization, GridLocalizationOverrides, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike, createGridLocalization, createGridPreferences, getBrowserGridPreferencesStorage, parseGridPreferences, readGridPreferences, removeGridPreferences, serializeGridPreferences, writeGridPreferences } from '@open-grid/primitives';
 
 type RowVirtualizationOptions = RowVirtualizationPrimitiveOptions;
 type ColumnVirtualizationOptions = ColumnVirtualizationPrimitiveOptions;
@@ -45,6 +45,7 @@ type HeaderActionMenuItems<TData> = (context: HeaderActionMenuContext<TData>) =>
 type GridReadyHandler<TData> = (grid: Grid<TData>) => void | (() => void);
 interface DataGridProps<TData> extends GridOptions<TData> {
     ariaLabel?: string;
+    localization?: GridLocalizationOverrides;
     className?: string;
     style?: CSSProperties;
     emptyState?: ReactNode;

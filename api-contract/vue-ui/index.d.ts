@@ -2,12 +2,13 @@ import * as vue from 'vue';
 import { DefineComponent, PropType, VNodeChild, VNode } from 'vue';
 import { GridOptions, Grid, Row, HeaderContext, CellContext, Column, CellFillOptions, ClipboardPasteResult, ClipboardPasteOptions, ExportFile } from '@open-grid/core';
 export { AccessorColumnOptions, AccessorFnColumnDef, AccessorKey, AccessorKeyColumnDef, AnyColumnDef, CellContext, CellCoordinate, CellEditEvent, CellEditEventParams, CellEditHistoryAction, CellEditHistoryState, CellEditOption, CellEditParserContext, CellEditPhase, CellEditValidationContext, CellEditValidationResult, CellEditValidationState, CellEditingState, CellFillOptions, CellInteractionEvent, CellInteractionEventParams, CellRange, CellRangeSelectionState, ClipboardCellContext, ClipboardCopyOptions, ClipboardPasteCellContext, ClipboardPasteCommittedCell, ClipboardPasteOptions, ClipboardPasteResult, ClipboardPasteSkippedCell, ClipboardPasteSkippedReason, ClipboardPasteValidationError, Column, ColumnDef, ColumnFilter, ColumnFiltersState, ColumnHelper, ColumnId, ColumnMovePosition, ColumnOrderState, ColumnPinningPosition, ColumnPinningState, ColumnResizeEvent, ColumnResizeEventParams, ColumnResizePhase, ColumnSizingState, ColumnVisibilityState, DisplayColumnDef, ExpandedState, ExportFile, ExportFileOptions, FilterFn, FitColumnsToWidthOptions, Grid, GridCacheDiagnostics, GridCacheDiagnosticsEntry, GridCacheKey, GridOptions, GridState, GroupColumnDef, GroupingState, Header, HeaderContext, HeaderGroup, MoveFocusOptions, PaginationState, Row, RowId, RowInteractionEvent, RowInteractionEventParams, RowModel, RowSelectionCleanupScope, RowSelectionState, SortFn, SortingRule, SortingState, Updater, fitColumnsToWidth } from '@open-grid/core';
-import { ColumnVirtualizationPrimitiveOptions, GridDensity, RowVirtualizationPrimitiveOptions } from '@open-grid/primitives';
-export { GRID_PREFERENCES_VERSION, GridDensity, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike, createGridPreferences, getBrowserGridPreferencesStorage, parseGridPreferences, readGridPreferences, removeGridPreferences, serializeGridPreferences, writeGridPreferences } from '@open-grid/primitives';
+import { ColumnVirtualizationPrimitiveOptions, GridLocalizationOverrides, GridDensity, RowVirtualizationPrimitiveOptions, GridLocalization } from '@open-grid/primitives';
+export { DEFAULT_GRID_LOCALIZATION, GRID_PREFERENCES_VERSION, GridDensity, GridLocalization, GridLocalizationOverrides, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike, createGridLocalization, createGridPreferences, getBrowserGridPreferencesStorage, parseGridPreferences, readGridPreferences, removeGridPreferences, serializeGridPreferences, writeGridPreferences } from '@open-grid/primitives';
 export { createColumnHelper, useGrid } from '@open-grid/vue';
 
 interface DataGridProps<TData> {
     ariaLabel?: string;
+    localization?: GridLocalizationOverrides;
     options: GridOptions<TData>;
     emptyState?: VNodeChild;
     error?: boolean;
@@ -83,7 +84,11 @@ type HeaderActionMenuItems<TData> = (context: HeaderActionMenuContext<TData>) =>
 declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
     ariaLabel: {
         type: StringConstructor;
-        default: string;
+        default: undefined;
+    };
+    localization: {
+        type: PropType<GridLocalizationOverrides>;
+        default: undefined;
     };
     options: {
         type: PropType<GridOptions<unknown>>;
@@ -91,7 +96,7 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
     };
     emptyState: {
         type: PropType<VNodeChild>;
-        default: string;
+        default: undefined;
     };
     error: {
         type: BooleanConstructor;
@@ -99,7 +104,7 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
     };
     errorState: {
         type: PropType<VNodeChild>;
-        default: () => string;
+        default: undefined;
     };
     onRetry: {
         type: PropType<() => void>;
@@ -111,7 +116,7 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
     };
     loadingState: {
         type: PropType<VNodeChild>;
-        default: () => string;
+        default: undefined;
     };
     onGridReady: {
         type: PropType<GridReadyHandler<unknown>>;
@@ -210,7 +215,11 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
 }>, {}, {}, {}, vue.ComponentOptionsMixin, vue.ComponentOptionsMixin, {}, string, vue.PublicProps, Readonly<vue.ExtractPropTypes<{
     ariaLabel: {
         type: StringConstructor;
-        default: string;
+        default: undefined;
+    };
+    localization: {
+        type: PropType<GridLocalizationOverrides>;
+        default: undefined;
     };
     options: {
         type: PropType<GridOptions<unknown>>;
@@ -218,7 +227,7 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
     };
     emptyState: {
         type: PropType<VNodeChild>;
-        default: string;
+        default: undefined;
     };
     error: {
         type: BooleanConstructor;
@@ -226,7 +235,7 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
     };
     errorState: {
         type: PropType<VNodeChild>;
-        default: () => string;
+        default: undefined;
     };
     onRetry: {
         type: PropType<() => void>;
@@ -238,7 +247,7 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
     };
     loadingState: {
         type: PropType<VNodeChild>;
-        default: () => string;
+        default: undefined;
     };
     onGridReady: {
         type: PropType<GridReadyHandler<unknown>>;
@@ -334,6 +343,7 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
     };
 }>> & Readonly<{}>, {
     ariaLabel: string;
+    localization: Partial<GridLocalization>;
     emptyState: VNodeChild;
     error: boolean;
     errorState: VNodeChild;

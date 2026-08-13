@@ -4,6 +4,10 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Add a shared, typed, instance-scoped localization contract for built-in text and
+  accessibility labels across primitives and the React, Vue, and Svelte UI packages.
+- Rebaseline the required primitives gzip ceiling to 14,500 bytes after measuring
+  the shared localization contract.
 - Add generated public export and declaration contracts, including CSS entry points
   and removal detection, plus a documented pre-1.0 compatibility and deprecation
   policy enforced by CI and the protected publish workflow.

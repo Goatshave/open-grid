@@ -11,6 +11,7 @@ const column = createColumnHelper<CompatibilityRow>();
 export const react18Grid = (
   <DataGrid
     ariaLabel="React 18 compatibility grid"
+    localization={{ noRows: "No compatible rows" }}
     columns={[column.accessor("name", { header: "Name" })]}
     data={[{ id: "1", name: "Compatibility" }]}
     getRowId={(row) => row.id}

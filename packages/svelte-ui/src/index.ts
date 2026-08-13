@@ -17,7 +17,9 @@ export type {
 } from "./DataGrid.svelte";
 export { createColumnHelper, createGridStore, fitColumnsToWidth } from "@open-grid/svelte";
 export {
+  DEFAULT_GRID_LOCALIZATION,
   GRID_PREFERENCES_VERSION,
+  createGridLocalization,
   createGridPreferences,
   getBrowserGridPreferencesStorage,
   parseGridPreferences,
@@ -26,7 +28,7 @@ export {
   serializeGridPreferences,
   writeGridPreferences,
 } from "@open-grid/primitives";
-export type { GridDensity, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike } from "@open-grid/primitives";
+export type { GridDensity, GridLocalization, GridLocalizationOverrides, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike } from "@open-grid/primitives";
 
 export function downloadExportFile(file: ExportFile): boolean {
   return downloadBrowserExportFile(file);

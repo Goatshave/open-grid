@@ -12,6 +12,7 @@ const DataGrid = createDataGrid<CompatibilityRow>();
 
 export const vue34Grid = h(DataGrid, {
   ariaLabel: "Vue 3.4 compatibility grid",
+  localization: { noRows: "No compatible rows" },
   options: {
     columns: [column.accessor("name", { header: "Name" })],
     data: [{ id: "1", name: "Compatibility" }],

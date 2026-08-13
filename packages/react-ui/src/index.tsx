@@ -23,12 +23,11 @@ import {
   addPointerUpCancelListeners,
   applyResizeObserverMeasuredSizes,
   createClickSuppressionController,
+  createGridLocalization,
   createResizeObserver,
   disconnectResizeObserver,
   focusCellEditorElement,
   focusElement,
-  GROUPING_PANEL_EMPTY_MESSAGE,
-  HEADER_ACTION_MENU_TRIGGER_TEXT,
   getCellEditorProps,
   getCellEditorEventValue,
   getCellEditorKeyboardAction,
@@ -213,6 +212,8 @@ import {
   type ColumnVirtualizationPrimitiveOptions,
   GRID_DENSITIES,
   type GridDensity,
+  type GridLocalization,
+  type GridLocalizationOverrides,
   type RowVirtualizationPrimitiveOptions,
   writeClipboardText,
 } from "@open-grid/primitives";
@@ -236,12 +237,14 @@ import {
   syncMeasuredColumnLayoutCache,
   type VirtualItem,
 } from "@open-grid/virtual";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent, ReactNode, Ref } from "react";
 
 export type RowVirtualizationOptions = RowVirtualizationPrimitiveOptions;
 
 export type ColumnVirtualizationOptions = ColumnVirtualizationPrimitiveOptions;
+
+const GridLocalizationContext = createContext<GridLocalization>(createGridLocalization());
 
 export interface HeaderActionMenuActionItem<TData> {
   type?: "action";
@@ -293,6 +296,7 @@ export type GridReadyHandler<TData> = (grid: Grid<TData>) => void | (() => void)
 
 export interface DataGridProps<TData> extends GridOptions<TData> {
   ariaLabel?: string;
+  localization?: GridLocalizationOverrides;
   className?: string;
   style?: CSSProperties;
   emptyState?: ReactNode;
@@ -328,15 +332,16 @@ export interface DataGridProps<TData> extends GridOptions<TData> {
 
 export function DataGrid<TData>(props: DataGridProps<TData>) {
   const {
-    ariaLabel = "Data grid",
+    ariaLabel: ariaLabelProp,
+    localization: localizationOverrides,
     className,
     style,
-    emptyState = "No rows",
+    emptyState: emptyStateProp,
     error = false,
-    errorState = getGridErrorText(),
+    errorState: errorStateProp,
     onRetry,
     loading = false,
-    loadingState = getGridLoadingText(),
+    loadingState: loadingStateProp,
     onGridReady,
     getRowClassName,
     getHeaderClassName,
@@ -362,6 +367,11 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     onClipboardPaste,
     ...gridOptions
   } = props;
+  const localization = useMemo(() => createGridLocalization(localizationOverrides), [localizationOverrides]);
+  const ariaLabel = ariaLabelProp ?? localization.dataGridLabel;
+  const emptyState = emptyStateProp ?? localization.noRows;
+  const errorState = errorStateProp ?? getGridErrorText(localization);
+  const loadingState = loadingStateProp ?? getGridLoadingText(localization);
   const grid = useGrid(gridOptions);
   const onGridReadyRef = useRef(onGridReady);
   onGridReadyRef.current = onGridReady;
@@ -989,50 +999,50 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   };
 
   return (
-    <>
+    <GridLocalizationContext.Provider value={localization}>
     {quickFilterControl || rowSelectionControls || columnVisibilityControls || densityControl ? (
       <div className="og-grid__controls">
       {rowSelectionControls ? (
-        <div {...getRowSelectionControlsProps()} className="og-grid__selection-controls">
+        <div {...getRowSelectionControlsProps(localization)} className="og-grid__selection-controls">
           <label className="og-grid__selection-toggle">
             <input
               {...getRowSelectionCheckboxProps({
                 allSelected: allPageRowsSelected,
                 someSelected: somePageRowsSelected,
                 disabled: rows.length === 0,
-              })}
+              }, localization)}
               ref={(element) => { setCheckboxIndeterminate(element, somePageRowsSelected); }}
               onChange={() => grid.toggleAllPageRowsSelected(!allPageRowsSelected)}
             />
-            <span>{getRowSelectionCheckboxText()}</span>
+            <span>{getRowSelectionCheckboxText(localization)}</span>
           </label>
           <span {...getRowSelectionStatusProps()} className="og-grid__selection-status">
-            {getRowSelectionStatusText(selectedRowCount)}
+            {getRowSelectionStatusText(selectedRowCount, localization)}
           </span>
           <button
-            {...getRowSelectionClearButtonProps(selectedRowCount === 0)}
+            {...getRowSelectionClearButtonProps(selectedRowCount === 0, localization)}
             className="og-grid__selection-clear"
             onClick={() => grid.resetRowSelection()}
           >
-            {getRowSelectionClearButtonText()}
+            {getRowSelectionClearButtonText(localization)}
           </button>
         </div>
       ) : null}
       {columnVisibilityControls ? (
-        <details {...getColumnVisibilityControlsProps()} className="og-grid__column-visibility">
-          <summary {...getColumnVisibilitySummaryProps(columns.length, allColumns.length)} className="og-grid__column-visibility-summary">
-            {getColumnVisibilitySummaryText(columns.length, allColumns.length)}
+        <details {...getColumnVisibilityControlsProps(localization)} className="og-grid__column-visibility">
+          <summary {...getColumnVisibilitySummaryProps(columns.length, allColumns.length, localization)} className="og-grid__column-visibility-summary">
+            {getColumnVisibilitySummaryText(columns.length, allColumns.length, localization)}
           </summary>
           <div className="og-grid__column-visibility-panel">
             <input
-              {...getColumnVisibilitySearchInputProps(columnVisibilityQuery)}
+              {...getColumnVisibilitySearchInputProps(columnVisibilityQuery, localization)}
               className="og-grid__column-visibility-search"
               onChange={(event) => setColumnVisibilityQuery(event.currentTarget.value)}
             />
             <span {...getColumnVisibilityStatusProps()} className="og-grid__column-visibility-status">
-              {getColumnVisibilityStatusText(columns.length, allColumns.length)}
+              {getColumnVisibilityStatusText(columns.length, allColumns.length, localization)}
             </span>
-            <div {...getColumnVisibilityListProps()} className="og-grid__column-visibility-list">
+            <div {...getColumnVisibilityListProps(localization)} className="og-grid__column-visibility-list">
               {filteredVisibilityColumns.length > 0 ? filteredVisibilityColumns.map((column) => {
                 const label = getColumnHeaderText(column);
                 const visible = grid.getIsColumnVisible(column.id);
@@ -1051,37 +1061,37 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                   </label>
                 );
               }) : (
-                <span className="og-grid__column-visibility-empty">{getColumnVisibilityEmptyText()}</span>
+                <span className="og-grid__column-visibility-empty">{getColumnVisibilityEmptyText(localization)}</span>
               )}
             </div>
             <button
-              {...getColumnVisibilityResetButtonProps(allColumns.length - columns.length)}
+              {...getColumnVisibilityResetButtonProps(allColumns.length - columns.length, localization)}
               className="og-grid__column-visibility-reset"
               onClick={() => grid.resetColumnVisibility()}
             >
-              {getColumnVisibilityResetButtonText()}
+              {getColumnVisibilityResetButtonText(localization)}
             </button>
           </div>
         </details>
       ) : null}
       {densityControl ? (
-        <div {...getDensityControlsProps()} className="og-grid__density-controls">
+        <div {...getDensityControlsProps(localization)} className="og-grid__density-controls">
           {GRID_DENSITIES.map((densityOption) => (
             <button
-              {...getDensityButtonProps(densityOption, resolvedDensity)}
+              {...getDensityButtonProps(densityOption, resolvedDensity, localization)}
               className="og-grid__density-button"
               key={densityOption}
               onClick={() => setDensity(densityOption)}
             >
-              {getDensityButtonText(densityOption)}
+              {getDensityButtonText(densityOption, localization)}
             </button>
           ))}
         </div>
       ) : null}
       {quickFilterControl ? (
-        <div {...getQuickFilterProps()} className="og-grid__quick-filter">
+        <div {...getQuickFilterProps(localization)} className="og-grid__quick-filter">
         <input
-          {...getQuickFilterInputProps({ value: grid.getState().globalFilter })}
+          {...getQuickFilterInputProps({ value: grid.getState().globalFilter }, localization)}
           className="og-grid__quick-filter-input"
           onChange={(event) => {
             const value = event.currentTarget.value;
@@ -1094,7 +1104,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
           }}
         />
         <button
-          {...getQuickFilterClearButtonProps(grid.getState().globalFilter)}
+          {...getQuickFilterClearButtonProps(grid.getState().globalFilter, localization)}
           className="og-grid__quick-filter-clear"
           onClick={() => {
             grid.setState((previous) => ({
@@ -1105,7 +1115,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
             resetPaginationScroll();
           }}
         >
-          {getQuickFilterClearButtonText()}
+          {getQuickFilterClearButtonText(localization)}
         </button>
         </div>
       ) : null}
@@ -1119,33 +1129,33 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       {groupingPanel ? (
         <div
           ref={groupingPanelRef}
-          {...getGroupingPanelProps({ empty: groupingColumns.length === 0 })}
+          {...getGroupingPanelProps({ empty: groupingColumns.length === 0 }, localization)}
           className="og-grid__grouping-panel"
         >
           {groupingColumns.length === 0 ? (
             <span {...getGroupingPanelPlaceholderProps()} className="og-grid__grouping-placeholder">
-              {GROUPING_PANEL_EMPTY_MESSAGE}
+              {localization.groupingPanelEmpty}
             </span>
           ) : (
             groupingColumns.map((column, index) => (
               <span key={column.id} {...getGroupingPanelChipProps(column)} className="og-grid__grouping-chip">
                 <span className="og-grid__grouping-chip-label">{getColumnLabel(column)}</span>
                 <button
-                  {...getGroupingPanelMoveButtonProps(column, { direction: "left", disabled: index === 0 })}
+                  {...getGroupingPanelMoveButtonProps(column, { direction: "left", disabled: index === 0 }, localization)}
                   className="og-grid__grouping-move"
                   onClick={() => moveGroupedColumn(grid, groupingColumns, column.id, "left")}
                 >
                   {"<"}
                 </button>
                 <button
-                  {...getGroupingPanelMoveButtonProps(column, { direction: "right", disabled: index === groupingColumns.length - 1 })}
+                  {...getGroupingPanelMoveButtonProps(column, { direction: "right", disabled: index === groupingColumns.length - 1 }, localization)}
                   className="og-grid__grouping-move"
                   onClick={() => moveGroupedColumn(grid, groupingColumns, column.id, "right")}
                 >
                   {">"}
                 </button>
                 <button
-                  {...getGroupingPanelRemoveButtonProps(column)}
+                  {...getGroupingPanelRemoveButtonProps(column, localization)}
                   className="og-grid__grouping-remove"
                   onClick={() => grid.toggleColumnGrouping(column.id, false)}
                 >
@@ -1251,7 +1261,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                           {...getColumnFilterInputProps(column, {
                             label: getColumnHeaderText(column),
                             value: getColumnFilterText(grid.getState().columnFilters, column.id),
-                          })}
+                          }, localization)}
                           className="og-grid__filter-input"
                           onChange={(event) => {
                             const value = event.currentTarget.value;
@@ -1386,51 +1396,51 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
         </div>
       </div>
       {error ? (
-        <div {...getGridErrorOverlayProps()} className="og-grid__status-overlay og-grid__error-overlay">
+        <div {...getGridErrorOverlayProps(localization)} className="og-grid__status-overlay og-grid__error-overlay">
           <span className="og-grid__status-text">{errorState}</span>
           {onRetry ? (
-            <button {...getGridErrorRetryButtonProps()} className="og-grid__retry-button" onClick={onRetry}>
-              {getGridErrorRetryButtonText()}
+            <button {...getGridErrorRetryButtonProps(localization)} className="og-grid__retry-button" onClick={onRetry}>
+              {getGridErrorRetryButtonText(localization)}
             </button>
           ) : null}
         </div>
       ) : loading ? (
-        <div {...getGridLoadingOverlayProps()} className="og-grid__status-overlay og-grid__loading-overlay">
+        <div {...getGridLoadingOverlayProps(localization)} className="og-grid__status-overlay og-grid__loading-overlay">
           <span className="og-grid__loading-spinner" aria-hidden="true" />
           <span className="og-grid__status-text">{loadingState}</span>
         </div>
       ) : null}
     </div>
     {paginationControls ? (
-      <nav {...getPaginationProps()} className="og-grid__pagination">
+      <nav {...getPaginationProps(localization)} className="og-grid__pagination">
         <div className="og-grid__pagination-buttons">
-          <button {...getPaginationButtonProps({ action: "first", disabled: !grid.getCanPreviousPage() })} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.firstPage())}>
+          <button {...getPaginationButtonProps({ action: "first", disabled: !grid.getCanPreviousPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.firstPage())}>
             {getPaginationButtonText("first")}
           </button>
-          <button {...getPaginationButtonProps({ action: "previous", disabled: !grid.getCanPreviousPage() })} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.previousPage())}>
+          <button {...getPaginationButtonProps({ action: "previous", disabled: !grid.getCanPreviousPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.previousPage())}>
             {getPaginationButtonText("previous")}
           </button>
-          <span {...getPaginationStatusProps()} className="og-grid__pagination-status">{getPaginationPageText(grid)}</span>
-          <button {...getPaginationButtonProps({ action: "next", disabled: !grid.getCanNextPage() })} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.nextPage())}>
+          <span {...getPaginationStatusProps()} className="og-grid__pagination-status">{getPaginationPageText(grid, localization)}</span>
+          <button {...getPaginationButtonProps({ action: "next", disabled: !grid.getCanNextPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.nextPage())}>
             {getPaginationButtonText("next")}
           </button>
-          <button {...getPaginationButtonProps({ action: "last", disabled: !grid.getCanNextPage() })} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.lastPage())}>
+          <button {...getPaginationButtonProps({ action: "last", disabled: !grid.getCanNextPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.lastPage())}>
             {getPaginationButtonText("last")}
           </button>
         </div>
         <select
-          {...getPaginationPageSizeSelectProps(grid.getState().pagination.pageSize)}
+          {...getPaginationPageSizeSelectProps(grid.getState().pagination.pageSize, localization)}
           className="og-grid__pagination-size"
           onChange={(event) => {
             grid.setPageSize(Number(event.currentTarget.value));
             resetPaginationScroll();
           }}
         >
-          {resolvedPageSizeOptions.map((pageSize) => <option key={pageSize} value={pageSize}>{getPaginationPageSizeOptionText(pageSize)}</option>)}
+          {resolvedPageSizeOptions.map((pageSize) => <option key={pageSize} value={pageSize}>{getPaginationPageSizeOptionText(pageSize, localization)}</option>)}
         </select>
       </nav>
     ) : null}
-    </>
+    </GridLocalizationContext.Provider>
   );
 }
 
@@ -1481,6 +1491,7 @@ interface HeaderCellProps<TData> {
 }
 
 function HeaderCell<TData>(props: HeaderCellProps<TData>) {
+  const localization = useContext(GridLocalizationContext);
   const {
     grid,
     header,
@@ -1643,7 +1654,7 @@ function HeaderCell<TData>(props: HeaderCellProps<TData>) {
     canGroup: column.getCanGroup(),
     canMoveLeft,
     canMoveRight,
-  }).map((descriptor): HeaderActionMenuActionItem<TData> => {
+  }, localization).map((descriptor): HeaderActionMenuActionItem<TData> => {
     if (descriptor.id === "sort-asc") {
       return { ...descriptor, onSelect: () => grid.toggleColumnSorting(column.id, false) };
     }
@@ -1728,9 +1739,9 @@ function HeaderCell<TData>(props: HeaderCellProps<TData>) {
         </span>
       </button>
       {canInteract && columnPinningControls ? (
-        <span {...getColumnPinningControlsProps(column)} className="og-grid__pinning-controls">
+        <span {...getColumnPinningControlsProps(column, localization)} className="og-grid__pinning-controls">
           <button
-            {...getColumnPinningButtonProps(column, { position: "left", active: pinningPosition === "left" })}
+            {...getColumnPinningButtonProps(column, { position: "left", active: pinningPosition === "left" }, localization)}
             className="og-grid__pinning-button"
             onPointerDown={(event) => stopEventPropagation(event)}
             onClick={(event) => {
@@ -1742,7 +1753,7 @@ function HeaderCell<TData>(props: HeaderCellProps<TData>) {
             {getColumnPinningButtonText("left")}
           </button>
           <button
-            {...getColumnPinningButtonProps(column, { position: false, active: pinningPosition === false })}
+            {...getColumnPinningButtonProps(column, { position: false, active: pinningPosition === false }, localization)}
             className="og-grid__pinning-button"
             onPointerDown={(event) => stopEventPropagation(event)}
             onClick={(event) => {
@@ -1754,7 +1765,7 @@ function HeaderCell<TData>(props: HeaderCellProps<TData>) {
             {getColumnPinningButtonText(false)}
           </button>
           <button
-            {...getColumnPinningButtonProps(column, { position: "right", active: pinningPosition === "right" })}
+            {...getColumnPinningButtonProps(column, { position: "right", active: pinningPosition === "right" }, localization)}
             className="og-grid__pinning-button"
             onPointerDown={(event) => stopEventPropagation(event)}
             onClick={(event) => {
@@ -1771,7 +1782,7 @@ function HeaderCell<TData>(props: HeaderCellProps<TData>) {
         <span className="og-grid__header-menu">
           <button
             ref={menuTriggerRef}
-            {...getHeaderActionMenuTriggerProps(column, { expanded: menuOpen, controls: menuId })}
+            {...getHeaderActionMenuTriggerProps(column, { expanded: menuOpen, controls: menuId }, localization)}
             id={menuTriggerId}
             className="og-grid__header-menu-trigger"
             onPointerDown={(event) => stopEventPropagation(event)}
@@ -1791,12 +1802,12 @@ function HeaderCell<TData>(props: HeaderCellProps<TData>) {
               openMenuFromKeyboard(focusPosition);
             }}
           >
-            {HEADER_ACTION_MENU_TRIGGER_TEXT}
+            {localization.headerActionMenuTrigger}
           </button>
           {menuOpen ? (
             <div
               ref={menuPopoverRef}
-              {...getHeaderActionMenuProps(column)}
+              {...getHeaderActionMenuProps(column, localization)}
               className="og-grid__header-menu-popover"
               id={menuId}
               onPointerDown={(event) => stopEventPropagation(event)}
@@ -1841,7 +1852,7 @@ function HeaderCell<TData>(props: HeaderCellProps<TData>) {
       ) : null}
       {canInteract ? (
         <span
-          {...getColumnResizeHandleProps(column)}
+          {...getColumnResizeHandleProps(column, {}, localization)}
           className="og-grid__resize-handle"
           onKeyDown={handleResizeKeyDown}
           onPointerDown={handleResizePointerDown}
@@ -1882,6 +1893,7 @@ interface BodyCellProps<TData> {
 }
 
 function BodyCell<TData>(props: BodyCellProps<TData>) {
+  const localization = useContext(GridLocalizationContext);
   const {
     grid,
     row,
@@ -2008,7 +2020,7 @@ function BodyCell<TData>(props: BodyCellProps<TData>) {
             editorRef.current = element;
           }}
           className="og-grid__cell-editor"
-          {...getCellEditorProps(column, { invalid: Boolean(validationMessage) })}
+          {...getCellEditorProps(column, { invalid: Boolean(validationMessage) }, localization)}
           value={draftValue}
           onChange={(event) => {
             setDraftValue(getCellEditorEventValue(event));
@@ -2035,7 +2047,7 @@ function BodyCell<TData>(props: BodyCellProps<TData>) {
             editorRef.current = element;
           }}
           className="og-grid__cell-editor"
-          {...getCellEditorProps(column, { invalid: Boolean(validationMessage) })}
+          {...getCellEditorProps(column, { invalid: Boolean(validationMessage) }, localization)}
           value={draftValue}
           onChange={(event) => {
             setDraftValue(getCellEditorEventValue(event));
@@ -2051,7 +2063,7 @@ function BodyCell<TData>(props: BodyCellProps<TData>) {
           }}
         />
       ) : (
-        groupLabelCell ? renderGroupCell(grid, row, column, onToggleRowExpanded) : renderCell(grid, row, column)
+        groupLabelCell ? renderGroupCell(grid, row, column, onToggleRowExpanded, localization) : renderCell(grid, row, column)
       )}
       {editing && validationMessage ? (
         <span {...getCellValidationMessageProps()} className="og-grid__cell-validation">
@@ -2067,17 +2079,18 @@ function renderGroupCell<TData>(
   row: Row<TData>,
   column: Column<TData, unknown>,
   onToggleRowExpanded: () => void,
+  localization: GridLocalization,
 ): ReactNode {
   const expanded = grid.getIsRowExpanded(row.id);
   const fallback = row.getIsGroupFooter() || row.groupingColumnId ? undefined : renderCell(grid, row, column);
-  const label = getGroupRowLabel(row, column, { fallback });
+  const label = getGroupRowLabel(row, column, { fallback }, localization);
   const countText = getGroupRowCountText(row);
 
   return (
     <span className="og-grid__group-cell" style={getGroupCellIndentStyle(row)}>
       {row.getCanExpand() ? (
         <button
-          {...getRowExpansionToggleProps(row, { expanded, label: String(label) })}
+          {...getRowExpansionToggleProps(row, { expanded, label: String(label) }, localization)}
           className="og-grid__group-toggle"
           onPointerDown={(event) => {
             stopEventPropagation(event);
@@ -2175,7 +2188,9 @@ export function downloadExportFile(file: ExportFile): boolean {
 
 export { createColumnHelper, fitColumnsToWidth } from "@open-grid/core";
 export {
+  DEFAULT_GRID_LOCALIZATION,
   GRID_PREFERENCES_VERSION,
+  createGridLocalization,
   createGridPreferences,
   getBrowserGridPreferencesStorage,
   parseGridPreferences,
@@ -2184,7 +2199,7 @@ export {
   serializeGridPreferences,
   writeGridPreferences,
 } from "@open-grid/primitives";
-export type { GridDensity, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike } from "@open-grid/primitives";
+export type { GridDensity, GridLocalization, GridLocalizationOverrides, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike } from "@open-grid/primitives";
 export type {
   AccessorColumnOptions,
   AccessorFnColumnDef,

@@ -42,6 +42,7 @@ export default defineConfig({
           { text: "Overview", link: "/" },
           { text: "Getting started", link: "/getting-started" },
           { text: "Packages", link: "/packages" },
+          { text: "Localization", link: "/localization" },
         ],
       },
       {

@@ -2,6 +2,9 @@
 
 `@open-grid/vue-ui` is the first styled Vue UI package for Open Grid. It reuses the same framework-agnostic core, Vue adapter, unstyled primitives, and CSS-variable theme contract as the React UI.
 
+Built-in text and accessibility labels use the shared typed
+[localization contract](localization.md).
+
 ## Install
 
 ```bash

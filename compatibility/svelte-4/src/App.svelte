@@ -15,4 +15,4 @@
   };
 </script>
 
-<DataGrid ariaLabel="Svelte 4 compatibility grid" {options} />
+<DataGrid ariaLabel="Svelte 4 compatibility grid" localization={{ noRows: "No compatible rows" }} {options} />

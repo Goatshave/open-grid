@@ -22,10 +22,9 @@ import {
   addPointerMoveUpListeners,
   applyResizeObserverMeasuredSizes,
   createClickSuppressionController,
+  createGridLocalization,
   createResizeObserver,
   disconnectResizeObserver,
-  GROUPING_PANEL_EMPTY_MESSAGE,
-  HEADER_ACTION_MENU_TRIGGER_TEXT,
   getCellEditorProps,
   getCellEditorEventValue,
   getCellEditorKeyboardAction,
@@ -217,6 +216,8 @@ import {
   type ColumnVirtualizationPrimitiveOptions,
   GRID_DENSITIES,
   type GridDensity,
+  type GridLocalization,
+  type GridLocalizationOverrides,
   type RowVirtualizationPrimitiveOptions,
   writeClipboardText,
 } from "@open-grid/primitives";
@@ -242,6 +243,7 @@ interface HeaderDragHandlers {
 
 export interface DataGridProps<TData> {
   ariaLabel?: string;
+  localization?: GridLocalizationOverrides;
   options: GridOptions<TData>;
   emptyState?: VNodeChild;
   error?: boolean;
@@ -336,7 +338,11 @@ export const DataGrid = defineComponent({
   props: {
     ariaLabel: {
       type: String,
-      default: "Data grid",
+      default: undefined,
+    },
+    localization: {
+      type: Object as PropType<GridLocalizationOverrides>,
+      default: undefined,
     },
     options: {
       type: Object as PropType<GridOptions<unknown>>,
@@ -344,7 +350,7 @@ export const DataGrid = defineComponent({
     },
     emptyState: {
       type: [String, Number, Object, Array] as PropType<VNodeChild>,
-      default: "No rows",
+      default: undefined,
     },
     error: {
       type: Boolean,
@@ -352,7 +358,7 @@ export const DataGrid = defineComponent({
     },
     errorState: {
       type: [String, Number, Object, Array] as PropType<VNodeChild>,
-      default: () => getGridErrorText(),
+      default: undefined,
     },
     onRetry: {
       type: Function as PropType<() => void>,
@@ -364,7 +370,7 @@ export const DataGrid = defineComponent({
     },
     loadingState: {
       type: [String, Number, Object, Array] as PropType<VNodeChild>,
-      default: () => getGridLoadingText(),
+      default: undefined,
     },
     onGridReady: {
       type: Function as PropType<GridReadyHandler<unknown>>,
@@ -1001,6 +1007,11 @@ export const DataGrid = defineComponent({
     };
 
     return () => {
+      const localization = createGridLocalization(props.localization);
+      const ariaLabel = props.ariaLabel ?? localization.dataGridLabel;
+      const emptyState = props.emptyState ?? localization.noRows;
+      const errorState = props.errorState ?? getGridErrorText(localization);
+      const loadingState = props.loadingState ?? getGridLoadingText(localization);
       state.value;
       rowSizeVersion.value;
       columnSizeVersion.value;
@@ -1047,7 +1058,7 @@ export const DataGrid = defineComponent({
         style: rootStyle,
       };
       const semanticGridProps = {
-        ...getGridProps(grid, { additionalHeaderRowCount, ariaLabel: props.ariaLabel, error: props.error, loading: props.loading }),
+        ...getGridProps(grid, { additionalHeaderRowCount, ariaLabel, error: props.error, loading: props.loading }),
         ...(densitySizingEnabled ? getGridDensityProps(resolvedDensity) : {}),
         ...gridAttrs,
       };
@@ -1060,20 +1071,20 @@ export const DataGrid = defineComponent({
         resetPaginationScroll();
       };
       const quickFilterNode = props.quickFilterControl
-        ? h("div", { ...getQuickFilterProps(), class: "og-grid__quick-filter" }, [
+        ? h("div", { ...getQuickFilterProps(localization), class: "og-grid__quick-filter" }, [
             h("input", {
-              ...getQuickFilterInputProps({ value: state.value.globalFilter }),
+              ...getQuickFilterInputProps({ value: state.value.globalFilter }, localization),
               class: "og-grid__quick-filter-input",
               onInput: (event: Event) => setQuickFilter(getCellEditorEventValue(event)),
             }),
             h(
               "button",
               {
-                ...getQuickFilterClearButtonProps(state.value.globalFilter),
+                ...getQuickFilterClearButtonProps(state.value.globalFilter, localization),
                 class: "og-grid__quick-filter-clear",
                 onClick: () => setQuickFilter(""),
               },
-              getQuickFilterClearButtonText(),
+              getQuickFilterClearButtonText(localization),
             ),
           ])
         : null;
@@ -1081,53 +1092,53 @@ export const DataGrid = defineComponent({
       const somePageRowsSelected = props.rowSelectionControls ? grid.getIsSomePageRowsSelected() : false;
       const selectedRowCount = props.rowSelectionControls ? grid.getSelectedRowModel().rows.length : 0;
       const selectionControlsNode = props.rowSelectionControls
-        ? h("div", { ...getRowSelectionControlsProps(), class: "og-grid__selection-controls" }, [
+        ? h("div", { ...getRowSelectionControlsProps(localization), class: "og-grid__selection-controls" }, [
             h("label", { class: "og-grid__selection-toggle" }, [
               h("input", {
                 ...getRowSelectionCheckboxProps({
                   allSelected: allPageRowsSelected,
                   someSelected: somePageRowsSelected,
                   disabled: rows.length === 0,
-                }),
+                }, localization),
                 ref: (element: unknown) => { setCheckboxIndeterminate(element, somePageRowsSelected); },
                 onChange: () => grid.toggleAllPageRowsSelected(!allPageRowsSelected),
               }),
-              h("span", getRowSelectionCheckboxText()),
+              h("span", getRowSelectionCheckboxText(localization)),
             ]),
-            h("span", { ...getRowSelectionStatusProps(), class: "og-grid__selection-status" }, getRowSelectionStatusText(selectedRowCount)),
+            h("span", { ...getRowSelectionStatusProps(), class: "og-grid__selection-status" }, getRowSelectionStatusText(selectedRowCount, localization)),
             h(
               "button",
               {
-                ...getRowSelectionClearButtonProps(selectedRowCount === 0),
+                ...getRowSelectionClearButtonProps(selectedRowCount === 0, localization),
                 class: "og-grid__selection-clear",
                 onClick: () => grid.resetRowSelection(),
               },
-              getRowSelectionClearButtonText(),
+              getRowSelectionClearButtonText(localization),
             ),
           ])
         : null;
       const filteredVisibilityColumns = getFilteredColumnVisibilityColumns(allColumns, columnVisibilityQuery.value);
       const columnVisibilityNode = props.columnVisibilityControls
-        ? h("details", { ...getColumnVisibilityControlsProps(), class: "og-grid__column-visibility" }, [
+        ? h("details", { ...getColumnVisibilityControlsProps(localization), class: "og-grid__column-visibility" }, [
             h(
               "summary",
-              { ...getColumnVisibilitySummaryProps(visibleColumns.length, allColumns.length), class: "og-grid__column-visibility-summary" },
-              getColumnVisibilitySummaryText(visibleColumns.length, allColumns.length),
+              { ...getColumnVisibilitySummaryProps(visibleColumns.length, allColumns.length, localization), class: "og-grid__column-visibility-summary" },
+              getColumnVisibilitySummaryText(visibleColumns.length, allColumns.length, localization),
             ),
             h("div", { class: "og-grid__column-visibility-panel" }, [
               h("input", {
-                ...getColumnVisibilitySearchInputProps(columnVisibilityQuery.value),
+                ...getColumnVisibilitySearchInputProps(columnVisibilityQuery.value, localization),
                 class: "og-grid__column-visibility-search",
                 onInput: (event: Event) => { columnVisibilityQuery.value = getCellEditorEventValue(event); },
               }),
               h(
                 "span",
                 { ...getColumnVisibilityStatusProps(), class: "og-grid__column-visibility-status" },
-                getColumnVisibilityStatusText(visibleColumns.length, allColumns.length),
+                getColumnVisibilityStatusText(visibleColumns.length, allColumns.length, localization),
               ),
               h(
                 "div",
-                { ...getColumnVisibilityListProps(), class: "og-grid__column-visibility-list" },
+                { ...getColumnVisibilityListProps(localization), class: "og-grid__column-visibility-list" },
                 filteredVisibilityColumns.length > 0
                   ? filteredVisibilityColumns.map((column) => {
                       const label = getColumnHeaderText(column);
@@ -1145,16 +1156,16 @@ export const DataGrid = defineComponent({
                         h("span", label),
                       ]);
                     })
-                  : [h("span", { class: "og-grid__column-visibility-empty" }, getColumnVisibilityEmptyText())],
+                  : [h("span", { class: "og-grid__column-visibility-empty" }, getColumnVisibilityEmptyText(localization))],
               ),
               h(
                 "button",
                 {
-                  ...getColumnVisibilityResetButtonProps(allColumns.length - visibleColumns.length),
+                  ...getColumnVisibilityResetButtonProps(allColumns.length - visibleColumns.length, localization),
                   class: "og-grid__column-visibility-reset",
                   onClick: () => grid.resetColumnVisibility(),
                 },
-                getColumnVisibilityResetButtonText(),
+                getColumnVisibilityResetButtonText(localization),
               ),
             ]),
           ])
@@ -1162,12 +1173,12 @@ export const DataGrid = defineComponent({
       const densityNode = props.densityControl
         ? h(
             "div",
-            { ...getDensityControlsProps(), class: "og-grid__density-controls" },
+            { ...getDensityControlsProps(localization), class: "og-grid__density-controls" },
             GRID_DENSITIES.map((densityOption) =>
               h(
                 "button",
                 {
-                  ...getDensityButtonProps(densityOption, resolvedDensity),
+                  ...getDensityButtonProps(densityOption, resolvedDensity, localization),
                   class: "og-grid__density-button",
                   onClick: () => {
                     if (props.density === undefined) {
@@ -1179,7 +1190,7 @@ export const DataGrid = defineComponent({
                     props.onDensityChange?.(densityOption);
                   },
                 },
-                getDensityButtonText(densityOption),
+                getDensityButtonText(densityOption, localization),
               ),
             ),
           )
@@ -1189,7 +1200,7 @@ export const DataGrid = defineComponent({
         : null;
 
       const gridNode = h("div", rootProps, [
-        props.groupingPanel ? renderGroupingPanel(grid, groupingColumns, groupingPanelRef) : null,
+        props.groupingPanel ? renderGroupingPanel(grid, groupingColumns, groupingPanelRef, localization) : null,
         h("div", { ...semanticGridProps, class: "og-grid__scroller", onKeydown: handleKeyDown, ref: scrollerRef }, [
           h("div", { class: "og-grid__canvas", style: getInlineSizeStyleText(totalWidth) }, [
             h(
@@ -1240,6 +1251,7 @@ export const DataGrid = defineComponent({
                       () => {
                         headerMenuColumnId.value = null;
                       },
+                      localization,
                     );
                   }),
                   ),
@@ -1280,7 +1292,7 @@ export const DataGrid = defineComponent({
                                     ...getColumnFilterInputProps(column, {
                                       label: getColumnHeaderText(column),
                                       value: getColumnFilterText(state.value.columnFilters, column.id),
-                                    }),
+                                    }, localization),
                                     class: "og-grid__filter-input",
                                     onInput: (event: Event) => {
                                       const value = getCellEditorEventValue(event);
@@ -1311,7 +1323,7 @@ export const DataGrid = defineComponent({
                 ? [
                     h("div", { ...getGridEmptyRowProps({ rowIndexOffset: bodyRowIndexOffset }), class: "og-grid__empty" }, [
                       h("div", { ...getGridEmptyCellProps({ rowIndexOffset: bodyRowIndexOffset, columnCount: visibleColumns.length }), class: "og-grid__empty-cell", style: getInlineSizeStyleText(totalWidth) }, [
-                        props.emptyState,
+                        emptyState,
                       ]),
                     ]),
                   ]
@@ -1373,6 +1385,7 @@ export const DataGrid = defineComponent({
                             },
                             rangeDragHandlers,
                             props.getCellClassName,
+                            localization,
                           ),
                         ];
                       }),
@@ -1382,32 +1395,32 @@ export const DataGrid = defineComponent({
           ]),
         ]),
         props.error
-          ? h("div", { ...getGridErrorOverlayProps(), class: "og-grid__status-overlay og-grid__error-overlay" }, [
-              h("span", { class: "og-grid__status-text" }, [props.errorState]),
+          ? h("div", { ...getGridErrorOverlayProps(localization), class: "og-grid__status-overlay og-grid__error-overlay" }, [
+              h("span", { class: "og-grid__status-text" }, [errorState]),
               props.onRetry
-                ? h("button", { ...getGridErrorRetryButtonProps(), class: "og-grid__retry-button", onClick: props.onRetry }, getGridErrorRetryButtonText())
+                ? h("button", { ...getGridErrorRetryButtonProps(localization), class: "og-grid__retry-button", onClick: props.onRetry }, getGridErrorRetryButtonText(localization))
                 : null,
             ])
           : props.loading
-          ? h("div", { ...getGridLoadingOverlayProps(), class: "og-grid__status-overlay og-grid__loading-overlay" }, [
+          ? h("div", { ...getGridLoadingOverlayProps(localization), class: "og-grid__status-overlay og-grid__loading-overlay" }, [
               h("span", { class: "og-grid__loading-spinner", "aria-hidden": "true" }),
-              h("span", { class: "og-grid__status-text" }, [props.loadingState]),
+              h("span", { class: "og-grid__status-text" }, [loadingState]),
             ])
           : null,
       ]);
       const paginationNode = props.paginationControls
-        ? h("nav", { ...getPaginationProps(), class: "og-grid__pagination" }, [
+        ? h("nav", { ...getPaginationProps(localization), class: "og-grid__pagination" }, [
             h("div", { class: "og-grid__pagination-buttons" }, [
-              h("button", { ...getPaginationButtonProps({ action: "first", disabled: !grid.getCanPreviousPage() }), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.firstPage()) }, getPaginationButtonText("first")),
-              h("button", { ...getPaginationButtonProps({ action: "previous", disabled: !grid.getCanPreviousPage() }), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.previousPage()) }, getPaginationButtonText("previous")),
-              h("span", { ...getPaginationStatusProps(), class: "og-grid__pagination-status" }, getPaginationPageText(grid)),
-              h("button", { ...getPaginationButtonProps({ action: "next", disabled: !grid.getCanNextPage() }), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.nextPage()) }, getPaginationButtonText("next")),
-              h("button", { ...getPaginationButtonProps({ action: "last", disabled: !grid.getCanNextPage() }), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.lastPage()) }, getPaginationButtonText("last")),
+              h("button", { ...getPaginationButtonProps({ action: "first", disabled: !grid.getCanPreviousPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.firstPage()) }, getPaginationButtonText("first")),
+              h("button", { ...getPaginationButtonProps({ action: "previous", disabled: !grid.getCanPreviousPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.previousPage()) }, getPaginationButtonText("previous")),
+              h("span", { ...getPaginationStatusProps(), class: "og-grid__pagination-status" }, getPaginationPageText(grid, localization)),
+              h("button", { ...getPaginationButtonProps({ action: "next", disabled: !grid.getCanNextPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.nextPage()) }, getPaginationButtonText("next")),
+              h("button", { ...getPaginationButtonProps({ action: "last", disabled: !grid.getCanNextPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.lastPage()) }, getPaginationButtonText("last")),
             ]),
             h(
               "select",
               {
-                ...getPaginationPageSizeSelectProps(state.value.pagination.pageSize),
+                ...getPaginationPageSizeSelectProps(state.value.pagination.pageSize, localization),
                 class: "og-grid__pagination-size",
                 onChange: (event: Event) => {
                   grid.setPageSize(Number(getCellEditorEventValue(event)));
@@ -1415,7 +1428,7 @@ export const DataGrid = defineComponent({
                 },
               },
               resolvedPageSizeOptions.map((pageSize) =>
-                h("option", { key: pageSize, value: pageSize }, getPaginationPageSizeOptionText(pageSize)),
+                h("option", { key: pageSize, value: pageSize }, getPaginationPageSizeOptionText(pageSize, localization)),
               ),
             ),
           ])
@@ -1448,6 +1461,7 @@ function renderHeader<TData>(
   onOpenHeaderMenu: (columnId: ColumnId) => void,
   onToggleHeaderMenu: (columnId: ColumnId) => void,
   onCloseHeaderMenu: () => void,
+  localization: GridLocalization,
 ): RenderableValue {
   const canSort = !header.isPlaceholder && header.column.columns.length === 0 && header.column.getCanSort();
   const canResize = !header.isPlaceholder && header.column.columns.length === 0;
@@ -1468,7 +1482,7 @@ function renderHeader<TData>(
     canGroup: header.column.getCanGroup(),
     canMoveLeft,
     canMoveRight,
-  }).map((descriptor): HeaderActionMenuActionItem<TData> => {
+  }, localization).map((descriptor): HeaderActionMenuActionItem<TData> => {
     if (descriptor.id === "sort-asc") {
       return { ...descriptor, onSelect: () => grid.toggleColumnSorting(header.column.id, false) };
     }
@@ -1542,10 +1556,10 @@ function renderHeader<TData>(
             h("span", { ...getHeaderSortIndicatorProps(), class: "og-grid__sort-indicator" }, getHeaderSortIndicatorText(sortDirection, { visible: canSort })),
           ]),
           canInteract && columnPinningControls
-            ? h("span", { ...getColumnPinningControlsProps(header.column), class: "og-grid__pinning-controls" }, [
-                h("button", getPinningButtonProps(grid, header.column, "left", pinningPosition === "left"), getColumnPinningButtonText("left")),
-                h("button", getPinningButtonProps(grid, header.column, false, pinningPosition === false), getColumnPinningButtonText(false)),
-                h("button", getPinningButtonProps(grid, header.column, "right", pinningPosition === "right"), getColumnPinningButtonText("right")),
+            ? h("span", { ...getColumnPinningControlsProps(header.column, localization), class: "og-grid__pinning-controls" }, [
+                h("button", getPinningButtonProps(grid, header.column, "left", pinningPosition === "left", localization), getColumnPinningButtonText("left")),
+                h("button", getPinningButtonProps(grid, header.column, false, pinningPosition === false, localization), getColumnPinningButtonText(false)),
+                h("button", getPinningButtonProps(grid, header.column, "right", pinningPosition === "right", localization), getColumnPinningButtonText("right")),
               ])
             : null,
           canInteract && headerActionMenu
@@ -1553,7 +1567,7 @@ function renderHeader<TData>(
                 h(
                   "button",
                   {
-                    ...getHeaderActionMenuTriggerProps(header.column, { expanded: openHeaderMenuColumnId === header.column.id, controls: menuId }),
+                    ...getHeaderActionMenuTriggerProps(header.column, { expanded: openHeaderMenuColumnId === header.column.id, controls: menuId }, localization),
                     id: menuTriggerId,
                     class: "og-grid__header-menu-trigger",
                     onPointerdown: (event: PointerEvent) => stopEventPropagation(event),
@@ -1573,13 +1587,13 @@ function renderHeader<TData>(
                       nextTick(() => focusHeaderActionMenuItemById(document, menuId, focusPosition));
                     },
                   },
-                  HEADER_ACTION_MENU_TRIGGER_TEXT,
+                  localization.headerActionMenuTrigger,
                 ),
                 openHeaderMenuColumnId === header.column.id
                   ? h(
                       "div",
                       {
-                        ...getHeaderActionMenuProps(header.column),
+                        ...getHeaderActionMenuProps(header.column, localization),
                         class: "og-grid__header-menu-popover",
                         id: menuId,
                         onPointerdown: (event: PointerEvent) => stopEventPropagation(event),
@@ -1627,7 +1641,7 @@ function renderHeader<TData>(
             : null,
           canResize
             ? h("span", {
-                ...getColumnResizeHandleProps(header.column),
+                ...getColumnResizeHandleProps(header.column, {}, localization),
                 class: "og-grid__resize-handle",
                 onKeydown: (event: KeyboardEvent) => handleResizeKeyDown(grid, header.column, Math.max(0, columnIndex), event),
                 onPointerdown: (event: PointerEvent) => handleResizePointerDown(grid, header.column, Math.max(0, columnIndex), event),
@@ -1642,9 +1656,10 @@ function getPinningButtonProps<TData>(
   column: Column<TData, unknown>,
   position: "left" | "right" | false,
   active: boolean,
+  localization: GridLocalization,
 ) {
   return {
-    ...getColumnPinningButtonProps(column, { position, active }),
+    ...getColumnPinningButtonProps(column, { position, active }, localization),
     class: "og-grid__pinning-button",
     onPointerdown: (event: PointerEvent) => stopEventPropagation(event),
     onClick: (event: MouseEvent) => {
@@ -1820,6 +1835,7 @@ function renderCell<TData>(
   cancelCellEdit: (event: KeyboardEvent) => void,
   rangeDragHandlers: CellRangeDragHandlers,
   getCellClassName: ((context: CellContext<TData, unknown>) => string | undefined) | undefined,
+  localization: GridLocalization,
 ): RenderableValue {
   const editing = grid.getIsCellEditing(row.id, column.id);
   const rangeSelected = grid.getIsCellRangeSelected(row.id, column.id);
@@ -1876,7 +1892,7 @@ function renderCell<TData>(
             ? h(
                 "select",
                 {
-                  ...getCellEditorProps(column, { invalid: Boolean(editValidationMessage.value) }),
+                  ...getCellEditorProps(column, { invalid: Boolean(editValidationMessage.value) }, localization),
                   class: "og-grid__cell-editor",
                   value: editDraft.value,
                   onChange: (event: Event) => {
@@ -1919,7 +1935,7 @@ function renderCell<TData>(
                 column.columnDef.editOptions.map((option) => h("option", getCellEditorOptionProps(option), getCellEditorOptionText(option))),
               )
             : h("input", {
-                ...getCellEditorProps(column, { invalid: Boolean(editValidationMessage.value) }),
+                ...getCellEditorProps(column, { invalid: Boolean(editValidationMessage.value) }, localization),
                 class: "og-grid__cell-editor",
                 value: editDraft.value,
                 onInput: (event: Event) => {
@@ -1964,15 +1980,20 @@ function renderCell<TData>(
       : fillHandleVisible
         ? [renderFillHandle(coordinate, rangeDragHandlers), renderCellValue(grid, row, column)]
         : groupLabelCell
-          ? renderGroupCell(grid, row, column)
+          ? renderGroupCell(grid, row, column, localization)
           : renderCellValue(grid, row, column),
   );
 }
 
-function renderGroupCell<TData>(grid: Grid<TData>, row: Row<TData>, column: Column<TData, unknown>): VNode {
+function renderGroupCell<TData>(
+  grid: Grid<TData>,
+  row: Row<TData>,
+  column: Column<TData, unknown>,
+  localization: GridLocalization,
+): VNode {
   const expanded = grid.getIsRowExpanded(row.id);
   const fallback = row.getIsGroupFooter() || row.groupingColumnId ? undefined : renderCellValue(grid, row, column);
-  const label = getGroupRowLabel(row, column, { fallback });
+  const label = getGroupRowLabel(row, column, { fallback }, localization);
   const countText = getGroupRowCountText(row);
 
   return h(
@@ -1986,7 +2007,7 @@ function renderGroupCell<TData>(grid: Grid<TData>, row: Row<TData>, column: Colu
         ? h(
             "button",
             {
-              ...getRowExpansionToggleProps(row, { expanded, label: String(label) }),
+              ...getRowExpansionToggleProps(row, { expanded, label: String(label) }, localization),
               class: "og-grid__group-toggle",
               onPointerdown: (event: PointerEvent) => {
                 stopEventPropagation(event);
@@ -2037,23 +2058,24 @@ function renderGroupingPanel<TData>(
   grid: Grid<TData>,
   groupingColumns: Array<Column<TData, unknown>>,
   panelRef: Ref<HTMLElement | null>,
+  localization: GridLocalization,
 ): VNode {
   return h(
     "div",
     {
       ref: panelRef,
-      ...getGroupingPanelProps({ empty: groupingColumns.length === 0 }),
+      ...getGroupingPanelProps({ empty: groupingColumns.length === 0 }, localization),
       class: "og-grid__grouping-panel",
     },
     groupingColumns.length === 0
-      ? [h("span", { ...getGroupingPanelPlaceholderProps(), class: "og-grid__grouping-placeholder" }, GROUPING_PANEL_EMPTY_MESSAGE)]
+      ? [h("span", { ...getGroupingPanelPlaceholderProps(), class: "og-grid__grouping-placeholder" }, localization.groupingPanelEmpty)]
       : groupingColumns.map((column, index) =>
           h("span", { key: column.id, ...getGroupingPanelChipProps(column), class: "og-grid__grouping-chip" }, [
             h("span", { class: "og-grid__grouping-chip-label" }, getColumnLabel(column)),
             h(
               "button",
               {
-                ...getGroupingPanelMoveButtonProps(column, { direction: "left", disabled: index === 0 }),
+                ...getGroupingPanelMoveButtonProps(column, { direction: "left", disabled: index === 0 }, localization),
                 class: "og-grid__grouping-move",
                 onClick: () => moveGroupedColumn(grid, groupingColumns, column.id, "left"),
               },
@@ -2062,7 +2084,7 @@ function renderGroupingPanel<TData>(
             h(
               "button",
               {
-                ...getGroupingPanelMoveButtonProps(column, { direction: "right", disabled: index === groupingColumns.length - 1 }),
+                ...getGroupingPanelMoveButtonProps(column, { direction: "right", disabled: index === groupingColumns.length - 1 }, localization),
                 class: "og-grid__grouping-move",
                 onClick: () => moveGroupedColumn(grid, groupingColumns, column.id, "right"),
               },
@@ -2071,7 +2093,7 @@ function renderGroupingPanel<TData>(
             h(
               "button",
               {
-                ...getGroupingPanelRemoveButtonProps(column),
+                ...getGroupingPanelRemoveButtonProps(column, localization),
                 class: "og-grid__grouping-remove",
                 onClick: () => grid.toggleColumnGrouping(column.id, false),
               },
@@ -2136,7 +2158,9 @@ export function downloadExportFile(file: ExportFile): boolean {
 export { fitColumnsToWidth } from "@open-grid/core";
 export { createColumnHelper, useGrid };
 export {
+  DEFAULT_GRID_LOCALIZATION,
   GRID_PREFERENCES_VERSION,
+  createGridLocalization,
   createGridPreferences,
   getBrowserGridPreferencesStorage,
   parseGridPreferences,
@@ -2145,7 +2169,7 @@ export {
   serializeGridPreferences,
   writeGridPreferences,
 } from "@open-grid/primitives";
-export type { GridDensity, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike } from "@open-grid/primitives";
+export type { GridDensity, GridLocalization, GridLocalizationOverrides, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike } from "@open-grid/primitives";
 export type {
   AccessorKey,
   AccessorColumnOptions,
