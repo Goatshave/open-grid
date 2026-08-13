@@ -10,7 +10,7 @@
     { "id": "package-vue", "distDirectory": "packages/vue/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 640 } },
     { "id": "package-vue-ui", "distDirectory": "packages/vue-ui/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 17500 } },
     { "id": "package-svelte", "distDirectory": "packages/svelte/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 700 } },
-    { "id": "package-svelte-ui", "distDirectory": "packages/svelte-ui/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 20000 } },
+    { "id": "package-svelte-ui", "distDirectory": "packages/svelte-ui/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 21000 } },
     {
       "id": "open-grid-react",
       "distDirectory": "benchmarks/open-grid-react/dist",

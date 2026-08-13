@@ -12,6 +12,12 @@ export interface DataGridProps<TData = unknown> {
   onRetry?: () => void;
   loading?: boolean;
   loadingState?: unknown;
+  renderToolbar?: (context: DataGridRenderContext<TData>) => SvelteDataGridRenderValue<DataGridRenderContext<TData>>;
+  renderEmptyState?: (context: DataGridRenderContext<TData>) => SvelteDataGridRenderValue<DataGridRenderContext<TData>>;
+  renderLoadingState?: (context: DataGridRenderContext<TData>) => SvelteDataGridRenderValue<DataGridRenderContext<TData>>;
+  renderErrorState?: (context: DataGridErrorRenderContext<TData>) => SvelteDataGridRenderValue<DataGridErrorRenderContext<TData>>;
+  renderHeader?: (context: HeaderContext<TData, unknown>) => SvelteDataGridRenderValue<HeaderContext<TData, unknown>>;
+  renderCell?: (context: CellContext<TData, unknown>) => SvelteDataGridRenderValue<CellContext<TData, unknown>>;
   onGridReady?: GridReadyHandler<TData>;
   getRowClassName?: (row: Row<TData>) => string | undefined;
   getHeaderClassName?: (context: HeaderContext<TData, unknown>) => string | undefined;
@@ -38,6 +44,25 @@ export interface DataGridProps<TData = unknown> {
   class?: string;
   style?: string;
 }
+
+export interface DataGridRenderContext<TData = unknown> {
+  grid: Grid<TData>;
+  rows: readonly Row<TData>[];
+  visibleColumns: readonly Column<TData, unknown>[];
+}
+
+export interface DataGridErrorRenderContext<TData = unknown> extends DataGridRenderContext<TData> {
+  retry: (() => void) | undefined;
+}
+
+export interface SvelteDataGridRenderer<TContext = unknown> {
+  type: "open-grid:svelte-renderer";
+  component: unknown;
+  context: TContext;
+  props?: Record<string, unknown>;
+}
+
+export type SvelteDataGridRenderValue<TContext = unknown> = string | number | boolean | null | undefined | SvelteDataGridRenderer<TContext>;
 
 export type GridReadyHandler<TData = unknown> = (grid: Grid<TData>) => void | (() => void);
 

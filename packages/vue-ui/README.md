@@ -8,6 +8,12 @@ Use this package for the reference Vue grid UI, including sorting, filtering, se
 
 Use Vue's `class` attribute, `getRowClassName(row)`, `getHeaderClassName(context)`, and `getCellClassName(context)` to attach product-owned root, row, header, and cell classes for status, risk, or workflow styling without replacing the renderer. Header contexts include the grid, column, and header; cell contexts also include the row and current value.
 
+Use `renderHeader` and `renderCell` for framework-native VNodes, `renderToolbar` for
+product commands, and the state render callbacks for component-based loading,
+error, and empty content. See the
+[custom rendering](https://goatshave.github.io/open-grid/custom-rendering) and
+[composition](https://goatshave.github.io/open-grid/composition) guides.
+
 ## Install
 
 ```bash

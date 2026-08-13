@@ -246,6 +246,16 @@ export type ColumnVirtualizationOptions = ColumnVirtualizationPrimitiveOptions;
 
 const GridLocalizationContext = createContext<GridLocalization>(createGridLocalization());
 
+export interface DataGridRenderContext<TData> {
+  grid: Grid<TData>;
+  rows: readonly Row<TData>[];
+  visibleColumns: readonly Column<TData, unknown>[];
+}
+
+export interface DataGridErrorRenderContext<TData> extends DataGridRenderContext<TData> {
+  retry: (() => void) | undefined;
+}
+
 export interface HeaderActionMenuActionItem<TData> {
   type?: "action";
   id: string;
@@ -305,6 +315,12 @@ export interface DataGridProps<TData> extends GridOptions<TData> {
   onRetry?: () => void;
   loading?: boolean;
   loadingState?: ReactNode;
+  renderToolbar?: (context: DataGridRenderContext<TData>) => ReactNode;
+  renderEmptyState?: (context: DataGridRenderContext<TData>) => ReactNode;
+  renderLoadingState?: (context: DataGridRenderContext<TData>) => ReactNode;
+  renderErrorState?: (context: DataGridErrorRenderContext<TData>) => ReactNode;
+  renderHeader?: (context: HeaderContext<TData, unknown>) => ReactNode;
+  renderCell?: (context: CellContext<TData, unknown>) => ReactNode;
   onGridReady?: GridReadyHandler<TData>;
   getRowClassName?: (row: Row<TData>) => string | undefined;
   getHeaderClassName?: (context: HeaderContext<TData, unknown>) => string | undefined;
@@ -342,6 +358,12 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     onRetry,
     loading = false,
     loadingState: loadingStateProp,
+    renderToolbar,
+    renderEmptyState,
+    renderLoadingState,
+    renderErrorState,
+    renderHeader: renderHeaderProp,
+    renderCell: renderCellProp,
     onGridReady,
     getRowClassName,
     getHeaderClassName,
@@ -379,6 +401,13 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
   const rows = grid.getRowModel().rows;
   const allColumns = grid.getAllLeafColumns();
   const columns = grid.getVisibleLeafColumns();
+  const renderContext = useMemo<DataGridRenderContext<TData>>(
+    () => ({ grid, rows, visibleColumns: columns }),
+    [columns, grid, rows],
+  );
+  const resolvedEmptyState = renderEmptyState?.(renderContext) ?? emptyState;
+  const resolvedLoadingState = renderLoadingState?.(renderContext) ?? loadingState;
+  const resolvedErrorState = renderErrorState?.({ ...renderContext, retry: onRetry }) ?? errorState;
   const layout = grid.getColumnLayout();
   const resolvedPageSizeOptions = getPaginationPageSizeOptions(pageSizeOptions, grid.getState().pagination.pageSize);
   const headerGroups = grid.getHeaderGroups();
@@ -1000,6 +1029,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
 
   return (
     <GridLocalizationContext.Provider value={localization}>
+    {renderToolbar ? <div className="og-grid__toolbar-slot">{renderToolbar(renderContext)}</div> : null}
     {quickFilterControl || rowSelectionControls || columnVisibilityControls || densityControl ? (
       <div className="og-grid__controls">
       {rowSelectionControls ? (
@@ -1208,6 +1238,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                       columnPinningControls={columnPinningControls}
                       headerActionMenu={headerActionMenu}
                       headerActionMenuItems={headerActionMenuItems}
+                      renderHeader={renderHeaderProp}
                       onHeaderClick={(multi) => handleHeaderClick(column, multi)}
                       onMoveColumn={(direction) => moveVisibleColumn(grid, column.id, direction)}
                       onPointerDownHeader={(event) => startColumnHeaderDrag(column.id, event)}
@@ -1288,7 +1319,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
             {rows.length === 0 ? (
               <div {...getGridEmptyRowProps({ rowIndexOffset: bodyRowIndexOffset })} className="og-grid__empty">
                 <div {...getGridEmptyCellProps({ rowIndexOffset: bodyRowIndexOffset, columnCount: columns.length })} className="og-grid__empty-cell" style={getInlineSizeStyle(totalMeasuredWidth)}>
-                  {emptyState}
+                  {resolvedEmptyState}
                 </div>
               </div>
             ) : (
@@ -1368,6 +1399,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                         onPointerUpCell={endCellRangeDrag}
                         onPointerDownFillHandle={(event) => startCellFillDrag({ rowId: row.id, columnId: column.id }, event)}
                         onToggleRowExpanded={() => grid.toggleRowExpanded(row.id)}
+                        renderCell={renderCellProp}
                         onClickCell={(event) => {
                           if (cellClickSuppression.consume(event)) {
                             return;
@@ -1397,7 +1429,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       </div>
       {error ? (
         <div {...getGridErrorOverlayProps(localization)} className="og-grid__status-overlay og-grid__error-overlay">
-          <span className="og-grid__status-text">{errorState}</span>
+          <span className="og-grid__status-text">{resolvedErrorState}</span>
           {onRetry ? (
             <button {...getGridErrorRetryButtonProps(localization)} className="og-grid__retry-button" onClick={onRetry}>
               {getGridErrorRetryButtonText(localization)}
@@ -1407,7 +1439,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
       ) : loading ? (
         <div {...getGridLoadingOverlayProps(localization)} className="og-grid__status-overlay og-grid__loading-overlay">
           <span className="og-grid__loading-spinner" aria-hidden="true" />
-          <span className="og-grid__status-text">{loadingState}</span>
+          <span className="og-grid__status-text">{resolvedLoadingState}</span>
         </div>
       ) : null}
     </div>
@@ -1488,6 +1520,7 @@ interface HeaderCellProps<TData> {
   columnPinningControls: boolean;
   headerActionMenu: boolean;
   headerActionMenuItems: HeaderActionMenuItems<TData> | undefined;
+  renderHeader: ((context: HeaderContext<TData, unknown>) => ReactNode) | undefined;
 }
 
 function HeaderCell<TData>(props: HeaderCellProps<TData>) {
@@ -1514,6 +1547,7 @@ function HeaderCell<TData>(props: HeaderCellProps<TData>) {
     columnPinningControls,
     headerActionMenu,
     headerActionMenuItems,
+    renderHeader: renderHeaderProp,
   } = props;
   const [menuOpen, setMenuOpen] = useState(false);
   const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -1733,7 +1767,7 @@ function HeaderCell<TData>(props: HeaderCellProps<TData>) {
         }}
         onKeyDown={handleHeaderButtonKeyDown}
       >
-        <span className="og-grid__header-label">{header.isPlaceholder ? "" : renderHeader(grid, column, header)}</span>
+        <span className="og-grid__header-label">{header.isPlaceholder ? "" : renderHeaderProp?.({ grid, column, header }) ?? renderHeader(grid, column, header)}</span>
         <span {...getHeaderSortIndicatorProps()} className="og-grid__sort-indicator">
           {getHeaderSortIndicatorText(sortDirection, { visible: canInteract })}
         </span>
@@ -1890,6 +1924,7 @@ interface BodyCellProps<TData> {
   onPointerDownFillHandle: (event: PointerEvent<HTMLSpanElement>) => void;
   onToggleRowExpanded: () => void;
   onClickCell: (event: MouseEvent<HTMLDivElement>) => void;
+  renderCell: ((context: CellContext<TData, unknown>) => ReactNode) | undefined;
 }
 
 function BodyCell<TData>(props: BodyCellProps<TData>) {
@@ -1922,6 +1957,7 @@ function BodyCell<TData>(props: BodyCellProps<TData>) {
     onPointerDownFillHandle,
     onToggleRowExpanded,
     onClickCell,
+    renderCell: renderCellProp,
   } = props;
   const previousValue = row.getValue(column.id);
   const [draftValue, setDraftValue] = useState(() => getCellEditText(previousValue));
@@ -2063,7 +2099,7 @@ function BodyCell<TData>(props: BodyCellProps<TData>) {
           }}
         />
       ) : (
-        groupLabelCell ? renderGroupCell(grid, row, column, onToggleRowExpanded, localization) : renderCell(grid, row, column)
+        groupLabelCell ? renderGroupCell(grid, row, column, onToggleRowExpanded, localization, renderCellProp) : renderCellProp?.({ grid, row, column, value: row.getValue(column.id) }) ?? renderCell(grid, row, column)
       )}
       {editing && validationMessage ? (
         <span {...getCellValidationMessageProps()} className="og-grid__cell-validation">
@@ -2080,9 +2116,12 @@ function renderGroupCell<TData>(
   column: Column<TData, unknown>,
   onToggleRowExpanded: () => void,
   localization: GridLocalization,
+  renderCellProp: ((context: CellContext<TData, unknown>) => ReactNode) | undefined,
 ): ReactNode {
   const expanded = grid.getIsRowExpanded(row.id);
-  const fallback = row.getIsGroupFooter() || row.groupingColumnId ? undefined : renderCell(grid, row, column);
+  const fallback = row.getIsGroupFooter() || row.groupingColumnId
+    ? undefined
+    : renderCellProp?.({ grid, row, column, value: row.getValue(column.id) }) ?? renderCell(grid, row, column);
   const label = getGroupRowLabel(row, column, { fallback }, localization);
   const countText = getGroupRowCountText(row);
 

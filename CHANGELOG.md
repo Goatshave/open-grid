@@ -8,6 +8,10 @@ All notable Open Grid release changes should be documented here before a package
   accessibility labels across primitives and the React, Vue, and Svelte UI packages.
 - Rebaseline the required primitives gzip ceiling to 14,500 bytes after measuring
   the shared localization contract.
+- Add typed framework-native header and cell renderers plus product toolbar and
+  loading, error, and empty-state composition across React, Vue, and Svelte UI.
+- Rebaseline the required Svelte UI gzip ceiling to 21,000 bytes after measuring
+  the component-renderer addition.
 - Add generated public export and declaration contracts, including CSS entry points
   and removal detection, plus a documented pre-1.0 compatibility and deprecation
   policy enforced by CI and the protected publish workflow.

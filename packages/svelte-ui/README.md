@@ -8,6 +8,11 @@ Use this package for the reference Svelte grid UI, including sorting, filtering,
 
 Use Svelte's `class` prop, `getRowClassName(row)`, `getHeaderClassName(context)`, and `getCellClassName(context)` to attach product-owned root, row, header, and cell classes for status, risk, or workflow styling without replacing the renderer. Header contexts include the grid, column, and header; cell contexts also include the row and current value.
 
+Use `createSvelteDataGridRenderer(Component)` with `renderHeader`, `renderCell`,
+`renderToolbar`, or the state render callbacks for component-based content. See the
+[custom rendering](https://goatshave.github.io/open-grid/custom-rendering) and
+[composition](https://goatshave.github.io/open-grid/composition) guides.
+
 ## Install
 
 ```bash

@@ -5,6 +5,9 @@
 Built-in text and accessibility labels use the shared typed
 [localization contract](localization.md).
 
+Product components and commands use the shared [custom rendering](custom-rendering.md)
+and [composition](composition.md) contracts.
+
 ## Install
 
 ```bash

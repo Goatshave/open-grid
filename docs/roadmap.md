@@ -39,11 +39,11 @@ regression safety, and dependable releases.
 
 - [x] Define instance-scoped localization contracts for built-in labels, status text,
   controls, and accessibility labels across React, Vue, Svelte, and primitives.
-- Expand typed custom renderer parity across React, Vue, and Svelte.
-- Add product toolbar and loading, error, and empty-state composition points without
+- [x] Expand typed custom renderer parity across React, Vue, and Svelte.
+- [x] Add product toolbar and loading, error, and empty-state composition points without
   coupling product UI to the grid core.
 - Version persisted preference migrations and document upgrade behavior.
-- Expand task-oriented API reference and integration examples from user reports.
+- [x] Expand task-oriented API reference and integration examples from user reports.
 - Continue keyboard, screen-reader, forced-colors, mobile reflow, server-data, and
   export improvements where real integration evidence identifies a gap.
 

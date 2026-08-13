@@ -43,6 +43,8 @@ export default defineConfig({
           { text: "Getting started", link: "/getting-started" },
           { text: "Packages", link: "/packages" },
           { text: "Localization", link: "/localization" },
+          { text: "Custom rendering", link: "/custom-rendering" },
+          { text: "Product composition", link: "/composition" },
         ],
       },
       {

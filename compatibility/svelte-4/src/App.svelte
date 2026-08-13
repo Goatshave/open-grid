@@ -1,6 +1,8 @@
 <script lang="ts">
   import { createColumnHelper, type GridOptions } from "@open-grid/core";
   import DataGrid from "@open-grid/svelte-ui/DataGrid.svelte";
+  import { createSvelteDataGridRenderer } from "@open-grid/svelte-ui";
+  import CellValue from "./CellValue.svelte";
 
   interface CompatibilityRow {
     id: string;
@@ -15,4 +17,9 @@
   };
 </script>
 
-<DataGrid ariaLabel="Svelte 4 compatibility grid" localization={{ noRows: "No compatible rows" }} {options} />
+<DataGrid
+  ariaLabel="Svelte 4 compatibility grid"
+  localization={{ noRows: "No compatible rows" }}
+  renderCell={createSvelteDataGridRenderer(CellValue)}
+  {options}
+/>

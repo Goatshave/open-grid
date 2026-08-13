@@ -223,10 +223,30 @@
   import { createGridStore } from "@open-grid/svelte";
   import { createMeasuredSizeCache, createMeasuredSizeResolver, getColumnCellRenderItems, getColumnLayoutMeasurementSignature, getColumnRenderItems, getHeaderRenderItemKey, getHeaderRenderItems, getInitialScrollFrame, getMeasuredColumnLayoutFromCache, getScrollFrame, getSizedColumnLayout, getVirtualRowRange, getVirtualRowItems, isHeaderRenderSpacerItem, syncMeasuredColumnLayoutCache, type ColumnCellRenderItem, type ColumnRenderItem, type VirtualItem, type VirtualRange } from "@open-grid/virtual";
   import { onDestroy, onMount, tick } from "svelte";
+  import RenderValue from "./RenderValue.svelte";
 
   export type RowVirtualizationOptions = RowVirtualizationPrimitiveOptions;
 
   export type ColumnVirtualizationOptions = ColumnVirtualizationPrimitiveOptions;
+
+  export interface DataGridRenderContext<TData = unknown> {
+    grid: Grid<TData>;
+    rows: readonly Row<TData>[];
+    visibleColumns: readonly Column<TData, unknown>[];
+  }
+
+  export interface DataGridErrorRenderContext<TData = unknown> extends DataGridRenderContext<TData> {
+    retry: (() => void) | undefined;
+  }
+
+  export interface SvelteDataGridRenderer<TContext = unknown> {
+    type: "open-grid:svelte-renderer";
+    component: unknown;
+    context: TContext;
+    props?: Record<string, unknown>;
+  }
+
+  export type SvelteDataGridRenderValue<TContext = unknown> = string | number | boolean | null | undefined | SvelteDataGridRenderer<TContext>;
 
   export interface HeaderActionMenuActionItem<TData = unknown> {
     type?: "action";
@@ -286,6 +306,12 @@
   export let onRetry: (() => void) | undefined = undefined;
   export let loading = false;
   export let loadingState: unknown = undefined;
+  export let renderToolbar: ((context: DataGridRenderContext<unknown>) => SvelteDataGridRenderValue<DataGridRenderContext<unknown>>) | undefined = undefined;
+  export let renderEmptyState: ((context: DataGridRenderContext<unknown>) => SvelteDataGridRenderValue<DataGridRenderContext<unknown>>) | undefined = undefined;
+  export let renderLoadingState: ((context: DataGridRenderContext<unknown>) => SvelteDataGridRenderValue<DataGridRenderContext<unknown>>) | undefined = undefined;
+  export let renderErrorState: ((context: DataGridErrorRenderContext<unknown>) => SvelteDataGridRenderValue<DataGridErrorRenderContext<unknown>>) | undefined = undefined;
+  export let renderHeader: ((context: HeaderContext<unknown, unknown>) => SvelteDataGridRenderValue<HeaderContext<unknown, unknown>>) | undefined = undefined;
+  export let renderCell: ((context: CellContext<unknown, unknown>) => SvelteDataGridRenderValue<CellContext<unknown, unknown>>) | undefined = undefined;
   export let onGridReady: ((grid: Grid<unknown>) => void | (() => void)) | undefined = undefined;
   export let getRowClassName: ((row: Row<unknown>) => string | undefined) | undefined = undefined;
   export let getHeaderClassName: ((context: HeaderContext<unknown, unknown>) => string | undefined) | undefined = undefined;
@@ -388,6 +414,7 @@
   let resolvedEmptyState: unknown = resolvedLocalization.noRows;
   let resolvedErrorState: unknown = resolvedLocalization.gridError;
   let resolvedLoadingState: unknown = resolvedLocalization.loadingRows;
+  let renderContext: DataGridRenderContext<unknown> = { grid, rows: [], visibleColumns: [] };
   let canPreviousPage = grid.getCanPreviousPage();
   let canNextPage = grid.getCanNextPage();
   let allPageRowsSelected = rowSelectionControls ? grid.getIsAllPageRowsSelected() : false;
@@ -429,6 +456,7 @@
   $: bodyRowIndexOffset = ($state, additionalHeaderRowCount, getGridBodyRowIndexOffset(grid, { additionalHeaderRowCount }));
   $: allColumns = ($state, grid.getAllLeafColumns());
   $: visibleColumns = ($state, grid.getVisibleLeafColumns());
+  $: renderContext = { grid, rows: allRows, visibleColumns };
   $: filteredVisibilityColumns = getFilteredColumnVisibilityColumns(allColumns, columnVisibilityQuery);
   $: groupingColumns = $state.grouping.flatMap((columnId) => {
     const column = getColumnById(columnId, grid.getAllLeafColumns());
@@ -498,6 +526,8 @@
   });
   $: simpleCellRendering = !$state.editingCell
     && (!$state.cellSelectionRange || deferDetailedCellRendering)
+    && !renderCell
+    && !visibleColumns.some((column) => typeof column.columnDef.cell === "function")
     && !visibleRowItems.some(({ row }) =>
     row.getIsGrouped() || row.getIsGroupFooter() || row.depth > 0 || row.getCanExpand(),
   );
@@ -630,6 +660,13 @@
       valueNow: layout?.size ?? grid.getColumnSize(column.id) ?? column.getSize(),
     }, resolvedLocalization);
 
+  const getHeaderContent = (header: Header<unknown>): unknown => {
+    const context = { grid, column: header.column, header } as HeaderContext<unknown, unknown>;
+    const value = renderHeader?.(context) ?? (typeof header.column.columnDef.header === "function"
+      ? header.column.columnDef.header(context)
+      : header.column.columnDef.header);
+    return value ?? getColumnHeaderText(header.column);
+  };
   const getCanUseCompactHeaderRendering = (
     headerGroup: HeaderGroup<unknown>,
     pinningControls: boolean,
@@ -637,7 +674,6 @@
   ) => !pinningControls && !actionMenu && headerGroup.headers.every((header) =>
     !header.isPlaceholder && header.column.columns.length === 0,
   );
-  const getHeaderLabel = (header: Header<unknown>) => getColumnHeaderText(header.column);
   const getColumnLabel = (column: Column<unknown, unknown>) => {
     return getColumnHeaderText(column);
   };
@@ -686,6 +722,10 @@
   const getCellValue = (row: Row<unknown>, column: Column<unknown, unknown>) => {
     const value = row.getValue(column.id);
     return getCellDisplayText(value);
+  };
+  const getCellContent = (row: Row<unknown>, column: Column<unknown, unknown>): unknown => {
+    const context = { grid, row, column, value: row.getValue(column.id) } as CellContext<unknown, unknown>;
+    return renderCell?.(context) ?? column.columnDef.cell?.(context) ?? getCellValue(row, column);
   };
   const getGroupLabel = (row: Row<unknown>, column: Column<unknown, unknown>) =>
     getGroupRowLabel(row, column, { fallback: getCellValue(row, column) }, resolvedLocalization);
@@ -1450,6 +1490,9 @@
 
 </script>
 
+{#if renderToolbar}
+  <div class="og-grid__toolbar-slot"><RenderValue value={renderToolbar(renderContext)} /></div>
+{/if}
 {#if quickFilterControl || rowSelectionControls || columnVisibilityControls || densityControl}
   <div class="og-grid__controls">
     {#if rowSelectionControls}
@@ -1612,7 +1655,7 @@
                     class="og-grid__header-button"
                     on:click={(event) => handleHeaderClick(header.column, canSort, event)}
                     on:keydown={(event) => handleHeaderButtonKeyDown(header.column, event)}
-                  ><span class="og-grid__header-label">{getHeaderLabel(header)}</span><span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">{getHeaderSortIndicatorText(sortDirection, { visible: true })}</span></button><!-- svelte-ignore a11y-no-noninteractive-tabindex a11y-no-noninteractive-element-interactions --><span
+                  ><span class="og-grid__header-label"><RenderValue value={getHeaderContent(header)} /></span><span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">{getHeaderSortIndicatorText(sortDirection, { visible: true })}</span></button><!-- svelte-ignore a11y-no-noninteractive-tabindex a11y-no-noninteractive-element-interactions --><span
                     {...getResizeHandleProps(header.column, layout, $state.columnSizing)}
                     class="og-grid__resize-handle"
                     role="separator"
@@ -1674,7 +1717,7 @@
                     on:click={(event) => handleHeaderClick(header.column, canSort, event)}
                     on:keydown={(event) => handleHeaderButtonKeyDown(header.column, event)}
                   >
-                    <span class="og-grid__header-label">{getHeaderLabel(header)}</span>
+                    <span class="og-grid__header-label"><RenderValue value={getHeaderContent(header)} /></span>
                     <span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">
                       {getHeaderSortIndicatorText(sortDirection, { visible: canInteract })}
                     </span>
@@ -1850,7 +1893,7 @@
       >
         {#if allRows.length === 0}
           <div {...getGridEmptyRowProps({ rowIndexOffset: bodyRowIndexOffset })} class="og-grid__empty">
-            <div {...getGridEmptyCellProps({ rowIndexOffset: bodyRowIndexOffset, columnCount: visibleColumns.length })} class="og-grid__empty-cell" style={getInlineSizeStyleText(totalMeasuredWidth)}>{String(resolvedEmptyState ?? "")}</div>
+            <div {...getGridEmptyCellProps({ rowIndexOffset: bodyRowIndexOffset, columnCount: visibleColumns.length })} class="og-grid__empty-cell" style={getInlineSizeStyleText(totalMeasuredWidth)}><RenderValue value={renderEmptyState?.(renderContext) ?? resolvedEmptyState} /></div>
           </div>
         {:else if simpleCellRendering}
           {#each visibleRowItems as { row, rowIndex, virtualItem } (row.id)}
@@ -2014,7 +2057,7 @@
                         {/if}
                       </span>
                     {:else}
-                      {getCellValue(row, column)}
+                      <RenderValue value={getCellContent(row, column)} />
                     {/if}
                   </div>
                 {/each}
@@ -2026,7 +2069,7 @@
   </div>
   {#if error}
     <div {...getGridErrorOverlayProps(resolvedLocalization)} class="og-grid__status-overlay og-grid__error-overlay">
-      <span class="og-grid__status-text">{String(resolvedErrorState ?? "")}</span>
+      <span class="og-grid__status-text"><RenderValue value={renderErrorState?.({ ...renderContext, retry: onRetry }) ?? resolvedErrorState} /></span>
       {#if onRetry}
         <button {...getGridErrorRetryButtonProps(resolvedLocalization)} class="og-grid__retry-button" on:click={onRetry}>{getGridErrorRetryButtonText(resolvedLocalization)}</button>
       {/if}
@@ -2034,7 +2077,7 @@
   {:else if loading}
     <div {...getGridLoadingOverlayProps(resolvedLocalization)} class="og-grid__status-overlay og-grid__loading-overlay">
       <span class="og-grid__loading-spinner" aria-hidden="true"></span>
-      <span class="og-grid__status-text">{String(resolvedLoadingState ?? "")}</span>
+      <span class="og-grid__status-text"><RenderValue value={renderLoadingState?.(renderContext) ?? resolvedLoadingState} /></span>
     </div>
   {/if}
 </div>
