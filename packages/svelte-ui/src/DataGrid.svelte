@@ -248,6 +248,11 @@
 
   export type SvelteDataGridRenderValue<TContext = unknown> = string | number | boolean | null | undefined | SvelteDataGridRenderer<TContext>;
 
+  const isSvelteDataGridRenderer = (value: unknown): value is SvelteDataGridRenderer<unknown> =>
+    typeof value === "object"
+    && value !== null
+    && (value as { type?: unknown }).type === "open-grid:svelte-renderer";
+
   export interface HeaderActionMenuActionItem<TData = unknown> {
     type?: "action";
     id: string;
@@ -1491,7 +1496,14 @@
 </script>
 
 {#if renderToolbar}
-  <div class="og-grid__toolbar-slot"><RenderValue value={renderToolbar(renderContext)} /></div>
+  {@const toolbarContent = renderToolbar(renderContext)}
+  <div class="og-grid__toolbar-slot">
+    {#if isSvelteDataGridRenderer(toolbarContent)}
+      <RenderValue value={toolbarContent} />
+    {:else}
+      {String(toolbarContent ?? "")}
+    {/if}
+  </div>
 {/if}
 {#if quickFilterControl || rowSelectionControls || columnVisibilityControls || densityControl}
   <div class="og-grid__controls">
@@ -1635,6 +1647,7 @@
                   {@const layout = layoutById.get(firstLeafId)}
                   {@const canSort = header.column.getCanSort()}
                   {@const sortDirection = grid.getColumnSortDirection(header.column.id)}
+                  {@const headerContent = getHeaderContent(header)}
                   <div
                     {...getHeaderCellProps(grid, header.column, Math.max(0, columnIndex), { pinned: layout?.pinned ?? false })}
                     {...getHeaderCellLayoutProps({
@@ -1655,7 +1668,7 @@
                     class="og-grid__header-button"
                     on:click={(event) => handleHeaderClick(header.column, canSort, event)}
                     on:keydown={(event) => handleHeaderButtonKeyDown(header.column, event)}
-                  ><span class="og-grid__header-label"><RenderValue value={getHeaderContent(header)} /></span><span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">{getHeaderSortIndicatorText(sortDirection, { visible: true })}</span></button><!-- svelte-ignore a11y-no-noninteractive-tabindex a11y-no-noninteractive-element-interactions --><span
+                  ><span class="og-grid__header-label">{#if isSvelteDataGridRenderer(headerContent)}<RenderValue value={headerContent} />{:else}{String(headerContent ?? "")}{/if}</span><span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">{getHeaderSortIndicatorText(sortDirection, { visible: true })}</span></button><!-- svelte-ignore a11y-no-noninteractive-tabindex a11y-no-noninteractive-element-interactions --><span
                     {...getResizeHandleProps(header.column, layout, $state.columnSizing)}
                     class="og-grid__resize-handle"
                     role="separator"
@@ -1684,6 +1697,7 @@
               {@const menuId = getHeaderMenuId(header.column.id)}
               {@const menuTriggerId = getHeaderActionMenuTriggerId(header.column.id)}
               {@const headerMenu = getHeaderActionMenu(header.column, sortDirection, pinningPosition, isGrouped, canMoveLeft, canMoveRight)}
+              {@const headerContent = getHeaderContent(header)}
               <div
                 {...(header.isPlaceholder
                   ? getHeaderPlaceholderCellProps(header.column)
@@ -1717,7 +1731,13 @@
                     on:click={(event) => handleHeaderClick(header.column, canSort, event)}
                     on:keydown={(event) => handleHeaderButtonKeyDown(header.column, event)}
                   >
-                    <span class="og-grid__header-label"><RenderValue value={getHeaderContent(header)} /></span>
+                    <span class="og-grid__header-label">
+                      {#if isSvelteDataGridRenderer(headerContent)}
+                        <RenderValue value={headerContent} />
+                      {:else}
+                        {String(headerContent ?? "")}
+                      {/if}
+                    </span>
                     <span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">
                       {getHeaderSortIndicatorText(sortDirection, { visible: canInteract })}
                     </span>
@@ -1892,8 +1912,15 @@
         on:dblclick={handleSimpleBodyDoubleClick}
       >
         {#if allRows.length === 0}
+          {@const emptyContent = renderEmptyState?.(renderContext) ?? resolvedEmptyState}
           <div {...getGridEmptyRowProps({ rowIndexOffset: bodyRowIndexOffset })} class="og-grid__empty">
-            <div {...getGridEmptyCellProps({ rowIndexOffset: bodyRowIndexOffset, columnCount: visibleColumns.length })} class="og-grid__empty-cell" style={getInlineSizeStyleText(totalMeasuredWidth)}><RenderValue value={renderEmptyState?.(renderContext) ?? resolvedEmptyState} /></div>
+            <div {...getGridEmptyCellProps({ rowIndexOffset: bodyRowIndexOffset, columnCount: visibleColumns.length })} class="og-grid__empty-cell" style={getInlineSizeStyleText(totalMeasuredWidth)}>
+              {#if isSvelteDataGridRenderer(emptyContent)}
+                <RenderValue value={emptyContent} />
+              {:else}
+                {String(emptyContent ?? "")}
+              {/if}
+            </div>
           </div>
         {:else if simpleCellRendering}
           {#each visibleRowItems as { row, rowIndex, virtualItem } (row.id)}
@@ -2057,7 +2084,12 @@
                         {/if}
                       </span>
                     {:else}
-                      <RenderValue value={getCellContent(row, column)} />
+                      {@const cellContent = getCellContent(row, column)}
+                      {#if isSvelteDataGridRenderer(cellContent)}
+                        <RenderValue value={cellContent} />
+                      {:else}
+                        {String(cellContent ?? "")}
+                      {/if}
                     {/if}
                   </div>
                 {/each}
@@ -2068,16 +2100,30 @@
     </div>
   </div>
   {#if error}
+    {@const errorContent = renderErrorState?.({ ...renderContext, retry: onRetry }) ?? resolvedErrorState}
     <div {...getGridErrorOverlayProps(resolvedLocalization)} class="og-grid__status-overlay og-grid__error-overlay">
-      <span class="og-grid__status-text"><RenderValue value={renderErrorState?.({ ...renderContext, retry: onRetry }) ?? resolvedErrorState} /></span>
+      <span class="og-grid__status-text">
+        {#if isSvelteDataGridRenderer(errorContent)}
+          <RenderValue value={errorContent} />
+        {:else}
+          {String(errorContent ?? "")}
+        {/if}
+      </span>
       {#if onRetry}
         <button {...getGridErrorRetryButtonProps(resolvedLocalization)} class="og-grid__retry-button" on:click={onRetry}>{getGridErrorRetryButtonText(resolvedLocalization)}</button>
       {/if}
     </div>
   {:else if loading}
+    {@const loadingContent = renderLoadingState?.(renderContext) ?? resolvedLoadingState}
     <div {...getGridLoadingOverlayProps(resolvedLocalization)} class="og-grid__status-overlay og-grid__loading-overlay">
       <span class="og-grid__loading-spinner" aria-hidden="true"></span>
-      <span class="og-grid__status-text"><RenderValue value={renderLoadingState?.(renderContext) ?? resolvedLoadingState} /></span>
+      <span class="og-grid__status-text">
+        {#if isSvelteDataGridRenderer(loadingContent)}
+          <RenderValue value={loadingContent} />
+        {:else}
+          {String(loadingContent ?? "")}
+        {/if}
+      </span>
     </div>
   {/if}
 </div>

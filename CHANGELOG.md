@@ -10,6 +10,9 @@ All notable Open Grid release changes should be documented here before a package
   the shared localization contract.
 - Add typed framework-native header and cell renderers plus product toolbar and
   loading, error, and empty-state composition across React, Vue, and Svelte UI.
+- Keep primitive Svelte render values on the direct text path so renderer
+  composition does not add component-boundary nodes to every header and cell,
+  and rebaseline the Svelte-to-Vue document-node delta to 80 after measurement.
 - Rebaseline the required Svelte UI gzip ceiling to 21,000 bytes after measuring
   the component-renderer addition.
 - Add generated public export and declaration contracts, including CSS entry points

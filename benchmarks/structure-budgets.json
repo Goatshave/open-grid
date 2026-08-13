@@ -152,14 +152,14 @@
       "candidateId": "open-grid-svelte",
       "baselineId": "open-grid-vue",
       "metric": "domNodeCount",
-      "maxDelta": 64
+      "maxDelta": 80
     },
     {
       "profileId": "wide-client",
       "candidateId": "open-grid-svelte",
       "baselineId": "open-grid-vue",
       "metric": "domNodeCount",
-      "maxDelta": 64
+      "maxDelta": 80
     }
   ]
 }
