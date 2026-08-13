@@ -168,7 +168,7 @@ function writeConsumerFiles(directory) {
   writeFileSync(join(directory, "src", "consumer.tsx"), `
 import { createColumnHelper, createGrid, type CellContext } from "@open-grid/core";
 import { getGridProps } from "@open-grid/primitives";
-import { DataGrid as ReactDataGrid } from "@open-grid/react-ui";
+import { DataGrid as ReactDataGrid, parseGridPreferences, type GridPreferencesMigration } from "@open-grid/react-ui";
 import { createSvelteDataGridRenderer, type DataGridProps as SvelteDataGridProps } from "@open-grid/svelte-ui";
 import { createOpenGridThemeStyle } from "@open-grid/theme/tokens";
 import { createDataGrid, type DataGridProps as VueDataGridProps } from "@open-grid/vue-ui";
@@ -180,6 +180,8 @@ const columns = [column.accessor("name", { header: "Name" })];
 const grid = createGrid({ columns, data: rows, getRowId: (row) => row.id });
 getGridProps(grid, { ariaLabel: "External consumer" });
 createOpenGridThemeStyle({ accent: "#087f5b" });
+const migrations: readonly GridPreferencesMigration[] = [{ fromVersion: 0, toVersion: 1, migrate: () => ({ version: 1, density: "standard", state: {} }) }];
+parseGridPreferences('{"version":0}', { migrations });
 export const reactGrid = <ReactDataGrid columns={columns} data={rows} getRowId={(row) => row.id} localization={{ noRows: "No external rows" }} renderToolbar={({ rows }) => <span>{rows.length}</span>} renderCell={({ value }) => <strong>{String(value)}</strong>} />;
 export const VueGrid = createDataGrid<Row>();
 export const vueGridProps: VueDataGridProps<Row> = { options: { columns, data: rows, getRowId: (row) => row.id }, localization: { noRows: "No external rows" }, renderToolbar: ({ rows }) => String(rows.length), renderCell: ({ value }) => String(value) };

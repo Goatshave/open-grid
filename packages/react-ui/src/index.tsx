@@ -2232,13 +2232,14 @@ export {
   createGridLocalization,
   createGridPreferences,
   getBrowserGridPreferencesStorage,
+  migrateGridPreferences,
   parseGridPreferences,
   readGridPreferences,
   removeGridPreferences,
   serializeGridPreferences,
   writeGridPreferences,
 } from "@open-grid/primitives";
-export type { GridDensity, GridLocalization, GridLocalizationOverrides, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike } from "@open-grid/primitives";
+export type { GridDensity, GridLocalization, GridLocalizationOverrides, GridPreferences, GridPreferencesMigration, GridPreferencesOptions, GridPreferencesParseOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike } from "@open-grid/primitives";
 export type {
   AccessorColumnOptions,
   AccessorFnColumnDef,
