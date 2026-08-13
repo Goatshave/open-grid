@@ -13,6 +13,7 @@ import {
   addPointerUpCancelListeners,
   applyResizeObserverMeasuredSizes,
   createClickSuppressionController,
+  createGridLocalization,
   createResizeObserver,
   disconnectResizeObserver,
   focusCellEditorElement,
@@ -26,6 +27,7 @@ import {
   GRID_FOCUSED_CELL_SELECTOR,
   GRID_INTERACTIVE_KEYBOARD_TARGET_SELECTOR,
   GRID_DENSITIES,
+  DEFAULT_GRID_LOCALIZATION,
   GRID_PREFERENCES_VERSION,
   GROUPING_PANEL_EMPTY_MESSAGE,
   HEADER_ACTION_MENU_ENABLED_ITEM_SELECTOR,
@@ -329,6 +331,25 @@ const grid = {
 } as Grid<Person>;
 
 describe("primitives", () => {
+  it("merges localization overrides without changing the default dictionary", () => {
+    const localization = createGridLocalization({
+      noRows: "행이 없습니다",
+      selectedRows: (count) => `${count}개 행 선택됨`,
+      paginationActionLabel: (action) => ({
+        first: "첫 페이지",
+        previous: "이전 페이지",
+        next: "다음 페이지",
+        last: "마지막 페이지",
+      })[action],
+    });
+
+    expect(localization.noRows).toBe("행이 없습니다");
+    expect(getRowSelectionStatusText(2, localization)).toBe("2개 행 선택됨");
+    expect(getPaginationButtonProps({ action: "next" }, localization)["aria-label"]).toBe("다음 페이지");
+    expect(getGridLoadingText(localization)).toBe("Loading rows...");
+    expect(DEFAULT_GRID_LOCALIZATION.noRows).toBe("No rows");
+    expect(Object.isFrozen(localization)).toBe(true);
+  });
   it("returns accessible grid root props", () => {
     expect(getGridProps(grid)).toMatchObject({
       role: "grid",

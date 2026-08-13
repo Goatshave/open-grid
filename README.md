@@ -49,6 +49,7 @@ Open Grid aims to be:
 - practical to ship in real products without hiding core behavior
 - lightweight, transparent, and independently verifiable
 - consistent across React, Vue, and Svelte
+- localizable per grid instance through one typed cross-framework contract
 - friendly to design systems through CSS variables and unstyled primitives
 - suitable for server-side data workflows as a first-class use case
 

@@ -1,7 +1,7 @@
 import { renderToString } from "@vue/server-renderer";
 import { createSSRApp, h } from "vue";
 import { describe, expect, it } from "vitest";
-import { createDataGrid, type ColumnDef, type GridOptions } from "../src";
+import { createDataGrid, type ColumnDef, type GridLocalizationOverrides, type GridOptions } from "../src";
 
 interface Person {
   id: string;
@@ -13,9 +13,13 @@ const columns: ColumnDef<Person>[] = [
 ];
 const PersonGrid = createDataGrid<Person>();
 
-async function renderGrid(options: GridOptions<Person>, emptyState = "No people") {
+async function renderGrid(
+  options: GridOptions<Person>,
+  emptyState?: string,
+  localization?: GridLocalizationOverrides,
+) {
   return renderToString(createSSRApp({
-    render: () => h(PersonGrid, { ariaLabel: "People", options, emptyState }),
+    render: () => h(PersonGrid, { ariaLabel: localization ? undefined : "People", options, emptyState, localization }),
   }));
 }
 
@@ -34,9 +38,25 @@ describe("DataGrid", () => {
   });
 
   it("renders the configured empty state for an empty dataset", async () => {
-    const markup = await renderGrid({ data: [], columns, getRowId: (row) => row.id });
+    const markup = await renderGrid({ data: [], columns, getRowId: (row) => row.id }, "No people");
 
     expect(markup).toContain("No people");
     expect(markup).toContain('role="gridcell"');
   });
+
+  it("renders localized built-in controls and default empty state", async () => {
+    const markup = await renderGrid(
+      { data: [], columns, getRowId: (row) => row.id },
+      undefined,
+      {
+        dataGridLabel: "사용자 표",
+        noRows: "사용자가 없습니다",
+        searchRowsPlaceholder: "사용자 검색",
+      },
+    );
+
+    expect(markup).toContain('aria-label="사용자 표"');
+    expect(markup).toContain("사용자가 없습니다");
+  });
+
 });

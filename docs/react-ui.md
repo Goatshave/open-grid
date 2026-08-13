@@ -2,6 +2,9 @@
 
 `@open-grid/react-ui` is the first optional styled UI package. It validates the shared core contracts in a real renderer without making React a dependency of the core engine.
 
+Built-in text and accessibility labels use the shared typed
+[localization contract](localization.md).
+
 ## Install
 
 ```bash

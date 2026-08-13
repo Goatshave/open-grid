@@ -2,6 +2,9 @@
 
 `@open-grid/svelte-ui` is the first styled Svelte UI package for Open Grid. It reuses the shared core, Svelte store adapter, unstyled primitives, and CSS-variable theme contract used by the React and Vue UI packages.
 
+Built-in text and accessibility labels use the shared typed
+[localization contract](localization.md).
+
 ## Install
 
 ```bash

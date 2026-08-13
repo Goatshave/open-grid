@@ -37,7 +37,8 @@ regression safety, and dependable releases.
 
 ## 0.2.0 Direction
 
-- Define localization contracts for built-in labels, status text, and controls.
+- [x] Define instance-scoped localization contracts for built-in labels, status text,
+  controls, and accessibility labels across React, Vue, Svelte, and primitives.
 - Expand typed custom renderer parity across React, Vue, and Svelte.
 - Add product toolbar and loading, error, and empty-state composition points without
   coupling product UI to the grid core.

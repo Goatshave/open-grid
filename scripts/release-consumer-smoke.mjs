@@ -171,7 +171,7 @@ import { getGridProps } from "@open-grid/primitives";
 import { DataGrid as ReactDataGrid } from "@open-grid/react-ui";
 import type { DataGridProps as SvelteDataGridProps } from "@open-grid/svelte-ui";
 import { createOpenGridThemeStyle } from "@open-grid/theme/tokens";
-import { createDataGrid } from "@open-grid/vue-ui";
+import { createDataGrid, type DataGridProps as VueDataGridProps } from "@open-grid/vue-ui";
 
 interface Row { id: string; name: string }
 const rows: Row[] = [{ id: "1", name: "Installed" }];
@@ -180,9 +180,10 @@ const columns = [column.accessor("name", { header: "Name" })];
 const grid = createGrid({ columns, data: rows, getRowId: (row) => row.id });
 getGridProps(grid, { ariaLabel: "External consumer" });
 createOpenGridThemeStyle({ accent: "#087f5b" });
-export const reactGrid = <ReactDataGrid columns={columns} data={rows} getRowId={(row) => row.id} />;
+export const reactGrid = <ReactDataGrid columns={columns} data={rows} getRowId={(row) => row.id} localization={{ noRows: "No external rows" }} />;
 export const VueGrid = createDataGrid<Row>();
-export const svelteGridProps: SvelteDataGridProps<Row> = { options: { columns, data: rows, getRowId: (row) => row.id } };
+export const vueGridProps: VueDataGridProps<Row> = { options: { columns, data: rows, getRowId: (row) => row.id }, localization: { noRows: "No external rows" } };
+export const svelteGridProps: SvelteDataGridProps<Row> = { options: { columns, data: rows, getRowId: (row) => row.id }, localization: { noRows: "No external rows" } };
 `);
   writeFileSync(join(directory, "index.html"), '<div id="app"></div><script type="module" src="/src/main.ts"></script>\n');
   writeFileSync(join(directory, "src", "main.ts"), 'import App from "./App.svelte"; new App({ target: document.getElementById("app")! });\n');
@@ -199,7 +200,7 @@ export const svelteGridProps: SvelteDataGridProps<Row> = { options: { columns, d
     getRowId: (row) => row.id,
   };
 </script>
-<DataGrid ariaLabel="External Svelte consumer" {options} />
+<DataGrid ariaLabel="External Svelte consumer" localization={{ noRows: "No external rows" }} {options} />
 `);
   writeFileSync(join(directory, "vite.config.mjs"), `
 import { svelte } from "@sveltejs/vite-plugin-svelte";

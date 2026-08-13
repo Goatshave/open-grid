@@ -6,6 +6,134 @@ export const GRID_DENSITIES = ["compact", "standard", "comfortable"] as const;
 
 export type GridDensity = (typeof GRID_DENSITIES)[number];
 
+export interface GridLocalization {
+  dataGridLabel: string;
+  noRows: string;
+  loadingRowsLabel: string;
+  loadingRows: string;
+  gridErrorLabel: string;
+  gridError: string;
+  retryLoadingRowsLabel: string;
+  retry: string;
+  filterPlaceholder: string;
+  filterColumnLabel: (label: string) => string;
+  searchGridRowsLabel: string;
+  searchRowsPlaceholder: string;
+  searchAllRowsLabel: string;
+  clearRowSearchLabel: string;
+  clear: string;
+  rowSelectionLabel: string;
+  selectAllRowsOnCurrentPageLabel: string;
+  selectPage: string;
+  selectedRows: (count: number) => string;
+  clearRowSelectionLabel: string;
+  clearSelection: string;
+  gridColumnsLabel: string;
+  manageColumnsLabel: (visibleCount: number, totalCount: number) => string;
+  columnsSummary: (visibleCount: number, totalCount: number) => string;
+  findColumns: string;
+  columnVisibilityLabel: string;
+  columnsVisible: (visibleCount: number, totalCount: number) => string;
+  noColumnsFound: string;
+  showAllColumnsLabel: string;
+  showAll: string;
+  rowDensityLabel: string;
+  useDensityLabel: (density: GridDensity) => string;
+  densityLabel: (density: GridDensity) => string;
+  paginationLabel: string;
+  paginationActionLabel: (action: PaginationAction) => string;
+  pageStatus: (page: number, pageCount: number) => string;
+  rowsPerPageLabel: string;
+  pageSizeOption: (pageSize: number) => string;
+  resizeColumnLabel: (columnId: string) => string;
+  columnPinningLabel: (columnId: string) => string;
+  pinColumnLabel: (columnId: string, position: ColumnPinningPosition) => string;
+  openColumnMenuLabel: (columnId: string) => string;
+  columnMenuLabel: (columnId: string) => string;
+  headerActionMenuTrigger: string;
+  headerActionMenuItemLabel: (itemId: HeaderActionMenuDefaultItemId, grouped: boolean) => string;
+  columnGroupingLabel: string;
+  groupingPanelEmpty: string;
+  moveColumnGroupingLabel: (columnId: string, direction: "left" | "right") => string;
+  removeColumnGroupingLabel: (columnId: string) => string;
+  toggleRowExpandedLabel: (expanded: boolean, label: string) => string;
+  blankGroupValue: string;
+  groupFooterTotal: string;
+  editColumnLabel: (columnId: string) => string;
+}
+
+export type GridLocalizationOverrides = Partial<GridLocalization>;
+
+export const DEFAULT_GRID_LOCALIZATION: Readonly<GridLocalization> = Object.freeze<GridLocalization>({
+  dataGridLabel: "Data grid",
+  noRows: "No rows",
+  loadingRowsLabel: "Loading rows",
+  loadingRows: "Loading rows...",
+  gridErrorLabel: "Grid error",
+  gridError: "Unable to load rows.",
+  retryLoadingRowsLabel: "Retry loading rows",
+  retry: "Retry",
+  filterPlaceholder: "Filter",
+  filterColumnLabel: (label) => `Filter ${label}`,
+  searchGridRowsLabel: "Search grid rows",
+  searchRowsPlaceholder: "Search rows",
+  searchAllRowsLabel: "Search all rows",
+  clearRowSearchLabel: "Clear row search",
+  clear: "Clear",
+  rowSelectionLabel: "Row selection",
+  selectAllRowsOnCurrentPageLabel: "Select all rows on current page",
+  selectPage: "Select page",
+  selectedRows: (count) => `${count} ${count === 1 ? "row" : "rows"} selected`,
+  clearRowSelectionLabel: "Clear row selection",
+  clearSelection: "Clear selection",
+  gridColumnsLabel: "Grid columns",
+  manageColumnsLabel: (visibleCount, totalCount) => `Manage columns, ${visibleCount} of ${totalCount} columns visible`,
+  columnsSummary: (visibleCount, totalCount) => `Columns ${visibleCount}/${totalCount}`,
+  findColumns: "Find columns",
+  columnVisibilityLabel: "Column visibility",
+  columnsVisible: (visibleCount, totalCount) => `${visibleCount} of ${totalCount} columns visible`,
+  noColumnsFound: "No columns found",
+  showAllColumnsLabel: "Show all columns",
+  showAll: "Show all",
+  rowDensityLabel: "Row density",
+  useDensityLabel: (density) => `Use ${density} density`,
+  densityLabel: (density) => ({ compact: "Compact", standard: "Standard", comfortable: "Comfortable" })[density],
+  paginationLabel: "Pagination",
+  paginationActionLabel: (action) => ({ first: "First page", previous: "Previous page", next: "Next page", last: "Last page" })[action],
+  pageStatus: (page, pageCount) => `Page ${page} of ${pageCount}`,
+  rowsPerPageLabel: "Rows per page",
+  pageSizeOption: (pageSize) => `${pageSize} rows`,
+  resizeColumnLabel: (columnId) => `Resize ${columnId} column`,
+  columnPinningLabel: (columnId) => `${columnId} column pinning`,
+  pinColumnLabel: (columnId, position) => position === "left" ? `Pin ${columnId} left` : position === "right" ? `Pin ${columnId} right` : `Unpin ${columnId}`,
+  openColumnMenuLabel: (columnId) => `Open ${columnId} column menu`,
+  columnMenuLabel: (columnId) => `${columnId} column menu`,
+  headerActionMenuTrigger: "...",
+  headerActionMenuItemLabel: (itemId, grouped) => ({
+    "sort-asc": "Sort ascending",
+    "sort-desc": "Sort descending",
+    "clear-sort": "Clear sort",
+    "move-left": "Move left",
+    "move-right": "Move right",
+    "pin-left": "Pin left",
+    unpin: "Unpin",
+    "pin-right": "Pin right",
+    "toggle-group": grouped ? "Ungroup column" : "Group by column",
+  })[itemId],
+  columnGroupingLabel: "Column grouping",
+  groupingPanelEmpty: "Drag column headers here to group",
+  moveColumnGroupingLabel: (columnId, direction) => `Move ${columnId} grouping ${direction}`,
+  removeColumnGroupingLabel: (columnId) => `Remove ${columnId} grouping`,
+  toggleRowExpandedLabel: (expanded, label) => `${expanded ? "Collapse" : "Expand"} ${label}`,
+  blankGroupValue: "(blank)",
+  groupFooterTotal: "Total",
+  editColumnLabel: (columnId) => `Edit ${columnId}`,
+});
+
+export function createGridLocalization(overrides: GridLocalizationOverrides = {}): Readonly<GridLocalization> {
+  return Object.freeze({ ...DEFAULT_GRID_LOCALIZATION, ...overrides });
+}
+
 export const GRID_PREFERENCES_VERSION = 1 as const;
 
 export interface GridPreferencesState {
@@ -822,9 +950,9 @@ export interface MeasuredSizeCacheLike {
 
 export const HEADER_ACTION_MENU_ENABLED_ITEM_SELECTOR = '[role="menuitem"]:not(:disabled):not([aria-disabled="true"])';
 
-export const HEADER_ACTION_MENU_TRIGGER_TEXT = "...";
+export const HEADER_ACTION_MENU_TRIGGER_TEXT = DEFAULT_GRID_LOCALIZATION.headerActionMenuTrigger;
 
-export const GROUPING_PANEL_EMPTY_MESSAGE = "Drag column headers here to group";
+export const GROUPING_PANEL_EMPTY_MESSAGE = DEFAULT_GRID_LOCALIZATION.groupingPanelEmpty;
 
 export const GRID_FOCUSED_CELL_SELECTOR = '[role="gridcell"][data-focused="true"]';
 
@@ -856,40 +984,40 @@ export function getGridHeaderProps(): PrimitiveProps {
   };
 }
 
-export function getGridLoadingOverlayProps(): PrimitiveProps {
+export function getGridLoadingOverlayProps(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): PrimitiveProps {
   return {
     role: "status",
     "aria-live": "polite",
-    "aria-label": "Loading rows",
+    "aria-label": localization.loadingRowsLabel,
   };
 }
 
-export function getGridLoadingText(): string {
-  return "Loading rows...";
+export function getGridLoadingText(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): string {
+  return localization.loadingRows;
 }
 
-export function getGridErrorOverlayProps(): PrimitiveProps {
+export function getGridErrorOverlayProps(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): PrimitiveProps {
   return {
     role: "alert",
     "aria-live": "assertive",
     "aria-atomic": true,
-    "aria-label": "Grid error",
+    "aria-label": localization.gridErrorLabel,
   };
 }
 
-export function getGridErrorText(): string {
-  return "Unable to load rows.";
+export function getGridErrorText(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): string {
+  return localization.gridError;
 }
 
-export function getGridErrorRetryButtonProps(): PrimitiveProps {
+export function getGridErrorRetryButtonProps(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): PrimitiveProps {
   return {
     type: "button",
-    "aria-label": "Retry loading rows",
+    "aria-label": localization.retryLoadingRowsLabel,
   };
 }
 
-export function getGridErrorRetryButtonText(): string {
-  return "Retry";
+export function getGridErrorRetryButtonText(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): string {
+  return localization.retry;
 }
 
 export function getGridHeaderRowProps(options: GridHeaderRowPrimitiveOptions = {}): PrimitiveProps {
@@ -932,12 +1060,13 @@ export function getColumnFilterCellProps<TData>(
 export function getColumnFilterInputProps<TData>(
   column: Column<TData, unknown>,
   options: ColumnFilterInputPrimitiveOptions,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
 ): PrimitiveProps {
   return {
     type: "search",
     value: options.value == null ? "" : String(options.value),
-    placeholder: "Filter",
-    "aria-label": `Filter ${options.label}`,
+    placeholder: localization.filterPlaceholder,
+    "aria-label": localization.filterColumnLabel(options.label),
     "data-column-id": column.id,
     autoComplete: "off",
   };
@@ -948,54 +1077,63 @@ export function getColumnFilterText(filters: ColumnFiltersState, columnId: Colum
   return value == null ? "" : String(value);
 }
 
-export function getQuickFilterProps(): PrimitiveProps {
+export function getQuickFilterProps(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): PrimitiveProps {
   return {
     role: "search",
-    "aria-label": "Search grid rows",
+    "aria-label": localization.searchGridRowsLabel,
   };
 }
 
-export function getQuickFilterInputProps(options: QuickFilterInputPrimitiveOptions): PrimitiveProps {
+export function getQuickFilterInputProps(
+  options: QuickFilterInputPrimitiveOptions,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
     type: "search",
     value: options.value,
-    placeholder: "Search rows",
-    "aria-label": "Search all rows",
+    placeholder: localization.searchRowsPlaceholder,
+    "aria-label": localization.searchAllRowsLabel,
     autoComplete: "off",
   };
 }
 
-export function getQuickFilterClearButtonProps(value: string): PrimitiveProps {
+export function getQuickFilterClearButtonProps(
+  value: string,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
     type: "button",
-    "aria-label": "Clear row search",
+    "aria-label": localization.clearRowSearchLabel,
     disabled: value.length === 0 || undefined,
   };
 }
 
-export function getQuickFilterClearButtonText(): string {
-  return "Clear";
+export function getQuickFilterClearButtonText(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): string {
+  return localization.clear;
 }
 
-export function getRowSelectionControlsProps(): PrimitiveProps {
+export function getRowSelectionControlsProps(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): PrimitiveProps {
   return {
     role: "group",
-    "aria-label": "Row selection",
+    "aria-label": localization.rowSelectionLabel,
   };
 }
 
-export function getRowSelectionCheckboxProps(options: RowSelectionCheckboxPrimitiveOptions = {}): PrimitiveProps {
+export function getRowSelectionCheckboxProps(
+  options: RowSelectionCheckboxPrimitiveOptions = {},
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
     type: "checkbox",
     checked: options.allSelected || false,
     disabled: options.disabled || undefined,
     "aria-checked": options.someSelected ? "mixed" : options.allSelected || false,
-    "aria-label": "Select all rows on current page",
+    "aria-label": localization.selectAllRowsOnCurrentPageLabel,
   };
 }
 
-export function getRowSelectionCheckboxText(): string {
-  return "Select page";
+export function getRowSelectionCheckboxText(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): string {
+  return localization.selectPage;
 }
 
 export function getRowSelectionStatusProps(): PrimitiveProps {
@@ -1006,21 +1144,27 @@ export function getRowSelectionStatusProps(): PrimitiveProps {
   };
 }
 
-export function getRowSelectionStatusText(selectedCount: number): string {
+export function getRowSelectionStatusText(
+  selectedCount: number,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): string {
   const count = Number.isFinite(selectedCount) ? Math.max(0, Math.floor(selectedCount)) : 0;
-  return `${count} ${count === 1 ? "row" : "rows"} selected`;
+  return localization.selectedRows(count);
 }
 
-export function getRowSelectionClearButtonProps(disabled = false): PrimitiveProps {
+export function getRowSelectionClearButtonProps(
+  disabled = false,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
     type: "button",
     disabled: disabled || undefined,
-    "aria-label": "Clear row selection",
+    "aria-label": localization.clearRowSelectionLabel,
   };
 }
 
-export function getRowSelectionClearButtonText(): string {
-  return "Clear selection";
+export function getRowSelectionClearButtonText(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): string {
+  return localization.clearSelection;
 }
 
 export function setCheckboxIndeterminate(target: unknown, indeterminate: boolean): boolean {
@@ -1032,37 +1176,49 @@ export function setCheckboxIndeterminate(target: unknown, indeterminate: boolean
   return true;
 }
 
-export function getColumnVisibilityControlsProps(): PrimitiveProps {
+export function getColumnVisibilityControlsProps(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): PrimitiveProps {
   return {
-    "aria-label": "Grid columns",
+    "aria-label": localization.gridColumnsLabel,
   };
 }
 
-export function getColumnVisibilitySummaryProps(visibleCount: number, totalCount: number): PrimitiveProps {
-  return {
-    "aria-label": `Manage columns, ${getColumnVisibilityStatusText(visibleCount, totalCount)}`,
-  };
-}
-
-export function getColumnVisibilitySummaryText(visibleCount: number, totalCount: number): string {
+export function getColumnVisibilitySummaryProps(
+  visibleCount: number,
+  totalCount: number,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   const { visible, total } = normalizeColumnVisibilityCounts(visibleCount, totalCount);
-  return `Columns ${visible}/${total}`;
+  return {
+    "aria-label": localization.manageColumnsLabel(visible, total),
+  };
 }
 
-export function getColumnVisibilitySearchInputProps(value: string): PrimitiveProps {
+export function getColumnVisibilitySummaryText(
+  visibleCount: number,
+  totalCount: number,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): string {
+  const { visible, total } = normalizeColumnVisibilityCounts(visibleCount, totalCount);
+  return localization.columnsSummary(visible, total);
+}
+
+export function getColumnVisibilitySearchInputProps(
+  value: string,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
     type: "search",
     value,
-    placeholder: "Find columns",
-    "aria-label": "Find columns",
+    placeholder: localization.findColumns,
+    "aria-label": localization.findColumns,
     autoComplete: "off",
   };
 }
 
-export function getColumnVisibilityListProps(): PrimitiveProps {
+export function getColumnVisibilityListProps(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): PrimitiveProps {
   return {
     role: "group",
-    "aria-label": "Column visibility",
+    "aria-label": localization.columnVisibilityLabel,
   };
 }
 
@@ -1087,25 +1243,32 @@ export function getColumnVisibilityStatusProps(): PrimitiveProps {
   };
 }
 
-export function getColumnVisibilityStatusText(visibleCount: number, totalCount: number): string {
+export function getColumnVisibilityStatusText(
+  visibleCount: number,
+  totalCount: number,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): string {
   const { visible, total } = normalizeColumnVisibilityCounts(visibleCount, totalCount);
-  return `${visible} of ${total} columns visible`;
+  return localization.columnsVisible(visible, total);
 }
 
-export function getColumnVisibilityEmptyText(): string {
-  return "No columns found";
+export function getColumnVisibilityEmptyText(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): string {
+  return localization.noColumnsFound;
 }
 
-export function getColumnVisibilityResetButtonProps(hiddenCount: number): PrimitiveProps {
+export function getColumnVisibilityResetButtonProps(
+  hiddenCount: number,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
     type: "button",
     disabled: !Number.isFinite(hiddenCount) || hiddenCount <= 0 || undefined,
-    "aria-label": "Show all columns",
+    "aria-label": localization.showAllColumnsLabel,
   };
 }
 
-export function getColumnVisibilityResetButtonText(): string {
-  return "Show all";
+export function getColumnVisibilityResetButtonText(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): string {
+  return localization.showAll;
 }
 
 export function normalizeGridDensity(value: unknown, fallback: GridDensity = "standard"): GridDensity {
@@ -1280,30 +1443,32 @@ export function getGridDensityRowHeight(density: GridDensity): number {
   return heights[normalizeGridDensity(density)];
 }
 
-export function getDensityControlsProps(): PrimitiveProps {
+export function getDensityControlsProps(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): PrimitiveProps {
   return {
     role: "group",
-    "aria-label": "Row density",
+    "aria-label": localization.rowDensityLabel,
   };
 }
 
-export function getDensityButtonProps(density: GridDensity, currentDensity: GridDensity): PrimitiveProps {
+export function getDensityButtonProps(
+  density: GridDensity,
+  currentDensity: GridDensity,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   const normalizedDensity = normalizeGridDensity(density);
   return {
     type: "button",
-    "aria-label": `Use ${normalizedDensity} density`,
+    "aria-label": localization.useDensityLabel(normalizedDensity),
     "aria-pressed": normalizedDensity === normalizeGridDensity(currentDensity),
     "data-density": normalizedDensity,
   };
 }
 
-export function getDensityButtonText(density: GridDensity): string {
-  const labels: Record<GridDensity, string> = {
-    compact: "Compact",
-    standard: "Standard",
-    comfortable: "Comfortable",
-  };
-  return labels[normalizeGridDensity(density)];
+export function getDensityButtonText(
+  density: GridDensity,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): string {
+  return localization.densityLabel(normalizeGridDensity(density));
 }
 
 export function getFilteredColumnVisibilityColumns<TData>(
@@ -1348,24 +1513,20 @@ export function getNextColumnFilters(
   return filters.map((filter, index) => (index === existingIndex ? { id: columnId, value } : filter));
 }
 
-export function getPaginationProps(): PrimitiveProps {
+export function getPaginationProps(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): PrimitiveProps {
   return {
     role: "navigation",
-    "aria-label": "Pagination",
+    "aria-label": localization.paginationLabel,
   };
 }
 
-export function getPaginationButtonProps(options: PaginationButtonPrimitiveOptions): PrimitiveProps {
-  const labels: Record<PaginationAction, string> = {
-    first: "First page",
-    previous: "Previous page",
-    next: "Next page",
-    last: "Last page",
-  };
-
+export function getPaginationButtonProps(
+  options: PaginationButtonPrimitiveOptions,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
     type: "button",
-    "aria-label": labels[options.action],
+    "aria-label": localization.paginationActionLabel(options.action),
     disabled: options.disabled || undefined,
   };
 }
@@ -1387,19 +1548,25 @@ export function getPaginationStatusProps(): PrimitiveProps {
   };
 }
 
-export function getPaginationPageText<TData>(grid: Grid<TData>): string {
+export function getPaginationPageText<TData>(
+  grid: Grid<TData>,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): string {
   const pageCount = grid.getPageCount();
   const rawPageIndex = grid.getState().pagination.pageIndex;
   const pageIndex = Math.min(
     Number.isFinite(rawPageIndex) ? Math.max(0, Math.floor(rawPageIndex)) : 0,
     pageCount - 1,
   );
-  return `Page ${pageIndex + 1} of ${pageCount}`;
+  return localization.pageStatus(pageIndex + 1, pageCount);
 }
 
-export function getPaginationPageSizeSelectProps(pageSize: number): PrimitiveProps {
+export function getPaginationPageSizeSelectProps(
+  pageSize: number,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
-    "aria-label": "Rows per page",
+    "aria-label": localization.rowsPerPageLabel,
     value: Number.isFinite(pageSize) && pageSize > 0 ? Math.max(1, Math.floor(pageSize)) : 1,
   };
 }
@@ -1417,8 +1584,11 @@ export function getPaginationPageSizeOptions(
   return Array.from(new Set(current === null ? normalized : [...normalized, current])).sort((left, right) => left - right);
 }
 
-export function getPaginationPageSizeOptionText(pageSize: number): string {
-  return `${pageSize} rows`;
+export function getPaginationPageSizeOptionText(
+  pageSize: number,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): string {
+  return localization.pageSizeOption(pageSize);
 }
 
 export function getGridBodyProps(options: GridBodyPrimitiveOptions = {}): PrimitiveProps {
@@ -1666,11 +1836,12 @@ export function getGridKeyboardFocusMove(event: GridKeyboardShortcutEventLike): 
 export function getColumnResizeHandleProps<TData>(
   column: Column<TData, unknown>,
   options: ColumnResizeHandlePrimitiveOptions = {},
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
 ): PrimitiveProps {
   return {
     role: "separator",
     "aria-orientation": "vertical",
-    "aria-label": `Resize ${column.id} column`,
+    "aria-label": localization.resizeColumnLabel(column.id),
     "aria-valuenow": options.valueNow ?? column.getSize(),
     "aria-valuemin": column.columnDef.minSize,
     "aria-valuemax": column.columnDef.maxSize,
@@ -1871,9 +2042,12 @@ export function addPassiveScrollListener(listener: ScrollListener, target: Scrol
   };
 }
 
-export function getColumnPinningControlsProps<TData>(column: Column<TData, unknown>): PrimitiveProps {
+export function getColumnPinningControlsProps<TData>(
+  column: Column<TData, unknown>,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
-    "aria-label": `${column.id} column pinning`,
+    "aria-label": localization.columnPinningLabel(column.id),
   };
 }
 
@@ -1891,13 +2065,11 @@ export function getColumnPinningButtonText(position: ColumnPinningPosition): str
 export function getColumnPinningButtonProps<TData>(
   column: Column<TData, unknown>,
   options: ColumnPinningButtonPrimitiveOptions,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
 ): PrimitiveProps {
-  const label =
-    options.position === "left" ? `Pin ${column.id} left` : options.position === "right" ? `Pin ${column.id} right` : `Unpin ${column.id}`;
-
   return {
     type: "button",
-    "aria-label": label,
+    "aria-label": localization.pinColumnLabel(column.id, options.position),
     "aria-pressed": options.active,
     disabled: options.active,
   };
@@ -1906,10 +2078,11 @@ export function getColumnPinningButtonProps<TData>(
 export function getHeaderActionMenuTriggerProps<TData>(
   column: Column<TData, unknown>,
   options: HeaderActionMenuTriggerPrimitiveOptions,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
 ): PrimitiveProps {
   return {
     type: "button",
-    "aria-label": `Open ${column.id} column menu`,
+    "aria-label": localization.openColumnMenuLabel(column.id),
     "aria-expanded": options.expanded,
     "aria-haspopup": "menu",
     "aria-controls": options.expanded ? options.controls : undefined,
@@ -1924,10 +2097,13 @@ export function getHeaderActionMenuTriggerId(columnId: string): string {
   return `${getHeaderActionMenuId(columnId)}-trigger`;
 }
 
-export function getHeaderActionMenuProps<TData>(column: Column<TData, unknown>): PrimitiveProps {
+export function getHeaderActionMenuProps<TData>(
+  column: Column<TData, unknown>,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
     role: "menu",
-    "aria-label": `${column.id} column menu`,
+    "aria-label": localization.columnMenuLabel(column.id),
     tabIndex: -1,
   };
 }
@@ -1935,75 +2111,52 @@ export function getHeaderActionMenuProps<TData>(column: Column<TData, unknown>):
 export function getHeaderActionMenuDefaultItemLabel(
   itemId: HeaderActionMenuDefaultItemId,
   options: HeaderActionMenuDefaultItemLabelOptions = {},
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
 ): string {
-  if (itemId === "sort-asc") {
-    return "Sort ascending";
-  }
-  if (itemId === "sort-desc") {
-    return "Sort descending";
-  }
-  if (itemId === "clear-sort") {
-    return "Clear sort";
-  }
-  if (itemId === "move-left") {
-    return "Move left";
-  }
-  if (itemId === "move-right") {
-    return "Move right";
-  }
-  if (itemId === "pin-left") {
-    return "Pin left";
-  }
-  if (itemId === "unpin") {
-    return "Unpin";
-  }
-  if (itemId === "pin-right") {
-    return "Pin right";
-  }
-
-  return options.grouped ? "Ungroup column" : "Group by column";
+  return localization.headerActionMenuItemLabel(itemId, options.grouped ?? false);
 }
 
 export function getHeaderActionMenuDefaultItemDescriptors(
   options: HeaderActionMenuDefaultItemDescriptorOptions,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
 ): HeaderActionMenuDefaultItemDescriptor[] {
   const descriptors: HeaderActionMenuDefaultItemDescriptor[] = [
     {
       id: "sort-asc",
-      label: getHeaderActionMenuDefaultItemLabel("sort-asc"),
+      label: getHeaderActionMenuDefaultItemLabel("sort-asc", {}, localization),
     },
     {
       id: "sort-desc",
-      label: getHeaderActionMenuDefaultItemLabel("sort-desc"),
+      label: getHeaderActionMenuDefaultItemLabel("sort-desc", {}, localization),
     },
     {
       id: "clear-sort",
-      label: getHeaderActionMenuDefaultItemLabel("clear-sort"),
+      label: getHeaderActionMenuDefaultItemLabel("clear-sort", {}, localization),
       disabled: !options.sortDirection,
     },
     {
       id: "move-left",
-      label: getHeaderActionMenuDefaultItemLabel("move-left"),
+      label: getHeaderActionMenuDefaultItemLabel("move-left", {}, localization),
       disabled: !options.canMoveLeft,
     },
     {
       id: "move-right",
-      label: getHeaderActionMenuDefaultItemLabel("move-right"),
+      label: getHeaderActionMenuDefaultItemLabel("move-right", {}, localization),
       disabled: !options.canMoveRight,
     },
     {
       id: "pin-left",
-      label: getHeaderActionMenuDefaultItemLabel("pin-left"),
+      label: getHeaderActionMenuDefaultItemLabel("pin-left", {}, localization),
       disabled: options.pinningPosition === "left",
     },
     {
       id: "unpin",
-      label: getHeaderActionMenuDefaultItemLabel("unpin"),
+      label: getHeaderActionMenuDefaultItemLabel("unpin", {}, localization),
       disabled: options.pinningPosition === false,
     },
     {
       id: "pin-right",
-      label: getHeaderActionMenuDefaultItemLabel("pin-right"),
+      label: getHeaderActionMenuDefaultItemLabel("pin-right", {}, localization),
       disabled: options.pinningPosition === "right",
     },
   ];
@@ -2011,7 +2164,7 @@ export function getHeaderActionMenuDefaultItemDescriptors(
   if (options.canGroup) {
     descriptors.push({
       id: "toggle-group",
-      label: getHeaderActionMenuDefaultItemLabel("toggle-group", { grouped: options.isGrouped }),
+      label: getHeaderActionMenuDefaultItemLabel("toggle-group", { grouped: options.isGrouped }, localization),
     });
   }
 
@@ -2080,9 +2233,12 @@ export function getHeaderActionMenuCustomItemUserProps(
   return item ? (item.props ?? {}) : {};
 }
 
-export function getGroupingPanelProps(options: GroupingPanelPrimitiveOptions = {}): PrimitiveProps {
+export function getGroupingPanelProps(
+  options: GroupingPanelPrimitiveOptions = {},
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
-    "aria-label": "Column grouping",
+    "aria-label": localization.columnGroupingLabel,
     "data-empty": options.empty || undefined,
   };
 }
@@ -2102,18 +2258,22 @@ export function getGroupingPanelChipProps<TData>(column: Column<TData, unknown>)
 export function getGroupingPanelMoveButtonProps<TData>(
   column: Column<TData, unknown>,
   options: GroupingPanelMoveButtonPrimitiveOptions,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
 ): PrimitiveProps {
   return {
     type: "button",
-    "aria-label": `Move ${column.id} grouping ${options.direction}`,
+    "aria-label": localization.moveColumnGroupingLabel(column.id, options.direction),
     disabled: options.disabled || false,
   };
 }
 
-export function getGroupingPanelRemoveButtonProps<TData>(column: Column<TData, unknown>): PrimitiveProps {
+export function getGroupingPanelRemoveButtonProps<TData>(
+  column: Column<TData, unknown>,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): PrimitiveProps {
   return {
     type: "button",
-    "aria-label": `Remove ${column.id} grouping`,
+    "aria-label": localization.removeColumnGroupingLabel(column.id),
   };
 }
 
@@ -2135,28 +2295,32 @@ export function getIsGroupLabelCell<TData>(
   return column.id === row.groupingColumnId || (!visibleColumns.some((candidate) => candidate.id === row.groupingColumnId) && column.id === firstVisibleColumnId);
 }
 
-export function getGroupValueText(value: unknown): string {
+export function getGroupValueText(
+  value: unknown,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
+): string {
   if (value instanceof Date) {
     return value.toISOString();
   }
 
-  return value == null ? "(blank)" : String(value);
+  return value == null ? localization.blankGroupValue : String(value);
 }
 
 export function getGroupRowLabel<TData, TFallback = string>(
   row: Row<TData>,
   column: Column<TData, unknown>,
   options: GroupRowLabelOptions<TFallback> = {},
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
 ): string | TFallback {
   if (row.getIsGroupFooter()) {
-    return row.groupFooterLabel ?? "Total";
+    return row.groupFooterLabel ?? localization.groupFooterTotal;
   }
 
   if (row.groupingColumnId) {
-    return `${row.groupingColumnId}: ${getGroupValueText(row.groupingValue)}`;
+    return `${row.groupingColumnId}: ${getGroupValueText(row.groupingValue, localization)}`;
   }
 
-  return options.fallback ?? getGroupValueText(row.getValue(column.id));
+  return options.fallback ?? getGroupValueText(row.getValue(column.id), localization);
 }
 
 export function getGroupCellIndent<TData>(row: Row<TData>, options: GroupCellIndentOptions = {}): number {
@@ -2204,10 +2368,11 @@ export function getRowLayoutProps<TData>(row: Row<TData>, options: RowLayoutPrim
 export function getRowExpansionToggleProps<TData>(
   row: Row<TData>,
   options: RowExpansionTogglePrimitiveOptions,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
 ): PrimitiveProps {
   return {
     type: "button",
-    "aria-label": `${options.expanded ? "Collapse" : "Expand"} ${options.label}`,
+    "aria-label": localization.toggleRowExpandedLabel(options.expanded, options.label),
     "aria-expanded": options.expanded,
     "data-row-id": row.id,
     "data-expanded": options.expanded,
@@ -2526,9 +2691,10 @@ export function getCanStartCellPointerDrag(
 export function getCellEditorProps<TData>(
   column: Column<TData, unknown>,
   options: CellEditorPrimitiveOptions = {},
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION,
 ): PrimitiveProps {
   return {
-    "aria-label": `Edit ${column.id}`,
+    "aria-label": localization.editColumnLabel(column.id),
     "aria-invalid": options.invalid || undefined,
   };
 }
