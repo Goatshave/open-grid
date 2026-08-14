@@ -1,12 +1,20 @@
 import * as react from 'react';
 import { CSSProperties, ReactNode } from 'react';
-import { GridOptions, Grid, Row, HeaderContext, CellContext, Column, CellFillOptions, ClipboardPasteOptions, ClipboardPasteResult, ExportFile } from '@open-grid/core';
+import { GridOptions, Grid, Row, Column, HeaderContext, CellContext, CellFillOptions, ClipboardPasteOptions, ClipboardPasteResult, ExportFile } from '@open-grid/core';
 export { AccessorColumnOptions, AccessorFnColumnDef, AccessorKeyColumnDef, AnyColumnDef, CellContext, CellEditEvent, CellEditEventParams, CellEditHistoryAction, CellEditHistoryState, CellEditOption, CellEditParserContext, CellEditPhase, CellEditValidationContext, CellEditValidationResult, CellEditValidationState, CellEditingState, CellFillOptions, CellInteractionEvent, CellInteractionEventParams, CellRange, CellRangeSelectionState, ClipboardCellContext, ClipboardCopyOptions, ClipboardPasteCellContext, ClipboardPasteCommittedCell, ClipboardPasteOptions, ClipboardPasteResult, ClipboardPasteSkippedCell, ClipboardPasteSkippedReason, ClipboardPasteValidationError, ColumnDef, ColumnFiltersState, ColumnHelper, ColumnMovePosition, ColumnOrderState, ColumnPinningPosition, ColumnResizeEvent, ColumnResizeEventParams, ColumnResizePhase, DisplayColumnDef, ExpandedState, ExportFile, ExportFileOptions, FitColumnsToWidthOptions, GridCacheDiagnostics, GridCacheDiagnosticsEntry, GridCacheKey, GridOptions, GridState, GroupColumnDef, GroupingState, Header, HeaderContext, HeaderGroup, MoveFocusOptions, PaginationState, RowInteractionEvent, RowInteractionEventParams, RowSelectionCleanupScope, SortingState, createColumnHelper, fitColumnsToWidth } from '@open-grid/core';
 import { ColumnVirtualizationPrimitiveOptions, GridLocalizationOverrides, GridDensity, RowVirtualizationPrimitiveOptions } from '@open-grid/primitives';
 export { DEFAULT_GRID_LOCALIZATION, GRID_PREFERENCES_VERSION, GridDensity, GridLocalization, GridLocalizationOverrides, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike, createGridLocalization, createGridPreferences, getBrowserGridPreferencesStorage, parseGridPreferences, readGridPreferences, removeGridPreferences, serializeGridPreferences, writeGridPreferences } from '@open-grid/primitives';
 
 type RowVirtualizationOptions = RowVirtualizationPrimitiveOptions;
 type ColumnVirtualizationOptions = ColumnVirtualizationPrimitiveOptions;
+interface DataGridRenderContext<TData> {
+    grid: Grid<TData>;
+    rows: readonly Row<TData>[];
+    visibleColumns: readonly Column<TData, unknown>[];
+}
+interface DataGridErrorRenderContext<TData> extends DataGridRenderContext<TData> {
+    retry: (() => void) | undefined;
+}
 interface HeaderActionMenuActionItem<TData> {
     type?: "action";
     id: string;
@@ -54,6 +62,12 @@ interface DataGridProps<TData> extends GridOptions<TData> {
     onRetry?: () => void;
     loading?: boolean;
     loadingState?: ReactNode;
+    renderToolbar?: (context: DataGridRenderContext<TData>) => ReactNode;
+    renderEmptyState?: (context: DataGridRenderContext<TData>) => ReactNode;
+    renderLoadingState?: (context: DataGridRenderContext<TData>) => ReactNode;
+    renderErrorState?: (context: DataGridErrorRenderContext<TData>) => ReactNode;
+    renderHeader?: (context: HeaderContext<TData, unknown>) => ReactNode;
+    renderCell?: (context: CellContext<TData, unknown>) => ReactNode;
     onGridReady?: GridReadyHandler<TData>;
     getRowClassName?: (row: Row<TData>) => string | undefined;
     getHeaderClassName?: (context: HeaderContext<TData, unknown>) => string | undefined;
@@ -81,4 +95,4 @@ interface DataGridProps<TData> extends GridOptions<TData> {
 declare function DataGrid<TData>(props: DataGridProps<TData>): react.JSX.Element;
 declare function downloadExportFile(file: ExportFile): boolean;
 
-export { type ColumnVirtualizationOptions, DataGrid, type DataGridProps, type GridReadyHandler, type HeaderActionMenuActionItem, type HeaderActionMenuContext, type HeaderActionMenuCustomItem, type HeaderActionMenuItem, type HeaderActionMenuItems, type HeaderActionMenuLabelItem, type HeaderActionMenuSeparatorItem, type RowVirtualizationOptions, downloadExportFile };
+export { type ColumnVirtualizationOptions, DataGrid, type DataGridErrorRenderContext, type DataGridProps, type DataGridRenderContext, type GridReadyHandler, type HeaderActionMenuActionItem, type HeaderActionMenuContext, type HeaderActionMenuCustomItem, type HeaderActionMenuItem, type HeaderActionMenuItems, type HeaderActionMenuLabelItem, type HeaderActionMenuSeparatorItem, type RowVirtualizationOptions, downloadExportFile };

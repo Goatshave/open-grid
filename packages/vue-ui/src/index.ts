@@ -241,6 +241,16 @@ interface HeaderDragHandlers {
   onClick: () => boolean;
 }
 
+export interface DataGridRenderContext<TData> {
+  grid: Grid<TData>;
+  rows: readonly Row<TData>[];
+  visibleColumns: readonly Column<TData, unknown>[];
+}
+
+export interface DataGridErrorRenderContext<TData> extends DataGridRenderContext<TData> {
+  retry: (() => void) | undefined;
+}
+
 export interface DataGridProps<TData> {
   ariaLabel?: string;
   localization?: GridLocalizationOverrides;
@@ -251,6 +261,12 @@ export interface DataGridProps<TData> {
   onRetry?: () => void;
   loading?: boolean;
   loadingState?: VNodeChild;
+  renderToolbar?: (context: DataGridRenderContext<TData>) => VNodeChild;
+  renderEmptyState?: (context: DataGridRenderContext<TData>) => VNodeChild;
+  renderLoadingState?: (context: DataGridRenderContext<TData>) => VNodeChild;
+  renderErrorState?: (context: DataGridErrorRenderContext<TData>) => VNodeChild;
+  renderHeader?: (context: HeaderContext<TData, unknown>) => VNodeChild;
+  renderCell?: (context: CellContext<TData, unknown>) => VNodeChild;
   onGridReady?: GridReadyHandler<TData>;
   getRowClassName?: (row: Row<TData>) => string | undefined;
   getHeaderClassName?: (context: HeaderContext<TData, unknown>) => string | undefined;
@@ -370,6 +386,30 @@ export const DataGrid = defineComponent({
     },
     loadingState: {
       type: [String, Number, Object, Array] as PropType<VNodeChild>,
+      default: undefined,
+    },
+    renderToolbar: {
+      type: Function as PropType<(context: DataGridRenderContext<unknown>) => VNodeChild>,
+      default: undefined,
+    },
+    renderEmptyState: {
+      type: Function as PropType<(context: DataGridRenderContext<unknown>) => VNodeChild>,
+      default: undefined,
+    },
+    renderLoadingState: {
+      type: Function as PropType<(context: DataGridRenderContext<unknown>) => VNodeChild>,
+      default: undefined,
+    },
+    renderErrorState: {
+      type: Function as PropType<(context: DataGridErrorRenderContext<unknown>) => VNodeChild>,
+      default: undefined,
+    },
+    renderHeader: {
+      type: Function as PropType<(context: HeaderContext<unknown, unknown>) => VNodeChild>,
+      default: undefined,
+    },
+    renderCell: {
+      type: Function as PropType<(context: CellContext<unknown, unknown>) => VNodeChild>,
       default: undefined,
     },
     onGridReady: {
@@ -1026,6 +1066,10 @@ export const DataGrid = defineComponent({
       const rows = grid.getRowModel().rows;
       const allColumns = grid.getAllLeafColumns();
       const visibleColumns = grid.getVisibleLeafColumns();
+      const renderContext: DataGridRenderContext<unknown> = { grid, rows, visibleColumns };
+      const resolvedEmptyState = props.renderEmptyState?.(renderContext) ?? emptyState;
+      const resolvedLoadingState = props.renderLoadingState?.(renderContext) ?? loadingState;
+      const resolvedErrorState = props.renderErrorState?.({ ...renderContext, retry: props.onRetry }) ?? errorState;
       const layout = grid.getColumnLayout();
       const columnById = new Map(visibleColumns.map((column) => [column.id, column]));
       const columnIndexById = new Map(visibleColumns.map((column, index) => [column.id, index]));
@@ -1252,6 +1296,7 @@ export const DataGrid = defineComponent({
                         headerMenuColumnId.value = null;
                       },
                       localization,
+                      props.renderHeader,
                     );
                   }),
                   ),
@@ -1323,7 +1368,7 @@ export const DataGrid = defineComponent({
                 ? [
                     h("div", { ...getGridEmptyRowProps({ rowIndexOffset: bodyRowIndexOffset }), class: "og-grid__empty" }, [
                       h("div", { ...getGridEmptyCellProps({ rowIndexOffset: bodyRowIndexOffset, columnCount: visibleColumns.length }), class: "og-grid__empty-cell", style: getInlineSizeStyleText(totalWidth) }, [
-                        emptyState,
+                        resolvedEmptyState,
                       ]),
                     ]),
                   ]
@@ -1386,6 +1431,7 @@ export const DataGrid = defineComponent({
                             rangeDragHandlers,
                             props.getCellClassName,
                             localization,
+                            props.renderCell,
                           ),
                         ];
                       }),
@@ -1396,7 +1442,7 @@ export const DataGrid = defineComponent({
         ]),
         props.error
           ? h("div", { ...getGridErrorOverlayProps(localization), class: "og-grid__status-overlay og-grid__error-overlay" }, [
-              h("span", { class: "og-grid__status-text" }, [errorState]),
+              h("span", { class: "og-grid__status-text" }, [resolvedErrorState]),
               props.onRetry
                 ? h("button", { ...getGridErrorRetryButtonProps(localization), class: "og-grid__retry-button", onClick: props.onRetry }, getGridErrorRetryButtonText(localization))
                 : null,
@@ -1404,7 +1450,7 @@ export const DataGrid = defineComponent({
           : props.loading
           ? h("div", { ...getGridLoadingOverlayProps(localization), class: "og-grid__status-overlay og-grid__loading-overlay" }, [
               h("span", { class: "og-grid__loading-spinner", "aria-hidden": "true" }),
-              h("span", { class: "og-grid__status-text" }, [loadingState]),
+              h("span", { class: "og-grid__status-text" }, [resolvedLoadingState]),
             ])
           : null,
       ]);
@@ -1434,7 +1480,11 @@ export const DataGrid = defineComponent({
           ])
         : null;
 
-      return h(Fragment, null, [controlsNode, gridNode, paginationNode]);
+      const toolbarNode = props.renderToolbar
+        ? h("div", { class: "og-grid__toolbar-slot" }, [props.renderToolbar(renderContext)])
+        : null;
+
+      return h(Fragment, null, [toolbarNode, controlsNode, gridNode, paginationNode]);
     };
   },
 });
@@ -1462,6 +1512,7 @@ function renderHeader<TData>(
   onToggleHeaderMenu: (columnId: ColumnId) => void,
   onCloseHeaderMenu: () => void,
   localization: GridLocalization,
+  renderHeaderProp: ((context: HeaderContext<TData, unknown>) => VNodeChild) | undefined,
 ): RenderableValue {
   const canSort = !header.isPlaceholder && header.column.columns.length === 0 && header.column.getCanSort();
   const canResize = !header.isPlaceholder && header.column.columns.length === 0;
@@ -1552,7 +1603,7 @@ function renderHeader<TData>(
       ? ""
       : [
           h("button", getHeaderButtonEventProps(grid, header.column, canSort, canInteract, headerDragHandlers), [
-            h("span", { class: "og-grid__header-label" }, renderHeaderValue(grid, header)),
+            h("span", { class: "og-grid__header-label" }, normalizeRenderable(renderHeaderProp?.({ grid, column: header.column, header }) ?? renderHeaderValue(grid, header))),
             h("span", { ...getHeaderSortIndicatorProps(), class: "og-grid__sort-indicator" }, getHeaderSortIndicatorText(sortDirection, { visible: canSort })),
           ]),
           canInteract && columnPinningControls
@@ -1836,6 +1887,7 @@ function renderCell<TData>(
   rangeDragHandlers: CellRangeDragHandlers,
   getCellClassName: ((context: CellContext<TData, unknown>) => string | undefined) | undefined,
   localization: GridLocalization,
+  renderCellProp: ((context: CellContext<TData, unknown>) => VNodeChild) | undefined,
 ): RenderableValue {
   const editing = grid.getIsCellEditing(row.id, column.id);
   const rangeSelected = grid.getIsCellRangeSelected(row.id, column.id);
@@ -1978,10 +2030,10 @@ function renderCell<TData>(
           editValidationMessage.value ? h("span", { ...getCellValidationMessageProps(), class: "og-grid__cell-validation" }, editValidationMessage.value) : null,
         ]
       : fillHandleVisible
-        ? [renderFillHandle(coordinate, rangeDragHandlers), renderCellValue(grid, row, column)]
+        ? [renderFillHandle(coordinate, rangeDragHandlers), renderCellProp?.({ grid, row, column, value: row.getValue(column.id) }) ?? renderCellValue(grid, row, column)]
         : groupLabelCell
-          ? renderGroupCell(grid, row, column, localization)
-          : renderCellValue(grid, row, column),
+          ? renderGroupCell(grid, row, column, localization, renderCellProp)
+          : renderCellProp?.({ grid, row, column, value: row.getValue(column.id) }) ?? renderCellValue(grid, row, column),
   );
 }
 
@@ -1990,9 +2042,12 @@ function renderGroupCell<TData>(
   row: Row<TData>,
   column: Column<TData, unknown>,
   localization: GridLocalization,
+  renderCellProp: ((context: CellContext<TData, unknown>) => VNodeChild) | undefined,
 ): VNode {
   const expanded = grid.getIsRowExpanded(row.id);
-  const fallback = row.getIsGroupFooter() || row.groupingColumnId ? undefined : renderCellValue(grid, row, column);
+  const fallback = row.getIsGroupFooter() || row.groupingColumnId
+    ? undefined
+    : renderCellProp?.({ grid, row, column, value: row.getValue(column.id) }) ?? renderCellValue(grid, row, column);
   const label = getGroupRowLabel(row, column, { fallback }, localization);
   const countText = getGroupRowCountText(row);
 

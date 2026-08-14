@@ -59,4 +59,40 @@ describe("DataGrid", () => {
     expect(markup).toContain("사용자가 없습니다");
   });
 
+  it("renders typed toolbar, header, and cell content with live grid context", async () => {
+    const markup = await renderToString(createSSRApp({
+      render: () => h(PersonGrid, {
+        ariaLabel: "People",
+        options: {
+          data: [{ id: "1", name: "Mina" }],
+          columns,
+          getRowId: (row) => row.id,
+        },
+        renderToolbar: ({ grid, rows, visibleColumns }) => h(
+          "aside",
+          { "data-grid-id": grid.getRowModel().rows[0]?.id },
+          `${rows.length} row / ${visibleColumns.length} column`,
+        ),
+        renderHeader: ({ column }) => h("strong", `Header ${column.id}`),
+        renderCell: ({ row, value }) => h("em", { "data-row-id": row.id }, `Cell ${String(value)}`),
+      }),
+    }));
+
+    expect(markup).toContain('data-grid-id="1"');
+    expect(markup).toContain("1 row / 1 column");
+    expect(markup).toContain("<strong>Header name</strong>");
+    expect(markup).toContain('<em data-row-id="1">Cell Mina</em>');
+  });
+
+  it("renders custom loading, error, and empty states", async () => {
+    const options: GridOptions<Person> = { data: [], columns, getRowId: (row) => row.id };
+    const retry = () => undefined;
+    const render = (props: Record<string, unknown>) => renderToString(createSSRApp({
+      render: () => h(PersonGrid, { ariaLabel: "People", options, ...props }),
+    }));
+
+    expect(await render({ loading: true, renderLoadingState: ({ rows }: { rows: readonly unknown[] }) => h("span", `Loading ${rows.length}`) })).toContain("Loading 0");
+    expect(await render({ error: true, onRetry: retry, renderErrorState: (context: { retry?: () => void }) => h("span", context.retry === retry ? "Retry ready" : "Retry missing") })).toContain("Retry ready");
+    expect(await render({ renderEmptyState: ({ visibleColumns }: { visibleColumns: readonly unknown[] }) => h("span", `Empty ${visibleColumns.length}`) })).toContain("Empty 1");
+  });
 });

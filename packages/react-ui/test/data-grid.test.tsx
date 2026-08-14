@@ -38,3 +38,59 @@ describe("DataGrid localization", () => {
     consoleError.mockRestore();
   });
 });
+
+describe("DataGrid composition", () => {
+  it("renders typed toolbar, header, and cell content with live grid context", () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const markup = renderToStaticMarkup(createElement(DataGrid<Person>, {
+      data: [{ id: "1", name: "Mina" }],
+      columns,
+      getRowId: (row) => row.id,
+      renderToolbar: ({ grid, rows, visibleColumns }) => createElement(
+        "aside",
+        { "data-grid-id": grid.getRowModel().rows[0]?.id },
+        `${rows.length} row / ${visibleColumns.length} column`,
+      ),
+      renderHeader: ({ column }) => createElement("strong", null, `Header ${column.id}`),
+      renderCell: ({ row, value }) => createElement("em", { "data-row-id": row.id }, `Cell ${String(value)}`),
+    }));
+
+    expect(markup).toContain('data-grid-id="1"');
+    expect(markup).toContain("1 row / 1 column");
+    expect(markup).toContain("<strong>Header name</strong>");
+    expect(markup).toContain('<em data-row-id="1">Cell Mina</em>');
+    expect(consoleError.mock.calls.every(([message]) => String(message).includes("useLayoutEffect does nothing on the server"))).toBe(true);
+    consoleError.mockRestore();
+  });
+
+  it("renders custom loading, error, and empty states", () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const baseProps = {
+      data: [],
+      columns,
+      getRowId: (row: Person) => row.id,
+    };
+
+    const loadingMarkup = renderToStaticMarkup(createElement(DataGrid<Person>, {
+      ...baseProps,
+      loading: true,
+      renderLoadingState: ({ rows }) => createElement("span", null, `Loading ${rows.length}`),
+    }));
+    const retry = vi.fn();
+    const errorMarkup = renderToStaticMarkup(createElement(DataGrid<Person>, {
+      ...baseProps,
+      error: true,
+      onRetry: retry,
+      renderErrorState: (context) => createElement("span", null, context.retry === retry ? "Retry ready" : "Retry missing"),
+    }));
+    const emptyMarkup = renderToStaticMarkup(createElement(DataGrid<Person>, {
+      ...baseProps,
+      renderEmptyState: ({ visibleColumns }) => createElement("span", null, `Empty ${visibleColumns.length}`),
+    }));
+
+    expect(loadingMarkup).toContain("Loading 0");
+    expect(errorMarkup).toContain("Retry ready");
+    expect(emptyMarkup).toContain("Empty 1");
+    consoleError.mockRestore();
+  });
+});
