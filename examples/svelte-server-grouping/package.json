@@ -15,7 +15,7 @@
     "@open-grid/svelte-ui": "workspace:*",
     "@open-grid/theme": "workspace:*",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
-    "svelte": "^5.15.0",
+    "svelte": "^5.56.9",
     "vite": "^6.0.3"
   },
   "devDependencies": {

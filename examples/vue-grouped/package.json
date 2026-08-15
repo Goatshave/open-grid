@@ -9,7 +9,7 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
-    "@lucide/vue": "^1.25.0",
+    "@lucide/vue": "^1.31.0",
     "@open-grid/core": "workspace:*",
     "@open-grid/theme": "workspace:*",
     "@open-grid/vue": "workspace:*",
