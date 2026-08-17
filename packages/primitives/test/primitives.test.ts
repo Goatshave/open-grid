@@ -141,6 +141,7 @@ import {
   getRowSelectionStatusText,
   normalizeGridDensity,
   createGridPreferences,
+  migrateGridPreferences,
   parseGridPreferences,
   readGridPreferences,
   removeGridPreferences,
@@ -604,6 +605,60 @@ describe("primitives", () => {
         columnPinning: { left: ["id"], right: ["owner"] },
       },
     });
+  });
+
+  it("migrates legacy preferences through an explicit version chain", () => {
+    const migrations = [{
+      fromVersion: 0,
+      toVersion: 1,
+      migrate: (preferences: Readonly<Record<string, unknown>>) => ({
+        version: 1,
+        density: preferences.compact ? "compact" : "standard",
+        state: {
+          columnVisibility: preferences.hiddenColumn === "owner" ? { owner: false } : {},
+          columnSizing: {},
+          columnOrder: ["id", "owner"],
+          columnPinning: { left: [], right: [] },
+        },
+      }),
+    }] as const;
+    const legacy = JSON.stringify({ version: 0, compact: true, hiddenColumn: "owner" });
+
+    expect(parseGridPreferences(legacy, { migrations, validColumnIds: ["id", "owner"] })).toEqual({
+      version: 1,
+      density: "compact",
+      state: {
+        columnVisibility: { owner: false },
+        columnSizing: {},
+        columnOrder: ["id", "owner"],
+        columnPinning: { left: [], right: [] },
+      },
+    });
+    expect(migrateGridPreferences(JSON.parse(legacy), migrations)?.version).toBe(1);
+  });
+
+  it("rejects incomplete, ambiguous, invalid, and failing preference migrations", () => {
+    const legacy = JSON.stringify({ version: 0 });
+    const validMigration = {
+      fromVersion: 0,
+      toVersion: 1,
+      migrate: () => ({ version: 1, state: {} }),
+    } as const;
+
+    expect(parseGridPreferences(legacy)).toBeNull();
+    expect(parseGridPreferences(legacy, { migrations: [validMigration, validMigration] })).toBeNull();
+    expect(parseGridPreferences(legacy, {
+      migrations: [{ ...validMigration, migrate: () => ({ version: 0, state: {} }) }],
+    })).toBeNull();
+    expect(parseGridPreferences(legacy, {
+      migrations: [{ fromVersion: 0, toVersion: 2, migrate: () => ({ version: 2 }) }],
+    })).toBeNull();
+    expect(parseGridPreferences(legacy, {
+      migrations: [{ ...validMigration, migrate: () => { throw new Error("migration failed"); } }],
+    })).toBeNull();
+    expect(migrateGridPreferences(JSON.parse(legacy), [
+      { ...validMigration, migrate: () => { throw new Error("migration failed"); } },
+    ])).toBeNull();
   });
 
   it("guards browser preference storage reads, writes, removals, and access failures", () => {

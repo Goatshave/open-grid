@@ -51,6 +51,7 @@ Open Grid aims to be:
 - consistent across React, Vue, and Svelte
 - localizable per grid instance through one typed cross-framework contract
 - composable with typed framework-native cells, headers, toolbars, and query states
+- explicit about persisted preference versions and product-owned migrations
 - friendly to design systems through CSS variables and unstyled primitives
 - suitable for server-side data workflows as a first-class use case
 
