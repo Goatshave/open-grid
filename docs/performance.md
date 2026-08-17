@@ -33,6 +33,12 @@ requires it. Browser or measurement-tool upgrades may require a coordinated base
 update when repeated runs show a stable measurement-definition shift across all
 renderers; unaffected metrics and relative limits should remain unchanged.
 
+Core scaling limits are workload-specific. Row-model construction and filtering keep
+the `2.0x` per-row ceiling. Numeric sorting uses `2.5x`, and repeated sort-direction
+flips use `3.0x`, reflecting reproduced one-million-row allocation and
+garbage-collection behavior on hosted Linux and local macOS. The budget tests enforce
+both sides of each boundary and continue to reject quadratic scaling.
+
 Bundle targets declare `enforcement: "required"` or `"diagnostic"`. Required targets
 must measure artifacts owned and shipped by Open Grid. Diagnostic targets may include
 framework runtimes and example application code to expose integration changes, but
