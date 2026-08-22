@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@open-grid/example-shared-server": "workspace:*",
-    "nuxt": "^4.5.1",
+    "nuxt": "^4.5.2",
     "vue": "^3.5.41"
   },
   "devDependencies": {
