@@ -556,6 +556,11 @@ export function expandRows<TData>(rowModel: RowModel<TData>, expanded: ExpandedS
   const visit = (row: Row<TData>) => {
     rows.push(row);
 
+    // Leaves have no expansion work, so avoid a state lookup for every leaf ID.
+    if (row.subRows.length === 0 && !row.footerRow) {
+      return;
+    }
+
     if (!expanded[row.id]) {
       return;
     }
@@ -573,7 +578,7 @@ export function expandRows<TData>(rowModel: RowModel<TData>, expanded: ExpandedS
     visit(row);
   }
 
-  return createRowModel(rows, { includeSubRows: false });
+  return createRowModel(rows, { includeSubRows: false, lazyRowsById: true });
 }
 
 export function paginateRows<TData>(rowModel: RowModel<TData>, pageIndex: number, pageSize: number): RowModel<TData> {
