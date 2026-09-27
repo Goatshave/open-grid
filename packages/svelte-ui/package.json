@@ -27,7 +27,7 @@
   },
   "files": ["dist", "LICENSE"],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean --external ./DataGrid.svelte && mkdir -p dist && cp src/DataGrid.svelte dist/DataGrid.svelte && cp src/DataGrid.svelte.d.ts dist/DataGrid.svelte.d.ts && cp ../react-ui/src/index.css dist/index.css",
+    "build": "tsup src/index.ts --format esm --dts --clean --external ./DataGrid.svelte && mkdir -p dist && cp src/DataGrid.svelte src/RenderValue.svelte dist/ && cp src/DataGrid.svelte.d.ts dist/DataGrid.svelte.d.ts && cp ../react-ui/src/index.css dist/index.css",
     "check": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "lint": "tsc --noEmit"
@@ -42,7 +42,7 @@
     "svelte": "^4.2.20 || ^5.0.0"
   },
   "devDependencies": {
-    "svelte": "^5.15.0",
+    "svelte": "^5.57.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"

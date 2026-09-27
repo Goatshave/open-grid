@@ -107,6 +107,12 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Verify public API contract
+        run: pnpm api:check
+
+      - name: Verify framework compatibility
+        run: pnpm compatibility:check
+
       - name: Test
         run: pnpm test
 
@@ -142,6 +148,9 @@ jobs:
 
       - name: Publish dry-run
         run: pnpm release:publish -- --version "$RELEASE_VERSION" --tag "$NPM_TAG" --out-dir .release/"$RELEASE_VERSION" --repository-url "$REPOSITORY_URL" --dry-run --json
+
+      - name: Verify external package consumption
+        run: pnpm release:consumer-smoke -- --version "$RELEASE_VERSION" --tarball-dir .release/"$RELEASE_VERSION" --json
 
       - name: Quick UI smoke tests
         run: pnpm e2e:smoke

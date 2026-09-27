@@ -4,6 +4,40 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Upgrade Svelte 5 example and benchmark tooling to Vite 8 with the Svelte Vite
+  plugin 7, and align the workspace Node requirement with their supported runtimes.
+
+- Defer nested and expanded row ID indexes until lookup and skip expansion-state
+  lookups for terminal rows, reducing server-grouping work without raising server
+  performance budgets.
+- Stabilize the one-million-row core compute gate with workload-specific sorting
+  ceilings backed by repeated hosted Linux and local macOS measurements, while
+  retaining stricter row-model and filtering limits and quadratic-regression tests.
+- Add a shared, typed, instance-scoped localization contract for built-in text and
+  accessibility labels across primitives and the React, Vue, and Svelte UI packages.
+- Rebaseline the required primitives gzip ceiling to 14,500 bytes after measuring
+  the shared localization contract.
+- Add typed framework-native header and cell renderers plus product toolbar and
+  loading, error, and empty-state composition across React, Vue, and Svelte UI.
+- Keep primitive Svelte render values on the direct text path so renderer
+  composition does not add component-boundary nodes to every header and cell,
+  and rebaseline the Svelte-to-Vue document-node delta to 80 after measurement.
+- Rebaseline the required Svelte UI gzip ceiling to 21,000 bytes after measuring
+  the component-renderer addition.
+- Add explicit forward-only persisted preference migrations with guarded failure
+  handling and task-oriented customization, composition, and upgrade guides.
+- Rebaseline the required primitives gzip ceiling from 14,500 to 15,000 bytes after
+  measuring the preference migration addition.
+- Add generated public export and declaration contracts, including CSS entry points
+  and removal detection, plus a documented pre-1.0 compatibility and deprecation
+  policy enforced by CI and the protected publish workflow.
+- Verify staged tarballs in a clean external project through ESM imports, strict
+  TypeScript consumption, and a real Svelte/Vite build before publishing.
+- Enforce gzip budgets for Open Grid-owned package artifacts while retaining
+  framework-inclusive example bundle measurements as non-blocking diagnostics.
+- Remove Svelte 4 compatibility warnings and add direct React adapter and Vue UI
+  server-rendering tests.
+
 ## 0.1.0 - 2026-08-07
 
 - Define and continuously validate the framework support contract: React 18.2 through 19, Vue 3.4 and later Vue 3 releases, and Svelte 4.2.20 through 5.

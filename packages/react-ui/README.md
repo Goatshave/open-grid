@@ -8,6 +8,12 @@ Use this package for the reference React grid UI, including sorting, filtering, 
 
 Use `className`, `getRowClassName(row)`, `getHeaderClassName(context)`, and `getCellClassName(context)` to attach product-owned root, row, header, and cell classes for status, risk, or workflow styling without replacing the renderer. Header contexts include the grid, column, and header; cell contexts also include the row and current value.
 
+Use `renderHeader` and `renderCell` for framework-native JSX, `renderToolbar` for
+product commands, and `renderLoadingState`, `renderErrorState`, or
+`renderEmptyState` for component-based query states. See the
+[custom rendering](https://goatshave.github.io/open-grid/custom-rendering) and
+[composition](https://goatshave.github.io/open-grid/composition) guides.
+
 ## Install
 
 ```bash

@@ -2192,6 +2192,9 @@ test("release plan includes GitHub, status, trusted-publishing, first-publish, a
   });
   const plan = JSON.parse(output);
 
+  assert.ok(plan.gates.includes("pnpm api:check"));
+  assert.ok(plan.gates.includes("pnpm compatibility:check"));
+  assert.ok(plan.gates.includes("pnpm release:consumer-smoke"));
   assert.ok(plan.gates.includes("pnpm release:github-push-preflight -- --repository-url <public-git-url>"));
   assert.ok(plan.gates.includes("pnpm release:first-publish-status -- --repository-url <public-git-url> --check-auth"));
   assert.ok(plan.gates.includes("pnpm release:trusted-publishing -- --repository-url <public-git-url>"));
@@ -2315,7 +2318,7 @@ test("release plan reports release context in text failure output", () => {
   assert.match(result.stderr, /Root version: 0\.1\.0/);
   assert.match(result.stderr, /Package count: 10/);
   assert.match(result.stderr, /Publish order count: 10/);
-  assert.match(result.stderr, /Prepublish gate count: 19/);
+  assert.match(result.stderr, /Prepublish gate count: 22/);
   assert.match(result.stderr, /Workspace dependency rewrite count: /);
   assert.match(result.stderr, /Failures:/);
   assert.match(result.stderr, /release version must be a valid semver version/);
@@ -3317,7 +3320,7 @@ function createFirstPublishStatusWorkspace() {
     version: "0.0.0",
     packageManager: "pnpm@9.15.0",
     engines: {
-      node: ">=22.0.0",
+      node: "^22.12.0 || >=24.0.0",
     },
     scripts: {
       "release:first-publish-status": "node scripts/release-first-publish-status.mjs",
@@ -3449,7 +3452,7 @@ function createFirstPublishReadinessFailureWorkspace() {
     version: "0.0.0",
     packageManager: "pnpm@9.15.0",
     engines: {
-      node: ">=22.0.0",
+      node: "^22.12.0 || >=24.0.0",
     },
   });
   writeFile(join(workspace, "CHANGELOG.md"), "# Changelog\n\n## 0.0.0 - 2026-07-04\n\n- Fixture release.\n");

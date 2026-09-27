@@ -9,6 +9,10 @@ as the source-tree index when browsing the repository directly.
 - [Documentation home](index.md)
 - [Getting started](getting-started.md)
 - [Package selection](packages.md)
+- [Localization](localization.md)
+- [Custom rendering](custom-rendering.md)
+- [Product composition](composition.md)
+- [Persisted preferences](preferences.md)
 - [Project overview](https://github.com/Goatshave/open-grid#readme)
 - [React UI](react-ui.md)
 - [Vue UI](vue-ui.md)
@@ -30,6 +34,7 @@ as the source-tree index when browsing the repository directly.
 ## Design and Operations
 
 - [Architecture](architecture.md)
+- [API stability](api-stability.md)
 - [Performance contract and evidence](performance.md)
 - [Roadmap](roadmap.md)
 - [Release process](release.md)

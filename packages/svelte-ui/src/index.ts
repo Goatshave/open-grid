@@ -1,10 +1,33 @@
 import type { ExportFile } from "@open-grid/core";
 import { downloadBrowserExportFile } from "@open-grid/primitives";
 
+export interface SvelteDataGridRenderer<TContext> {
+  type: "open-grid:svelte-renderer";
+  component: unknown;
+  context: TContext;
+  props?: Record<string, unknown>;
+}
+
+export type SvelteDataGridRendererFactory<TContext> = (context: TContext) => SvelteDataGridRenderer<TContext>;
+
+export function createSvelteDataGridRenderer<TContext>(
+  component: unknown,
+  props?: Record<string, unknown>,
+): SvelteDataGridRendererFactory<TContext> {
+  return (context) => ({
+    type: "open-grid:svelte-renderer",
+    component,
+    context,
+    ...(props ? { props } : {}),
+  });
+}
+
 export { default as DataGrid } from "./DataGrid.svelte";
 export type {
   ColumnVirtualizationOptions,
   DataGridProps,
+  DataGridErrorRenderContext,
+  DataGridRenderContext,
   GridReadyHandler,
   HeaderActionMenuActionItem,
   HeaderActionMenuContext,
@@ -14,19 +37,23 @@ export type {
   HeaderActionMenuLabelItem,
   HeaderActionMenuSeparatorItem,
   RowVirtualizationOptions,
+  SvelteDataGridRenderValue,
 } from "./DataGrid.svelte";
 export { createColumnHelper, createGridStore, fitColumnsToWidth } from "@open-grid/svelte";
 export {
+  DEFAULT_GRID_LOCALIZATION,
   GRID_PREFERENCES_VERSION,
+  createGridLocalization,
   createGridPreferences,
   getBrowserGridPreferencesStorage,
+  migrateGridPreferences,
   parseGridPreferences,
   readGridPreferences,
   removeGridPreferences,
   serializeGridPreferences,
   writeGridPreferences,
 } from "@open-grid/primitives";
-export type { GridDensity, GridPreferences, GridPreferencesOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike } from "@open-grid/primitives";
+export type { GridDensity, GridLocalization, GridLocalizationOverrides, GridPreferences, GridPreferencesMigration, GridPreferencesOptions, GridPreferencesParseOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike } from "@open-grid/primitives";
 
 export function downloadExportFile(file: ExportFile): boolean {
   return downloadBrowserExportFile(file);

@@ -115,6 +115,11 @@
   outline-offset: -2px;
 }
 
+.og-grid__toolbar-slot {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
 .og-grid__controls {
   display: flex;
   align-items: center;

@@ -1,6 +1,7 @@
 import type { CellContext, Column, ColumnLayout, GridOptions, HeaderContext, Row, SortingState } from "@open-grid/core";
 import {
   addPassiveScrollListener,
+  createGridLocalization,
   createResizeObserver,
   disconnectResizeObserver,
   getCellDisplayText,
@@ -24,6 +25,7 @@ import {
   getScrollFrameOptionsFromElement,
   getVirtualBodyStyle,
   getVirtualRowStyle,
+  type GridLocalizationOverrides,
 } from "@open-grid/primitives";
 import { useGrid } from "@open-grid/react";
 import {
@@ -47,6 +49,7 @@ const contentVisibilityRowThreshold = 50_000;
 
 export interface VirtualDataGridProps<TData> extends GridOptions<TData> {
   ariaLabel?: string;
+  localization?: GridLocalizationOverrides;
   className?: string;
   style?: CSSProperties;
   emptyState?: ReactNode;
@@ -76,10 +79,11 @@ const RenderedColumnsContext = createContext<readonly unknown[]>([]);
 
 export function VirtualDataGrid<TData>(props: VirtualDataGridProps<TData>) {
   const {
-    ariaLabel = "Data grid",
+    ariaLabel: ariaLabelProp,
+    localization: localizationOverrides,
     className,
     style,
-    emptyState = "No rows",
+    emptyState: emptyStateProp,
     rowHeight = 40,
     rowOverscan = 5,
     columnOverscan = 5,
@@ -88,6 +92,9 @@ export function VirtualDataGrid<TData>(props: VirtualDataGridProps<TData>) {
     getCellClassName,
     ...gridOptions
   } = props;
+  const localization = useMemo(() => createGridLocalization(localizationOverrides), [localizationOverrides]);
+  const ariaLabel = ariaLabelProp ?? localization.dataGridLabel;
+  const emptyState = emptyStateProp ?? localization.noRows;
   const resolvedRowHeight = positiveNumber(rowHeight, "rowHeight");
   const resolvedRowOverscan = nonNegativeInteger(rowOverscan, "rowOverscan");
   const resolvedColumnOverscan = nonNegativeInteger(columnOverscan, "columnOverscan");

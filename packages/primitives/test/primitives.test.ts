@@ -13,6 +13,7 @@ import {
   addPointerUpCancelListeners,
   applyResizeObserverMeasuredSizes,
   createClickSuppressionController,
+  createGridLocalization,
   createResizeObserver,
   disconnectResizeObserver,
   focusCellEditorElement,
@@ -26,6 +27,7 @@ import {
   GRID_FOCUSED_CELL_SELECTOR,
   GRID_INTERACTIVE_KEYBOARD_TARGET_SELECTOR,
   GRID_DENSITIES,
+  DEFAULT_GRID_LOCALIZATION,
   GRID_PREFERENCES_VERSION,
   GROUPING_PANEL_EMPTY_MESSAGE,
   HEADER_ACTION_MENU_ENABLED_ITEM_SELECTOR,
@@ -139,6 +141,7 @@ import {
   getRowSelectionStatusText,
   normalizeGridDensity,
   createGridPreferences,
+  migrateGridPreferences,
   parseGridPreferences,
   readGridPreferences,
   removeGridPreferences,
@@ -329,6 +332,25 @@ const grid = {
 } as Grid<Person>;
 
 describe("primitives", () => {
+  it("merges localization overrides without changing the default dictionary", () => {
+    const localization = createGridLocalization({
+      noRows: "행이 없습니다",
+      selectedRows: (count) => `${count}개 행 선택됨`,
+      paginationActionLabel: (action) => ({
+        first: "첫 페이지",
+        previous: "이전 페이지",
+        next: "다음 페이지",
+        last: "마지막 페이지",
+      })[action],
+    });
+
+    expect(localization.noRows).toBe("행이 없습니다");
+    expect(getRowSelectionStatusText(2, localization)).toBe("2개 행 선택됨");
+    expect(getPaginationButtonProps({ action: "next" }, localization)["aria-label"]).toBe("다음 페이지");
+    expect(getGridLoadingText(localization)).toBe("Loading rows...");
+    expect(DEFAULT_GRID_LOCALIZATION.noRows).toBe("No rows");
+    expect(Object.isFrozen(localization)).toBe(true);
+  });
   it("returns accessible grid root props", () => {
     expect(getGridProps(grid)).toMatchObject({
       role: "grid",
@@ -583,6 +605,60 @@ describe("primitives", () => {
         columnPinning: { left: ["id"], right: ["owner"] },
       },
     });
+  });
+
+  it("migrates legacy preferences through an explicit version chain", () => {
+    const migrations = [{
+      fromVersion: 0,
+      toVersion: 1,
+      migrate: (preferences: Readonly<Record<string, unknown>>) => ({
+        version: 1,
+        density: preferences.compact ? "compact" : "standard",
+        state: {
+          columnVisibility: preferences.hiddenColumn === "owner" ? { owner: false } : {},
+          columnSizing: {},
+          columnOrder: ["id", "owner"],
+          columnPinning: { left: [], right: [] },
+        },
+      }),
+    }] as const;
+    const legacy = JSON.stringify({ version: 0, compact: true, hiddenColumn: "owner" });
+
+    expect(parseGridPreferences(legacy, { migrations, validColumnIds: ["id", "owner"] })).toEqual({
+      version: 1,
+      density: "compact",
+      state: {
+        columnVisibility: { owner: false },
+        columnSizing: {},
+        columnOrder: ["id", "owner"],
+        columnPinning: { left: [], right: [] },
+      },
+    });
+    expect(migrateGridPreferences(JSON.parse(legacy), migrations)?.version).toBe(1);
+  });
+
+  it("rejects incomplete, ambiguous, invalid, and failing preference migrations", () => {
+    const legacy = JSON.stringify({ version: 0 });
+    const validMigration = {
+      fromVersion: 0,
+      toVersion: 1,
+      migrate: () => ({ version: 1, state: {} }),
+    } as const;
+
+    expect(parseGridPreferences(legacy)).toBeNull();
+    expect(parseGridPreferences(legacy, { migrations: [validMigration, validMigration] })).toBeNull();
+    expect(parseGridPreferences(legacy, {
+      migrations: [{ ...validMigration, migrate: () => ({ version: 0, state: {} }) }],
+    })).toBeNull();
+    expect(parseGridPreferences(legacy, {
+      migrations: [{ fromVersion: 0, toVersion: 2, migrate: () => ({ version: 2 }) }],
+    })).toBeNull();
+    expect(parseGridPreferences(legacy, {
+      migrations: [{ ...validMigration, migrate: () => { throw new Error("migration failed"); } }],
+    })).toBeNull();
+    expect(migrateGridPreferences(JSON.parse(legacy), [
+      { ...validMigration, migrate: () => { throw new Error("migration failed"); } },
+    ])).toBeNull();
   });
 
   it("guards browser preference storage reads, writes, removals, and access failures", () => {

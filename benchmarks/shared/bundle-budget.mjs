@@ -2,7 +2,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { gzipSync } from "node:zlib";
 
-export const BENCHMARK_BUNDLE_BUDGET_SCHEMA_VERSION = 1;
+export const BENCHMARK_BUNDLE_BUDGET_SCHEMA_VERSION = 2;
+
+const ENFORCEMENT_MODES = new Set(["required", "diagnostic"]);
 
 const METRICS = new Set([
   "javascriptGzipBytes",
@@ -23,12 +25,14 @@ export function measureBundleBudgets(config, rootDirectory) {
 
   for (const application of config.applications) {
     const measurement = byId.get(application.id);
+    const enforcement = application.enforcement ?? "required";
     for (const [metric, maximumBytes] of Object.entries(application.limits ?? {})) {
       checks.push({
         id: `${application.id}:${metric}`,
         type: "absolute",
         applicationId: application.id,
         metric,
+        enforcement,
         actualBytes: measurement[metric],
         maximumBytes,
         passed: measurement[metric] <= maximumBytes,
@@ -46,6 +50,7 @@ export function measureBundleBudgets(config, rootDirectory) {
       applicationId: comparison.candidateId,
       baselineId: comparison.baselineId,
       metric: comparison.metric,
+      enforcement: comparison.enforcement ?? "required",
       actualBytes: candidate[comparison.metric],
       baselineBytes: baseline[comparison.metric],
       maxDeltaBytes: comparison.maxDeltaBytes,
@@ -56,10 +61,11 @@ export function measureBundleBudgets(config, rootDirectory) {
 
   return {
     schemaVersion: BENCHMARK_BUNDLE_BUDGET_SCHEMA_VERSION,
-    passed: checks.every((check) => check.passed),
+    passed: checks.every((check) => check.enforcement !== "required" || check.passed),
     measurements,
     checks,
-    failures: checks.filter((check) => !check.passed),
+    failures: checks.filter((check) => check.enforcement === "required" && !check.passed),
+    diagnostics: checks.filter((check) => check.enforcement === "diagnostic" && !check.passed),
   };
 }
 
@@ -79,6 +85,8 @@ export function validateBundleBudgetConfig(config) {
     if (typeof application.distDirectory !== "string" || application.distDirectory.length === 0 || path.isAbsolute(application.distDirectory)) {
       throw new TypeError(`bundle budget distDirectory for ${application.id} must be relative`);
     }
+    validateEnforcement(application.enforcement, `${application.id} enforcement`);
+    validateExtensions(application.includeExtensions, `${application.id} includeExtensions`);
     ids.add(application.id);
     for (const [metric, maximumBytes] of Object.entries(application.limits ?? {})) {
       validateMetric(metric);
@@ -94,6 +102,7 @@ export function validateBundleBudgetConfig(config) {
       throw new TypeError("bundle budget comparisons must reference distinct configured applications");
     }
     validateMetric(comparison.metric);
+    validateEnforcement(comparison.enforcement, `${comparison.candidateId} comparison enforcement`);
     validateDeltaBytes(comparison.maxDeltaBytes, `${comparison.candidateId} maxDeltaBytes`);
   }
 }
@@ -109,16 +118,16 @@ export function formatBundleBudgetMarkdown(result) {
     `- Status: ${result.passed ? "passed" : "failed"}`,
     `- Schema: ${result.schemaVersion}`,
     "",
-    "| Application | JavaScript gzip | Stylesheet gzip | Total gzip | Files |",
-    "| --- | ---: | ---: | ---: | ---: |",
+    "| Target | Mode | JavaScript gzip | Stylesheet gzip | Total gzip | Files |",
+    "| --- | --- | ---: | ---: | ---: | ---: |",
     ...result.measurements.map((measurement) =>
-      `| ${measurement.id} | ${formatBytes(measurement.javascriptGzipBytes)} | ${formatBytes(measurement.stylesheetGzipBytes)} | ${formatBytes(measurement.totalGzipBytes)} | ${measurement.fileCount} |`,
+      `| ${measurement.id} | ${measurement.enforcement} | ${formatBytes(measurement.javascriptGzipBytes)} | ${formatBytes(measurement.stylesheetGzipBytes)} | ${formatBytes(measurement.totalGzipBytes)} | ${measurement.fileCount} |`,
     ),
     "",
-    "| Check | Actual | Maximum | Status |",
-    "| --- | ---: | ---: | --- |",
+    "| Check | Mode | Actual | Maximum | Status |",
+    "| --- | --- | ---: | ---: | --- |",
     ...result.checks.map((check) =>
-      `| ${check.id} | ${formatBytes(check.actualBytes)} | ${formatBytes(check.maximumBytes)} | ${check.passed ? "pass" : "fail"} |`,
+      `| ${check.id} | ${check.enforcement} | ${formatBytes(check.actualBytes)} | ${formatBytes(check.maximumBytes)} | ${check.passed ? "pass" : check.enforcement === "required" ? "fail" : "diagnostic"} |`,
     ),
   ];
 
@@ -131,7 +140,11 @@ function measureApplication(root, application) {
     throw new TypeError(`bundle budget distDirectory for ${application.id} escapes the root`);
   }
 
-  const files = collectFiles(directory).filter((file) => !file.endsWith(".map"));
+  const includedExtensions = application.includeExtensions ? new Set(application.includeExtensions) : null;
+  const files = collectFiles(directory).filter((file) => {
+    if (file.endsWith(".map")) return false;
+    return includedExtensions === null || includedExtensions.has(path.extname(file));
+  });
   if (files.length === 0) {
     throw new TypeError(`bundle budget application ${application.id} has no built files`);
   }
@@ -148,6 +161,7 @@ function measureApplication(root, application) {
 
   return {
     id: application.id,
+    enforcement: application.enforcement ?? "required",
     fileCount: files.length,
     javascriptGzipBytes,
     stylesheetGzipBytes,
@@ -176,6 +190,24 @@ function validateBytes(value, label, allowZero = false) {
 function validateDeltaBytes(value, label) {
   if (!Number.isSafeInteger(value)) {
     throw new TypeError(`bundle budget ${label} must be a safe integer`);
+  }
+}
+
+function validateEnforcement(value, label) {
+  if (value !== undefined && !ENFORCEMENT_MODES.has(value)) {
+    throw new TypeError(`bundle budget ${label} must be required or diagnostic`);
+  }
+}
+
+function validateExtensions(value, label) {
+  if (value === undefined) return;
+  if (!Array.isArray(value) || value.length === 0 || new Set(value).size !== value.length) {
+    throw new TypeError(`bundle budget ${label} must be a non-empty array of unique extensions`);
+  }
+  for (const extension of value) {
+    if (typeof extension !== "string" || !/^\.[a-z0-9]+$/i.test(extension)) {
+      throw new TypeError(`bundle budget ${label} contains an invalid extension`);
+    }
   }
 }
 

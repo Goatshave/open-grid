@@ -23,6 +23,7 @@ test("measures built assets and enforces absolute and relative bundle budgets", 
     assert.equal(result.failures.length, 0);
     assert.equal(result.measurements.length, 2);
     assert.equal(result.measurements[0].fileCount, 3);
+    assert.equal(result.measurements[0].enforcement, "required");
     assert.ok(result.measurements[0].javascriptGzipBytes > 0);
     assert.ok(result.measurements[0].stylesheetGzipBytes > 0);
     assert.equal(result.checks.length, 4);
@@ -36,6 +37,17 @@ test("measures built assets and enforces absolute and relative bundle budgets", 
     assert.equal(failed.passed, false);
     assert.equal(failed.failures.length, 1);
     assert.equal(failed.failures[0].type, "absolute");
+
+    config.applications[0].enforcement = "diagnostic";
+    const diagnostic = measureBundleBudgets(config, root);
+    assert.equal(diagnostic.passed, true);
+    assert.equal(diagnostic.failures.length, 0);
+    assert.equal(diagnostic.diagnostics.length, 1);
+    assert.match(formatBundleBudgetMarkdown(diagnostic), /diagnostic/);
+
+    config.applications[0].includeExtensions = [".js"];
+    const filtered = measureBundleBudgets(config, root);
+    assert.equal(filtered.measurements[0].fileCount, 1);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -43,36 +55,44 @@ test("measures built assets and enforces absolute and relative bundle budgets", 
 
 test("rejects malformed bundle budget contracts and missing build output", () => {
   assert.throws(() => validateBundleBudgetConfig({}), /schemaVersion/);
-  assert.throws(() => validateBundleBudgetConfig({ schemaVersion: 1, applications: [] }), /non-empty/);
+  assert.throws(() => validateBundleBudgetConfig({ schemaVersion: 2, applications: [] }), /non-empty/);
   assert.throws(() => validateBundleBudgetConfig({
-    schemaVersion: 1,
+    schemaVersion: 2,
     applications: [
       { id: "same", distDirectory: "a" },
       { id: "same", distDirectory: "b" },
     ],
   }), /unique/);
   assert.throws(() => validateBundleBudgetConfig({
-    schemaVersion: 1,
+    schemaVersion: 2,
     applications: [{ id: "app", distDirectory: "dist", limits: { unsupported: 1 } }],
   }), /unsupported/);
   assert.throws(() => validateBundleBudgetConfig({
-    schemaVersion: 1,
+    schemaVersion: 2,
     applications: [{ id: "app", distDirectory: "dist" }],
     comparisons: [{ candidateId: "app", baselineId: "missing", metric: "totalGzipBytes", maxDeltaBytes: 0 }],
   }), /distinct configured/);
   assert.throws(() => validateBundleBudgetConfig({
-    schemaVersion: 1,
+    schemaVersion: 2,
     applications: [
       { id: "candidate", distDirectory: "candidate" },
       { id: "baseline", distDirectory: "baseline" },
     ],
     comparisons: [{ candidateId: "candidate", baselineId: "baseline", metric: "totalGzipBytes", maxDeltaBytes: 0.5 }],
   }), /safe integer/);
+  assert.throws(() => validateBundleBudgetConfig({
+    schemaVersion: 2,
+    applications: [{ id: "app", distDirectory: "dist", enforcement: "optional" }],
+  }), /required or diagnostic/);
+  assert.throws(() => validateBundleBudgetConfig({
+    schemaVersion: 2,
+    applications: [{ id: "app", distDirectory: "dist", includeExtensions: ["js"] }],
+  }), /invalid extension/);
 
   const root = mkdtempSync(path.join(os.tmpdir(), "open-grid-bundle-budget-missing-"));
   try {
     assert.throws(() => measureBundleBudgets({
-      schemaVersion: 1,
+      schemaVersion: 2,
       applications: [{ id: "app", distDirectory: "../outside" }],
     }, root), /escapes the root/);
   } finally {
@@ -82,7 +102,7 @@ test("rejects malformed bundle budget contracts and missing build output", () =>
 
 function createConfig() {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     applications: [
       {
         id: "candidate",

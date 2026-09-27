@@ -21,10 +21,9 @@
     addPointerMoveUpListeners,
     applyResizeObserverMeasuredSizes,
     createClickSuppressionController,
+    createGridLocalization,
     createResizeObserver,
     disconnectResizeObserver,
-    GROUPING_PANEL_EMPTY_MESSAGE,
-    HEADER_ACTION_MENU_TRIGGER_TEXT,
     getCellEditorProps,
     getCellEditorKeyboardAction,
     getCellEditorOptionProps,
@@ -214,6 +213,8 @@
     GRID_DENSITIES,
     type ColumnVirtualizationPrimitiveOptions,
     type GridDensity,
+    type GridLocalization,
+    type GridLocalizationOverrides,
     type ResolvedColumnVirtualizationOptions,
     type ResolvedRowVirtualizationOptions,
     type RowVirtualizationPrimitiveOptions,
@@ -222,10 +223,35 @@
   import { createGridStore } from "@open-grid/svelte";
   import { createMeasuredSizeCache, createMeasuredSizeResolver, getColumnCellRenderItems, getColumnLayoutMeasurementSignature, getColumnRenderItems, getHeaderRenderItemKey, getHeaderRenderItems, getInitialScrollFrame, getMeasuredColumnLayoutFromCache, getScrollFrame, getSizedColumnLayout, getVirtualRowRange, getVirtualRowItems, isHeaderRenderSpacerItem, syncMeasuredColumnLayoutCache, type ColumnCellRenderItem, type ColumnRenderItem, type VirtualItem, type VirtualRange } from "@open-grid/virtual";
   import { onDestroy, onMount, tick } from "svelte";
+  import RenderValue from "./RenderValue.svelte";
 
   export type RowVirtualizationOptions = RowVirtualizationPrimitiveOptions;
 
   export type ColumnVirtualizationOptions = ColumnVirtualizationPrimitiveOptions;
+
+  export interface DataGridRenderContext<TData = unknown> {
+    grid: Grid<TData>;
+    rows: readonly Row<TData>[];
+    visibleColumns: readonly Column<TData, unknown>[];
+  }
+
+  export interface DataGridErrorRenderContext<TData = unknown> extends DataGridRenderContext<TData> {
+    retry: (() => void) | undefined;
+  }
+
+  export interface SvelteDataGridRenderer<TContext = unknown> {
+    type: "open-grid:svelte-renderer";
+    component: unknown;
+    context: TContext;
+    props?: Record<string, unknown>;
+  }
+
+  export type SvelteDataGridRenderValue<TContext = unknown> = string | number | boolean | null | undefined | SvelteDataGridRenderer<TContext>;
+
+  const isSvelteDataGridRenderer = (value: unknown): value is SvelteDataGridRenderer<unknown> =>
+    typeof value === "object"
+    && value !== null
+    && (value as { type?: unknown }).type === "open-grid:svelte-renderer";
 
   export interface HeaderActionMenuActionItem<TData = unknown> {
     type?: "action";
@@ -276,14 +302,21 @@
 
   export type HeaderActionMenuItems<TData = unknown> = (context: HeaderActionMenuContext<TData>) => Array<HeaderActionMenuItem<TData> | null | false | undefined>;
 
-  export let ariaLabel = "Data grid";
+  export let ariaLabel: string | undefined = undefined;
+  export let localization: GridLocalizationOverrides | undefined = undefined;
   export let options: GridOptions<unknown>;
-  export let emptyState: unknown = "No rows";
+  export let emptyState: unknown = undefined;
   export let error = false;
-  export let errorState: unknown = getGridErrorText();
+  export let errorState: unknown = undefined;
   export let onRetry: (() => void) | undefined = undefined;
   export let loading = false;
-  export let loadingState: unknown = getGridLoadingText();
+  export let loadingState: unknown = undefined;
+  export let renderToolbar: ((context: DataGridRenderContext<unknown>) => SvelteDataGridRenderValue<DataGridRenderContext<unknown>>) | undefined = undefined;
+  export let renderEmptyState: ((context: DataGridRenderContext<unknown>) => SvelteDataGridRenderValue<DataGridRenderContext<unknown>>) | undefined = undefined;
+  export let renderLoadingState: ((context: DataGridRenderContext<unknown>) => SvelteDataGridRenderValue<DataGridRenderContext<unknown>>) | undefined = undefined;
+  export let renderErrorState: ((context: DataGridErrorRenderContext<unknown>) => SvelteDataGridRenderValue<DataGridErrorRenderContext<unknown>>) | undefined = undefined;
+  export let renderHeader: ((context: HeaderContext<unknown, unknown>) => SvelteDataGridRenderValue<HeaderContext<unknown, unknown>>) | undefined = undefined;
+  export let renderCell: ((context: CellContext<unknown, unknown>) => SvelteDataGridRenderValue<CellContext<unknown, unknown>>) | undefined = undefined;
   export let onGridReady: ((grid: Grid<unknown>) => void | (() => void)) | undefined = undefined;
   export let getRowClassName: ((row: Row<unknown>) => string | undefined) | undefined = undefined;
   export let getHeaderClassName: ((context: HeaderContext<unknown, unknown>) => string | undefined) | undefined = undefined;
@@ -381,6 +414,12 @@
   let gridProps = getGridProps(grid, { ariaLabel, error, loading });
   let resolvedPageSizeOptions = getPaginationPageSizeOptions(pageSizeOptions, grid.getState().pagination.pageSize);
   let paginationPageText = getPaginationPageText(grid);
+  let resolvedLocalization: GridLocalization = createGridLocalization(localization);
+  let resolvedAriaLabel = resolvedLocalization.dataGridLabel;
+  let resolvedEmptyState: unknown = resolvedLocalization.noRows;
+  let resolvedErrorState: unknown = resolvedLocalization.gridError;
+  let resolvedLoadingState: unknown = resolvedLocalization.loadingRows;
+  let renderContext: DataGridRenderContext<unknown> = { grid, rows: [], visibleColumns: [] };
   let canPreviousPage = grid.getCanPreviousPage();
   let canNextPage = grid.getCanNextPage();
   let allPageRowsSelected = rowSelectionControls ? grid.getIsAllPageRowsSelected() : false;
@@ -389,6 +428,11 @@
   let selectionCheckboxElement: HTMLInputElement | null = null;
 
   $: gridStore.setOptions(options, { notify: false });
+  $: resolvedLocalization = createGridLocalization(localization);
+  $: resolvedAriaLabel = ariaLabel ?? resolvedLocalization.dataGridLabel;
+  $: resolvedEmptyState = emptyState ?? resolvedLocalization.noRows;
+  $: resolvedErrorState = errorState ?? getGridErrorText(resolvedLocalization);
+  $: resolvedLoadingState = loadingState ?? getGridLoadingText(resolvedLocalization);
   $: allRows = ($state, grid.getRowModel().rows);
   $: additionalHeaderRowCount = columnFilterControls ? 1 : 0;
   $: resolvedDensity = density ?? uncontrolledDensity;
@@ -402,12 +446,12 @@
       }
     }
   }
-  $: gridProps = ($state, additionalHeaderRowCount, ariaLabel, error, loading, resolvedDensity, {
-    ...getGridProps(grid, { additionalHeaderRowCount, ariaLabel, error, loading }),
+  $: gridProps = ($state, additionalHeaderRowCount, resolvedAriaLabel, error, loading, resolvedDensity, {
+    ...getGridProps(grid, { additionalHeaderRowCount, ariaLabel: resolvedAriaLabel, error, loading }),
     ...(densitySizingEnabled ? getGridDensityProps(resolvedDensity) : {}),
   });
   $: resolvedPageSizeOptions = ($state.pagination.pageSize, pageSizeOptions, getPaginationPageSizeOptions(pageSizeOptions, $state.pagination.pageSize));
-  $: paginationPageText = ($state.pagination, getPaginationPageText(grid));
+  $: paginationPageText = ($state.pagination, resolvedLocalization, getPaginationPageText(grid, resolvedLocalization));
   $: canPreviousPage = ($state.pagination.pageIndex, grid.getCanPreviousPage());
   $: canNextPage = ($state.pagination, grid.getCanNextPage());
   $: allPageRowsSelected = ($state.rowSelection, allRows, rowSelectionControls ? grid.getIsAllPageRowsSelected() : false);
@@ -417,6 +461,7 @@
   $: bodyRowIndexOffset = ($state, additionalHeaderRowCount, getGridBodyRowIndexOffset(grid, { additionalHeaderRowCount }));
   $: allColumns = ($state, grid.getAllLeafColumns());
   $: visibleColumns = ($state, grid.getVisibleLeafColumns());
+  $: renderContext = { grid, rows: allRows, visibleColumns };
   $: filteredVisibilityColumns = getFilteredColumnVisibilityColumns(allColumns, columnVisibilityQuery);
   $: groupingColumns = $state.grouping.flatMap((columnId) => {
     const column = getColumnById(columnId, grid.getAllLeafColumns());
@@ -486,6 +531,8 @@
   });
   $: simpleCellRendering = !$state.editingCell
     && (!$state.cellSelectionRange || deferDetailedCellRendering)
+    && !renderCell
+    && !visibleColumns.some((column) => typeof column.columnDef.cell === "function")
     && !visibleRowItems.some(({ row }) =>
     row.getIsGrouped() || row.getIsGroupFooter() || row.depth > 0 || row.getCanExpand(),
   );
@@ -616,10 +663,14 @@
   ) =>
     getColumnResizeHandleProps(column, {
       valueNow: layout?.size ?? grid.getColumnSize(column.id) ?? column.getSize(),
-    });
+    }, resolvedLocalization);
 
-  const getHeaderLabel = (header: Header<unknown>) => {
-    return getColumnHeaderText(header.column);
+  const getHeaderContent = (header: Header<unknown>): unknown => {
+    const context = { grid, column: header.column, header } as HeaderContext<unknown, unknown>;
+    const value = renderHeader?.(context) ?? (typeof header.column.columnDef.header === "function"
+      ? header.column.columnDef.header(context)
+      : header.column.columnDef.header);
+    return value ?? getColumnHeaderText(header.column);
   };
   const getCanUseCompactHeaderRendering = (
     headerGroup: HeaderGroup<unknown>,
@@ -677,8 +728,12 @@
     const value = row.getValue(column.id);
     return getCellDisplayText(value);
   };
+  const getCellContent = (row: Row<unknown>, column: Column<unknown, unknown>): unknown => {
+    const context = { grid, row, column, value: row.getValue(column.id) } as CellContext<unknown, unknown>;
+    return renderCell?.(context) ?? column.columnDef.cell?.(context) ?? getCellValue(row, column);
+  };
   const getGroupLabel = (row: Row<unknown>, column: Column<unknown, unknown>) =>
-    getGroupRowLabel(row, column, { fallback: getCellValue(row, column) });
+    getGroupRowLabel(row, column, { fallback: getCellValue(row, column) }, resolvedLocalization);
   const getColumnStyle = (
     size: number,
     layout: ColumnLayout | undefined,
@@ -1352,7 +1407,7 @@
       canGroup: column.getCanGroup(),
       canMoveLeft,
       canMoveRight,
-    }).map((descriptor): HeaderActionMenuActionItem<unknown> => {
+    }, resolvedLocalization).map((descriptor): HeaderActionMenuActionItem<unknown> => {
       if (descriptor.id === "sort-asc") {
         return { ...descriptor, onSelect: () => grid.toggleColumnSorting(column.id, false) };
       }
@@ -1440,37 +1495,47 @@
 
 </script>
 
+{#if renderToolbar}
+  {@const toolbarContent = renderToolbar(renderContext)}
+  <div class="og-grid__toolbar-slot">
+    {#if isSvelteDataGridRenderer(toolbarContent)}
+      <RenderValue value={toolbarContent} />
+    {:else}
+      {String(toolbarContent ?? "")}
+    {/if}
+  </div>
+{/if}
 {#if quickFilterControl || rowSelectionControls || columnVisibilityControls || densityControl}
   <div class="og-grid__controls">
     {#if rowSelectionControls}
-      <div {...getRowSelectionControlsProps()} class="og-grid__selection-controls">
+      <div {...getRowSelectionControlsProps(resolvedLocalization)} class="og-grid__selection-controls">
         <label class="og-grid__selection-toggle">
           <input
-            {...getRowSelectionCheckboxProps({ allSelected: allPageRowsSelected, someSelected: somePageRowsSelected, disabled: allRows.length === 0 })}
+            {...getRowSelectionCheckboxProps({ allSelected: allPageRowsSelected, someSelected: somePageRowsSelected, disabled: allRows.length === 0 }, resolvedLocalization)}
             bind:this={selectionCheckboxElement}
             on:change={() => grid.toggleAllPageRowsSelected(!allPageRowsSelected)}
           />
-          <span>{getRowSelectionCheckboxText()}</span>
+          <span>{getRowSelectionCheckboxText(resolvedLocalization)}</span>
         </label>
-        <span {...getRowSelectionStatusProps()} class="og-grid__selection-status">{getRowSelectionStatusText(selectedRowCount)}</span>
-        <button {...getRowSelectionClearButtonProps(selectedRowCount === 0)} class="og-grid__selection-clear" on:click={() => grid.resetRowSelection()}>{getRowSelectionClearButtonText()}</button>
+        <span {...getRowSelectionStatusProps()} class="og-grid__selection-status">{getRowSelectionStatusText(selectedRowCount, resolvedLocalization)}</span>
+        <button {...getRowSelectionClearButtonProps(selectedRowCount === 0, resolvedLocalization)} class="og-grid__selection-clear" on:click={() => grid.resetRowSelection()}>{getRowSelectionClearButtonText(resolvedLocalization)}</button>
       </div>
     {/if}
     {#if columnVisibilityControls}
-      <details {...getColumnVisibilityControlsProps()} class="og-grid__column-visibility">
-        <summary {...getColumnVisibilitySummaryProps(visibleColumns.length, allColumns.length)} class="og-grid__column-visibility-summary">
-          {getColumnVisibilitySummaryText(visibleColumns.length, allColumns.length)}
+      <details {...getColumnVisibilityControlsProps(resolvedLocalization)} class="og-grid__column-visibility">
+        <summary {...getColumnVisibilitySummaryProps(visibleColumns.length, allColumns.length, resolvedLocalization)} class="og-grid__column-visibility-summary">
+          {getColumnVisibilitySummaryText(visibleColumns.length, allColumns.length, resolvedLocalization)}
         </summary>
         <div class="og-grid__column-visibility-panel">
           <input
-            {...getColumnVisibilitySearchInputProps(columnVisibilityQuery)}
+            {...getColumnVisibilitySearchInputProps(columnVisibilityQuery, resolvedLocalization)}
             class="og-grid__column-visibility-search"
             on:input={(event) => (columnVisibilityQuery = event.currentTarget.value)}
           />
           <span {...getColumnVisibilityStatusProps()} class="og-grid__column-visibility-status">
-            {getColumnVisibilityStatusText(visibleColumns.length, allColumns.length)}
+            {getColumnVisibilityStatusText(visibleColumns.length, allColumns.length, resolvedLocalization)}
           </span>
-          <div {...getColumnVisibilityListProps()} class="og-grid__column-visibility-list">
+          <div {...getColumnVisibilityListProps(resolvedLocalization)} class="og-grid__column-visibility-list">
             {#if filteredVisibilityColumns.length > 0}
               {#each filteredVisibilityColumns as column (column.id)}
                 {@const label = getColumnHeaderText(column)}
@@ -1489,32 +1554,32 @@
                 </label>
               {/each}
             {:else}
-              <span class="og-grid__column-visibility-empty">{getColumnVisibilityEmptyText()}</span>
+              <span class="og-grid__column-visibility-empty">{getColumnVisibilityEmptyText(resolvedLocalization)}</span>
             {/if}
           </div>
           <button
-            {...getColumnVisibilityResetButtonProps(allColumns.length - visibleColumns.length)}
+            {...getColumnVisibilityResetButtonProps(allColumns.length - visibleColumns.length, resolvedLocalization)}
             class="og-grid__column-visibility-reset"
             on:click={() => grid.resetColumnVisibility()}
-          >{getColumnVisibilityResetButtonText()}</button>
+          >{getColumnVisibilityResetButtonText(resolvedLocalization)}</button>
         </div>
       </details>
     {/if}
     {#if densityControl}
-      <div {...getDensityControlsProps()} class="og-grid__density-controls">
+      <div {...getDensityControlsProps(resolvedLocalization)} class="og-grid__density-controls">
         {#each GRID_DENSITIES as densityOption (densityOption)}
           <button
-            {...getDensityButtonProps(densityOption, resolvedDensity)}
+            {...getDensityButtonProps(densityOption, resolvedDensity, resolvedLocalization)}
             class="og-grid__density-button"
             on:click={() => setDensity(densityOption)}
-          >{getDensityButtonText(densityOption)}</button>
+          >{getDensityButtonText(densityOption, resolvedLocalization)}</button>
         {/each}
       </div>
     {/if}
     {#if quickFilterControl}
-      <div {...getQuickFilterProps()} class="og-grid__quick-filter">
-        <input {...getQuickFilterInputProps({ value: $state.globalFilter })} class="og-grid__quick-filter-input" on:input={handleQuickFilterInput} />
-        <button {...getQuickFilterClearButtonProps($state.globalFilter)} class="og-grid__quick-filter-clear" on:click={() => setQuickFilter("")}>{getQuickFilterClearButtonText()}</button>
+      <div {...getQuickFilterProps(resolvedLocalization)} class="og-grid__quick-filter">
+        <input {...getQuickFilterInputProps({ value: $state.globalFilter }, resolvedLocalization)} class="og-grid__quick-filter-input" on:input={handleQuickFilterInput} />
+        <button {...getQuickFilterClearButtonProps($state.globalFilter, resolvedLocalization)} class="og-grid__quick-filter-clear" on:click={() => setQuickFilter("")}>{getQuickFilterClearButtonText(resolvedLocalization)}</button>
       </div>
     {/if}
   </div>
@@ -1527,31 +1592,31 @@
   {#if groupingPanel}
     <div
       bind:this={groupingPanelElement}
-      {...getGroupingPanelProps({ empty: groupingColumns.length === 0 })}
+      {...getGroupingPanelProps({ empty: groupingColumns.length === 0 }, resolvedLocalization)}
       class="og-grid__grouping-panel"
     >
       {#if groupingColumns.length === 0}
-        <span {...getGroupingPanelPlaceholderProps()} class="og-grid__grouping-placeholder">{GROUPING_PANEL_EMPTY_MESSAGE}</span>
+        <span {...getGroupingPanelPlaceholderProps()} class="og-grid__grouping-placeholder">{resolvedLocalization.groupingPanelEmpty}</span>
       {:else}
         {#each groupingColumns as column, index (column.id)}
           <span {...getGroupingPanelChipProps(column)} class="og-grid__grouping-chip">
             <span class="og-grid__grouping-chip-label">{getColumnLabel(column)}</span>
             <button
-              {...getGroupingPanelMoveButtonProps(column, { direction: "left", disabled: index === 0 })}
+              {...getGroupingPanelMoveButtonProps(column, { direction: "left", disabled: index === 0 }, resolvedLocalization)}
               class="og-grid__grouping-move"
               on:click={() => moveGroupedColumn(grid, groupingColumns, column.id, "left")}
             >
               {"<"}
             </button>
             <button
-              {...getGroupingPanelMoveButtonProps(column, { direction: "right", disabled: index === groupingColumns.length - 1 })}
+              {...getGroupingPanelMoveButtonProps(column, { direction: "right", disabled: index === groupingColumns.length - 1 }, resolvedLocalization)}
               class="og-grid__grouping-move"
               on:click={() => moveGroupedColumn(grid, groupingColumns, column.id, "right")}
             >
               {">"}
             </button>
             <button
-              {...getGroupingPanelRemoveButtonProps(column)}
+              {...getGroupingPanelRemoveButtonProps(column, resolvedLocalization)}
               class="og-grid__grouping-remove"
               on:click={() => grid.toggleColumnGrouping(column.id, false)}
             >
@@ -1562,7 +1627,7 @@
       {/if}
     </div>
   {/if}
-  <div {...gridProps} class="og-grid__scroller" role="grid" bind:this={scrollerElement} on:keydown={handleGridKeyDown} on:scroll={syncFrame}>
+  <div {...gridProps} class="og-grid__scroller" role="grid" tabindex="0" bind:this={scrollerElement} on:keydown={handleGridKeyDown} on:scroll={syncFrame}>
     <div class="og-grid__canvas" style={getInlineSizeStyleText(totalMeasuredWidth)}>
       <div {...getGridHeaderProps()} class="og-grid__header" bind:this={headerElement}>
         {#each grid.getHeaderGroups() as headerGroup, headerRowIndex (headerGroup.id)}
@@ -1582,6 +1647,7 @@
                   {@const layout = layoutById.get(firstLeafId)}
                   {@const canSort = header.column.getCanSort()}
                   {@const sortDirection = grid.getColumnSortDirection(header.column.id)}
+                  {@const headerContent = getHeaderContent(header)}
                   <div
                     {...getHeaderCellProps(grid, header.column, Math.max(0, columnIndex), { pinned: layout?.pinned ?? false })}
                     {...getHeaderCellLayoutProps({
@@ -1602,9 +1668,11 @@
                     class="og-grid__header-button"
                     on:click={(event) => handleHeaderClick(header.column, canSort, event)}
                     on:keydown={(event) => handleHeaderButtonKeyDown(header.column, event)}
-                  ><span class="og-grid__header-label">{getHeaderLabel(header)}</span><span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">{getHeaderSortIndicatorText(sortDirection, { visible: true })}</span></button><span
+                  ><span class="og-grid__header-label">{#if isSvelteDataGridRenderer(headerContent)}<RenderValue value={headerContent} />{:else}{String(headerContent ?? "")}{/if}</span><span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">{getHeaderSortIndicatorText(sortDirection, { visible: true })}</span></button><!-- svelte-ignore a11y-no-noninteractive-tabindex a11y-no-noninteractive-element-interactions --><span
                     {...getResizeHandleProps(header.column, layout, $state.columnSizing)}
                     class="og-grid__resize-handle"
+                    role="separator"
+                    tabindex="0"
                     on:keydown={(event) => handleResizeKeyDown(header.column, Math.max(0, columnIndex), event)}
                     on:pointerdown={(event) => handleResizePointerDown(header.column, Math.max(0, columnIndex), event)}
                   ></span></div>
@@ -1629,6 +1697,7 @@
               {@const menuId = getHeaderMenuId(header.column.id)}
               {@const menuTriggerId = getHeaderActionMenuTriggerId(header.column.id)}
               {@const headerMenu = getHeaderActionMenu(header.column, sortDirection, pinningPosition, isGrouped, canMoveLeft, canMoveRight)}
+              {@const headerContent = getHeaderContent(header)}
               <div
                 {...(header.isPlaceholder
                   ? getHeaderPlaceholderCellProps(header.column)
@@ -1662,15 +1731,21 @@
                     on:click={(event) => handleHeaderClick(header.column, canSort, event)}
                     on:keydown={(event) => handleHeaderButtonKeyDown(header.column, event)}
                   >
-                    <span class="og-grid__header-label">{getHeaderLabel(header)}</span>
+                    <span class="og-grid__header-label">
+                      {#if isSvelteDataGridRenderer(headerContent)}
+                        <RenderValue value={headerContent} />
+                      {:else}
+                        {String(headerContent ?? "")}
+                      {/if}
+                    </span>
                     <span {...getHeaderSortIndicatorProps()} class="og-grid__sort-indicator">
                       {getHeaderSortIndicatorText(sortDirection, { visible: canInteract })}
                     </span>
                   </button>
                   {#if canInteract && columnPinningControls}
-                    <span {...getColumnPinningControlsProps(header.column)} class="og-grid__pinning-controls">
+                    <span {...getColumnPinningControlsProps(header.column, resolvedLocalization)} class="og-grid__pinning-controls">
                       <button
-                        {...getColumnPinningButtonProps(header.column, { position: "left", active: pinningPosition === "left" })}
+                        {...getColumnPinningButtonProps(header.column, { position: "left", active: pinningPosition === "left" }, resolvedLocalization)}
                         class="og-grid__pinning-button"
                         on:pointerdown|stopPropagation={() => undefined}
                         on:click|stopPropagation={() => grid.pinColumn(header.column.id, "left")}
@@ -1678,7 +1753,7 @@
                         {getColumnPinningButtonText("left")}
                       </button>
                       <button
-                        {...getColumnPinningButtonProps(header.column, { position: false, active: pinningPosition === false })}
+                        {...getColumnPinningButtonProps(header.column, { position: false, active: pinningPosition === false }, resolvedLocalization)}
                         class="og-grid__pinning-button"
                         on:pointerdown|stopPropagation={() => undefined}
                         on:click|stopPropagation={() => grid.pinColumn(header.column.id, false)}
@@ -1686,7 +1761,7 @@
                         {getColumnPinningButtonText(false)}
                       </button>
                       <button
-                        {...getColumnPinningButtonProps(header.column, { position: "right", active: pinningPosition === "right" })}
+                        {...getColumnPinningButtonProps(header.column, { position: "right", active: pinningPosition === "right" }, resolvedLocalization)}
                         class="og-grid__pinning-button"
                         on:pointerdown|stopPropagation={() => undefined}
                         on:click|stopPropagation={() => grid.pinColumn(header.column.id, "right")}
@@ -1698,7 +1773,7 @@
                   {#if canInteract && headerActionMenu}
                     <span class="og-grid__header-menu">
                       <button
-                        {...getHeaderActionMenuTriggerProps(header.column, { expanded: headerMenuColumnId === header.column.id, controls: menuId })}
+                        {...getHeaderActionMenuTriggerProps(header.column, { expanded: headerMenuColumnId === header.column.id, controls: menuId }, resolvedLocalization)}
                         id={menuTriggerId}
                         class="og-grid__header-menu-trigger"
                         on:pointerdown|stopPropagation={() => undefined}
@@ -1717,13 +1792,15 @@
                           void tick().then(() => focusHeaderActionMenuItemById(document, menuId, focusPosition));
                         }}
                       >
-                        {HEADER_ACTION_MENU_TRIGGER_TEXT}
+                        {resolvedLocalization.headerActionMenuTrigger}
                       </button>
                       {#if headerMenuColumnId === header.column.id}
                         <div
-                          {...getHeaderActionMenuProps(header.column)}
+                          {...getHeaderActionMenuProps(header.column, resolvedLocalization)}
                           class="og-grid__header-menu-popover"
                           id={menuId}
+                          role="menu"
+                          tabindex="-1"
                           on:pointerdown|stopPropagation={() => undefined}
                           on:keydown={(event) => {
                             const menuAction = getHeaderActionMenuKeyboardAction(event);
@@ -1770,9 +1847,12 @@
                     </span>
                   {/if}
                   {#if canInteract}
+                    <!-- svelte-ignore a11y-no-noninteractive-tabindex a11y-no-noninteractive-element-interactions -->
                     <span
                       {...getResizeHandleProps(header.column, layout, $state.columnSizing)}
                       class="og-grid__resize-handle"
+                      role="separator"
+                      tabindex="0"
                       on:keydown={(event) => handleResizeKeyDown(header.column, Math.max(0, columnIndex), event)}
                       on:pointerdown={(event) => handleResizePointerDown(header.column, Math.max(0, columnIndex), event)}
                     ></span>
@@ -1806,7 +1886,7 @@
                     {...getColumnFilterInputProps(column, {
                       label: getColumnHeaderText(column),
                       value: getColumnFilterText($state.columnFilters, column.id),
-                    })}
+                    }, resolvedLocalization)}
                     class="og-grid__filter-input"
                     on:input={(event) => handleColumnFilterInput(column, event)}
                   />
@@ -1817,9 +1897,11 @@
         {/if}
       </div>
 
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <div
         {...getGridBodyProps({ virtualized: rowVirtualOptions.enabled, columnOrder: $state.columnOrder })}
         class="og-grid__body"
+        role="rowgroup"
         bind:this={bodyElement}
         style={getVirtualBodyStyleText(virtualRange)}
         on:focusin={handleSimpleBodyFocusIn}
@@ -1830,8 +1912,15 @@
         on:dblclick={handleSimpleBodyDoubleClick}
       >
         {#if allRows.length === 0}
+          {@const emptyContent = renderEmptyState?.(renderContext) ?? resolvedEmptyState}
           <div {...getGridEmptyRowProps({ rowIndexOffset: bodyRowIndexOffset })} class="og-grid__empty">
-            <div {...getGridEmptyCellProps({ rowIndexOffset: bodyRowIndexOffset, columnCount: visibleColumns.length })} class="og-grid__empty-cell" style={getInlineSizeStyleText(totalMeasuredWidth)}>{String(emptyState ?? "")}</div>
+            <div {...getGridEmptyCellProps({ rowIndexOffset: bodyRowIndexOffset, columnCount: visibleColumns.length })} class="og-grid__empty-cell" style={getInlineSizeStyleText(totalMeasuredWidth)}>
+              {#if isSvelteDataGridRenderer(emptyContent)}
+                <RenderValue value={emptyContent} />
+              {:else}
+                {String(emptyContent ?? "")}
+              {/if}
+            </div>
           </div>
         {:else if simpleCellRendering}
           {#each visibleRowItems as { row, rowIndex, virtualItem } (row.id)}
@@ -1843,12 +1932,14 @@
                 columnVirtualized: columnVirtualOptions.enabled,
               })}
               class={["og-grid__row", getRowClassName?.(row)].filter(Boolean).join(" ")}
+              role="row"
               style={getVirtualRowStyleText(virtualItem)}
               use:measureVirtualRow={row.id}
             >{@html getSimpleCellsHtml(row, rowIndex, columnCellRenderItems, $state.columnSizing, bodyRowIndexOffset, getCellClassName)}</div>
           {/each}
         {:else}
           {#each visibleRowItems as { row, rowIndex, virtualItem } (row.id)}
+            <!-- svelte-ignore a11y-interactive-supports-focus -->
             <div
               {...getRowProps(row, rowIndex, { selected: grid.getIsRowSelected(row.id), rowIndexOffset: bodyRowIndexOffset })}
               {...getRowLayoutProps(row, {
@@ -1857,6 +1948,7 @@
                 columnVirtualized: columnVirtualOptions.enabled,
               })}
               class={["og-grid__row", getRowClassName?.(row)].filter(Boolean).join(" ")}
+              role="row"
               style={getVirtualRowStyleText(virtualItem)}
               use:measureVirtualRow={row.id}
               on:click={(event) => handleRowClick(row, rowIndex, event)}
@@ -1870,6 +1962,8 @@
                     {...getCellProps(row, column, rowIndex, columnIndex, { focusedCell: $state.focusedCell, editing, rangeSelected, rowIndexOffset: bodyRowIndexOffset })}
                     {...getCellLayoutProps({ invalid: Boolean(editing && editValidationMessage), pinnedEdge: layout.pinnedEdge })}
                     class={["og-grid__cell", getCellClassName?.({ grid, row, column, value: row.getValue(column.id) })].filter(Boolean).join(" ")}
+                    role="gridcell"
+                    tabindex={isCellCoordinateEqual($state.focusedCell, { rowId: row.id, columnId: column.id }) ? 0 : -1}
                     style={getColumnStyle(layout.size, layout, $state.columnSizing, beforeSpacerSize, afterSpacerSize)}
                     on:focus={() => grid.setFocusedCell({ rowId: row.id, columnId: column.id })}
                     on:pointerdown={(event) => handleCellPointerDown({ rowId: row.id, columnId: column.id }, event)}
@@ -1888,7 +1982,7 @@
                     {#if editing}
                       {#if column.columnDef.editOptions}
                         <select
-                          {...getCellEditorProps(column, { invalid: Boolean(editValidationMessage) })}
+                          {...getCellEditorProps(column, { invalid: Boolean(editValidationMessage) }, resolvedLocalization)}
                           use:focusEditor
                           class="og-grid__cell-editor"
                           bind:value={editDraft}
@@ -1928,7 +2022,7 @@
                         </select>
                       {:else}
                         <input
-                          {...getCellEditorProps(column, { invalid: Boolean(editValidationMessage) })}
+                          {...getCellEditorProps(column, { invalid: Boolean(editValidationMessage) }, resolvedLocalization)}
                           use:focusEditor
                           class="og-grid__cell-editor"
                           bind:value={editDraft}
@@ -1971,7 +2065,7 @@
                       <span class="og-grid__group-cell" style={getGroupCellIndentStyleText(row)}>
                         {#if row.getCanExpand()}
                           <button
-                            {...getRowExpansionToggleProps(row, { expanded: grid.getIsRowExpanded(row.id), label: String(getGroupLabel(row, column)) })}
+                            {...getRowExpansionToggleProps(row, { expanded: grid.getIsRowExpanded(row.id), label: String(getGroupLabel(row, column)) }, resolvedLocalization)}
                             class="og-grid__group-toggle"
                             on:pointerdown|stopPropagation
                             on:click={(event) => {
@@ -1990,7 +2084,12 @@
                         {/if}
                       </span>
                     {:else}
-                      {getCellValue(row, column)}
+                      {@const cellContent = getCellContent(row, column)}
+                      {#if isSvelteDataGridRenderer(cellContent)}
+                        <RenderValue value={cellContent} />
+                      {:else}
+                        {String(cellContent ?? "")}
+                      {/if}
                     {/if}
                   </div>
                 {/each}
@@ -2001,31 +2100,45 @@
     </div>
   </div>
   {#if error}
-    <div {...getGridErrorOverlayProps()} class="og-grid__status-overlay og-grid__error-overlay">
-      <span class="og-grid__status-text">{String(errorState ?? "")}</span>
+    {@const errorContent = renderErrorState?.({ ...renderContext, retry: onRetry }) ?? resolvedErrorState}
+    <div {...getGridErrorOverlayProps(resolvedLocalization)} class="og-grid__status-overlay og-grid__error-overlay">
+      <span class="og-grid__status-text">
+        {#if isSvelteDataGridRenderer(errorContent)}
+          <RenderValue value={errorContent} />
+        {:else}
+          {String(errorContent ?? "")}
+        {/if}
+      </span>
       {#if onRetry}
-        <button {...getGridErrorRetryButtonProps()} class="og-grid__retry-button" on:click={onRetry}>{getGridErrorRetryButtonText()}</button>
+        <button {...getGridErrorRetryButtonProps(resolvedLocalization)} class="og-grid__retry-button" on:click={onRetry}>{getGridErrorRetryButtonText(resolvedLocalization)}</button>
       {/if}
     </div>
   {:else if loading}
-    <div {...getGridLoadingOverlayProps()} class="og-grid__status-overlay og-grid__loading-overlay">
+    {@const loadingContent = renderLoadingState?.(renderContext) ?? resolvedLoadingState}
+    <div {...getGridLoadingOverlayProps(resolvedLocalization)} class="og-grid__status-overlay og-grid__loading-overlay">
       <span class="og-grid__loading-spinner" aria-hidden="true"></span>
-      <span class="og-grid__status-text">{String(loadingState ?? "")}</span>
+      <span class="og-grid__status-text">
+        {#if isSvelteDataGridRenderer(loadingContent)}
+          <RenderValue value={loadingContent} />
+        {:else}
+          {String(loadingContent ?? "")}
+        {/if}
+      </span>
     </div>
   {/if}
 </div>
 {#if paginationControls}
-  <nav {...getPaginationProps()} class="og-grid__pagination">
+  <nav {...getPaginationProps(resolvedLocalization)} class="og-grid__pagination">
     <div class="og-grid__pagination-buttons">
-      <button {...getPaginationButtonProps({ action: "first", disabled: !canPreviousPage })} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.firstPage())}>{getPaginationButtonText("first")}</button>
-      <button {...getPaginationButtonProps({ action: "previous", disabled: !canPreviousPage })} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.previousPage())}>{getPaginationButtonText("previous")}</button>
+      <button {...getPaginationButtonProps({ action: "first", disabled: !canPreviousPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.firstPage())}>{getPaginationButtonText("first")}</button>
+      <button {...getPaginationButtonProps({ action: "previous", disabled: !canPreviousPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.previousPage())}>{getPaginationButtonText("previous")}</button>
       <span {...getPaginationStatusProps()} class="og-grid__pagination-status">{paginationPageText}</span>
-      <button {...getPaginationButtonProps({ action: "next", disabled: !canNextPage })} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.nextPage())}>{getPaginationButtonText("next")}</button>
-      <button {...getPaginationButtonProps({ action: "last", disabled: !canNextPage })} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.lastPage())}>{getPaginationButtonText("last")}</button>
+      <button {...getPaginationButtonProps({ action: "next", disabled: !canNextPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.nextPage())}>{getPaginationButtonText("next")}</button>
+      <button {...getPaginationButtonProps({ action: "last", disabled: !canNextPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.lastPage())}>{getPaginationButtonText("last")}</button>
     </div>
-    <select {...getPaginationPageSizeSelectProps($state.pagination.pageSize)} class="og-grid__pagination-size" on:change={handlePageSizeChange}>
+    <select {...getPaginationPageSizeSelectProps($state.pagination.pageSize, resolvedLocalization)} class="og-grid__pagination-size" on:change={handlePageSizeChange}>
       {#each resolvedPageSizeOptions as pageSize (pageSize)}
-        <option value={pageSize}>{getPaginationPageSizeOptionText(pageSize)}</option>
+        <option value={pageSize}>{getPaginationPageSizeOptionText(pageSize, resolvedLocalization)}</option>
       {/each}
     </select>
   </nav>

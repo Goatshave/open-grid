@@ -42,6 +42,10 @@ export default defineConfig({
           { text: "Overview", link: "/" },
           { text: "Getting started", link: "/getting-started" },
           { text: "Packages", link: "/packages" },
+          { text: "Localization", link: "/localization" },
+          { text: "Custom rendering", link: "/custom-rendering" },
+          { text: "Product composition", link: "/composition" },
+          { text: "Persisted preferences", link: "/preferences" },
         ],
       },
       {
@@ -56,6 +60,7 @@ export default defineConfig({
         text: "Engineering",
         items: [
           { text: "Architecture", link: "/architecture" },
+          { text: "API stability", link: "/api-stability" },
           { text: "Performance", link: "/performance" },
           { text: "Roadmap", link: "/roadmap" },
         ],
