@@ -6,6 +6,8 @@ All notable Open Grid release changes should be documented here before a package
 
 - Align maintained React workspaces on React 19 with matching React DOM and type
   packages, and group future React major dependency updates to avoid mixed runtimes.
+- Rebaseline only framework-inclusive server transfer/decoded-size ceilings for the
+  measured React 19 runtime increase, retaining timing, heap, DOM, and package limits.
 - Upgrade Svelte 5 example and benchmark tooling to Vite 8 with the Svelte Vite
   plugin 7, and align the workspace Node requirement with their supported runtimes.
 

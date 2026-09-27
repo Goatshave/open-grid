@@ -26,7 +26,7 @@
   "resources": {
     "jsHeapUsedBytes": { "maxP95": 33554432 },
     "domNodeCount": { "maxP95": 320 },
-    "transferredBytes": { "maxP95": 100000 },
-    "decodedBodyBytes": { "maxP95": 320000 }
+    "transferredBytes": { "maxP95": 115000 },
+    "decodedBodyBytes": { "maxP95": 380000 }
   }
 }

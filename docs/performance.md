@@ -44,6 +44,20 @@ must measure artifacts owned and shipped by Open Grid. Diagnostic targets may in
 framework runtimes and example application code to expose integration changes, but
 their failures are reported separately and do not change the release result.
 
+## React 19 server resource baseline
+
+The server application includes its framework runtime. With the same Open Grid
+source, Vite 6.0.3 build, and CSS, switching React/React DOM 18.3.1 to 19.2.8 changes
+the application JavaScript from 266,332 to 317,294 decoded bytes and from 84,710 to
+99,786 gzip bytes. These are framework-inclusive application measurements, not a
+change to the published Open Grid package budgets.
+
+Ten measured runs after two warmups on each standard/stress profile with Chromium
+153 recorded 105,809 transferred bytes and 343,690 decoded bytes. The corresponding
+server resource ceilings are 115,000 and 380,000 bytes, retaining roughly 9–11%
+headroom. Timing, retained heap, DOM, workload, and required package bundle limits
+remain unchanged. Future increases still require measured attribution.
+
 ## Observational Measurements
 
 `pnpm benchmark:run` records React, Vue, and Svelte measurements for local diagnosis.

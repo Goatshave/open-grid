@@ -2,13 +2,7 @@
   "name": "@open-grid/react",
   "version": "0.1.0",
   "description": "React adapter for Open Grid.",
-  "keywords": [
-    "data-grid",
-    "grid",
-    "table",
-    "react",
-    "adapter"
-  ],
+  "keywords": ["data-grid", "grid", "table", "react", "adapter"],
   "homepage": "https://goatshave.github.io/open-grid/packages#react",
   "bugs": {
     "url": "https://github.com/Goatshave/open-grid/issues"
@@ -25,10 +19,7 @@
       "import": "./dist/index.js"
     }
   },
-  "files": [
-    "dist",
-    "LICENSE"
-  ],
+  "files": ["dist", "LICENSE"],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean --external react",
     "check": "tsc --noEmit",
