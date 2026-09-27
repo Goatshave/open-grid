@@ -106,6 +106,7 @@ export const PeopleGrid = defineComponent({
 - Pass `getRowCanExpand` when lazy-loaded tree parents should show expanders before their child rows are present.
 - Set `rowSelectionMode: "descendants"` when expandable tree rows should select and report their leaf descendants instead of only the parent row.
 - Clicking a grouped row selects or clears its leaf rows through the shared core row selection model.
+- Use `manualSorting`, `manualFiltering`, `manualPagination`, controlled state, and the server's `rowCount` for server-side data workflows. Open Grid derives `pageCount` from the current page size; pass an explicit `pageCount` when the server cannot provide an exact row total.
 - Grid root role, row/column counts, one-based header/body/cell row indexes, empty-state coordinates, and pagination row offsets come from shared primitive props, matching React and Svelte UI. Client totals include header rows. Manual pagination includes a supplied `rowCount` in the accessible total and otherwise uses `aria-rowcount="-1"`.
 - Header sort indicators receive shared primitive hidden props and visible text, matching React and Svelte UI.
 - Uses roving tabindex cell props from `@open-grid/primitives`.

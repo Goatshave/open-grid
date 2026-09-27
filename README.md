@@ -148,6 +148,8 @@ The first implementation includes:
 - product-specific `ariaLabel` support with a `Data grid` fallback across the React, Vue, and Svelte styled UI packages, plus Chromium accessibility-tree regression coverage for the first-publish examples
 - loaded, filtered, and page-scoped row selection helpers, including explicit selection cleanup
 - client/manual server-side modes
+- server-owned `rowCount` support with derived page counts and exact cross-framework accessible row totals; explicit `pageCount` remains available for backends that cannot provide an exact total
+- a keyed framework-neutral server request coordinator with same-key supersession, cancellation, stale-response protection, retained successful data, retry, reset, subscriptions, and disposal
 - server-side React example with shared server-side ticket query helpers, full-query server CSV export, and streaming export progress/cancel preview
 - server-side Vue example with controlled query state, shared server-side ticket query helpers, full-query server CSV export, and streaming export progress/cancel preview
 - server-side Svelte example with controlled query state, shared server-side ticket query helpers, full-query server CSV export, and streaming export progress/cancel preview

@@ -71,3 +71,6 @@ import "@open-grid/svelte-ui/css";
 :::
 
 Continue with the [React](./react-ui), [Vue](./vue-ui), or [Svelte](./svelte-ui) guide for typed columns, controlled state, virtualization, editing, grouping, and server-owned workflows.
+Use the [server data guide](./server-data) for exact server totals, derived page counts,
+request cancellation, stale-response protection, and retry behavior shared across
+framework integrations.
