@@ -5,6 +5,31 @@ close to one visual grammar: right-angle geometry with a small accent. Later rou
 separate typography, form, rhythm, mood, and finally standalone symbol quality
 before any direction is selected.
 
+## Round 05 — Distinctiveness gate
+
+The vector shortlist is paused rather than reduced to a winner. A category scan
+showed that each draft still belongs to a familiar logo family, so visual appeal
+alone is not enough to select the project mark.
+
+| Candidate | Collision pressure | Decision |
+| --- | --- | --- |
+| Interwoven core | Interlocking paths and knots are common across software, networks, and AI | Retire the current construction |
+| Contour stack | Layered contour and wave marks are crowded across mapping, sensors, infrastructure, and technology | Retire as a primary mark |
+| Folded plane | Folded ribbons and dimensional planes are established data-platform and enterprise-software motifs | Keep only the underlying idea of one core opening into renderers |
+| Modular flow | Stepped modules and connected pills are common workflow and automation motifs | Retire the current construction |
+| Data depth | Receding bars overlap with volume, equalizer, analytics, and fast-forward symbols | Retire the current construction |
+
+The next drawings must come from a repeatable Open Grid construction rule rather
+than a general metaphor. That rule should encode one framework-independent core,
+three maintained renderers, and an intentionally open boundary. It must produce
+an asymmetric silhouette, avoid gradients and three-dimensional ribbon effects,
+and remain identifiable when reduced to one color at 16 pixels.
+
+No candidate advances because it merely looks polished. A finalist must first
+pass a broad visual-category scan, reverse-image comparison, and exact-name and
+figurative-mark searches in the relevant trademark databases. These checks reduce
+collision risk; they do not by themselves establish legal clearance.
+
 ## Round 04 — Vector shortlist
 
 Five territories from the symbol study were redrawn as original one-color SVG
