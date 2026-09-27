@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
-  <title id="title">Open Grid Shared Core concept</title>
-  <g fill="none" stroke="#14213d" stroke-width="13" stroke-linecap="square" stroke-linejoin="miter">
-    <path d="M52 20H20v32"/>
-    <path d="M76 20h32v32"/>
-    <path d="M100 76v32H28V76"/>
-  </g>
-  <rect x="56" y="56" width="16" height="16" fill="#ff5a36"/>
-</svg>

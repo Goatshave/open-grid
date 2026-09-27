@@ -1,47 +1,51 @@
 # Brand directions
 
-These concepts explore three distinct identities for Open Grid. None is approved
-or final. Direction 01 is temporarily applied to this pull request's navigation,
-homepage, favicon, and social preview so its behavior can be reviewed in a real
-interface. Selecting a direction comes before final optical refinement and asset
-production.
+This is a broad exploration rather than a set of final logos. The first study
+stayed too close to one visual grammar: right-angle geometry with a small accent.
+This second study deliberately separates typography, form, rhythm, and mood before
+any direction is selected.
 
-![Three Open Grid brand directions](/brand/concepts/directions.svg)
+![Six broad Open Grid brand explorations](/brand/concepts/exploration-02.png)
 
-## 01 — Open Path
+The current Open Path mark remains temporarily applied to this pull request's
+navigation, homepage, favicon, and social preview as a realistic baseline. It is
+not approved and is not favored automatically over the directions below.
 
-**Position:** technical, infrastructural, confident.
+## 01 — Editorial wordmark
 
-One uninterrupted orthogonal route folds through an implied grid and exits an
-open boundary. It expresses one framework-agnostic core that continues through
-React, Vue, and Svelte without becoming a spreadsheet illustration.
+A typography-first identity with no dependency on a standalone technology icon.
+The contrast between a high-character display face and quiet interface typography
+would make documentation feel more like a considered technical publication.
 
-This direction has the strongest standalone symbol and the clearest connection to
-the current product positioning. Its forest-and-signal palette feels established
-and operational.
+## 02 — Adaptive weave
 
-## 02 — Shared Core
+An organic ribbon system represents one engine changing shape across frameworks.
+It introduces motion and softness while retaining a compact one-color silhouette.
 
-**Position:** modular, balanced, framework-neutral.
+## 03 — Open form
 
-Three open frames gather around a shared center. The composition maps directly to
-the three maintained renderers around one core and gives each edge equal visual
-weight.
+A bold negative-space symbol treats openness as the primary idea. This direction
+is minimal and memorable, with enough scale range for favicons and social use.
 
-This direction communicates architecture quickly and feels lighter than Open
-Path. Its main risk is similarity to focus and scanning symbols, so selection
-would be followed by another distinctiveness pass.
+## 04 — Coordinate field
 
-## 03 — Open Syntax
+Fine axes and weighted points create a scientific, measured identity. It connects
+to performance evidence and data without drawing a table or spreadsheet.
 
-**Position:** developer-native, typographic, direct.
+## 05 — Constructivist modules
 
-The wordmark becomes the primary identity: `open:grid`. Brackets, a two-row colon,
-and a terminal underscore create the compact mark and supporting graphic language.
+Independent geometric pieces assemble into one balanced system. This direction
+supports patterns, diagrams, and framework-specific color variants beyond the
+primary mark.
 
-This direction is the most opinionated and works naturally on package, terminal,
-and documentation surfaces. It changes how the project name is typeset, so it has
-the largest effect on existing recognition.
+## 06 — Community loop
+
+A warmer, more human mark emphasizes open-source participation and the exchange
+between maintainers, framework communities, and product teams.
+
+These images are moodboard-level raster explorations. The selected family will be
+redrawn as original SVG geometry, tested in monochrome, corrected at small sizes,
+and paired with a production wordmark before any public asset ships.
 
 ## Review criteria
 
@@ -54,6 +58,6 @@ Compare the directions using the same criteria:
 - ability to work in one color
 - connection to the project's architecture without requiring an explanation
 
-The selected direction should then receive optical spacing, small-size correction,
-wordmark drawing, monochrome validation, and final export. The unselected concepts
-will remain exploration artifacts and will not ship in the public brand package.
+The selected family should then receive optical spacing, small-size correction,
+wordmark drawing, monochrome validation, distinctiveness review, and final export.
+The unselected explorations will not ship in the public brand package.
