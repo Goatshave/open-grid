@@ -9,14 +9,15 @@ test("react server-side example exports the full filtered server result", async 
 
   await expect(page.getByRole("heading", { name: "Server-side tickets" })).toBeVisible();
   const grid = page.getByRole("grid");
-  await expect(grid).toHaveAttribute("aria-rowcount", "-1");
+  const headerRowCount = await grid.locator(".og-grid__header > [role='row']").count();
+  await expect(grid).toHaveAttribute("aria-rowcount", String(240 + headerRowCount));
   await expect(page.getByTestId("server-export-status")).toHaveText("Server export idle");
 
   await page.getByRole("textbox", { name: "Account" }).fill("Acme");
   await expect(page.getByText("40 matching rows · page 1 of 2")).toBeVisible();
+  await expect(grid).toHaveAttribute("aria-rowcount", String(40 + headerRowCount));
   await expect(page.locator('[role="row"][data-row-id="TCK-0001"]')).toBeVisible();
   await expect(page.locator('[role="row"][data-row-id="TCK-0235"]')).toHaveCount(0);
-  const headerRowCount = await grid.locator(".og-grid__header > [role='row']").count();
   const firstBodyRow = grid.locator(".og-grid__body > [role='row'][data-row-id]").first();
   await expect(firstBodyRow).toHaveAttribute("aria-rowindex", String(headerRowCount + 1));
   await page.getByRole("navigation", { name: "Server pagination" }).getByRole("button", { name: "Next" }).click();

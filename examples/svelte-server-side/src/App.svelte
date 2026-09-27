@@ -71,7 +71,7 @@
       manualSorting: true,
       manualFiltering: true,
       manualPagination: true,
-      pageCount: result.pageCount,
+      rowCount: result.totalRows,
       initialState: {
         columnPinning: { left: ["id"], right: ["value"] },
       },

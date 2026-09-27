@@ -148,7 +148,7 @@ surface without changing row or column virtualization semantics.
 - Check `event.defaultPrevented` before mutating product-owned data in `onCellEdit`.
 - Use core selection helpers to read or toggle loaded rows, filtered rows, or current page rows separately.
 - Use `grid.pruneRowSelection("loaded" | "filtered" | "page")` when a product should explicitly drop selections outside a data scope.
-- Grid root role, row/column counts, one-based header/body/cell row indexes, empty-state coordinates, and pagination row offsets come from shared primitive props, matching Vue and Svelte UI. Client totals include header rows, while manual pagination uses `aria-rowcount="-1"` rather than guessing the server total.
+- Grid root role, row/column counts, one-based header/body/cell row indexes, empty-state coordinates, and pagination row offsets come from shared primitive props, matching Vue and Svelte UI. Client totals include header rows. Manual pagination includes a supplied `rowCount` in the accessible total and otherwise uses `aria-rowcount="-1"`.
 - Header sort indicators receive shared primitive hidden props and visible text, matching Vue and Svelte UI.
 - Selected rows receive shared primitive `aria-selected` and `data-selected` props, matching Vue and Svelte UI.
 - Press Space on a focused cell to toggle selection for that row; `onRowEvent` can prevent the keyboard selection by preventing the emitted `keydown` row event.
@@ -171,7 +171,7 @@ surface without changing row or column virtualization semantics.
 - Pass `getRowCanExpand` when lazy-loaded tree parents should show expanders before their child rows are present.
 - Set `rowSelectionMode: "descendants"` when expandable tree rows should select and report their leaf descendants instead of only the parent row.
 - Clicking a grouped row selects or clears its leaf rows through the shared core row selection model.
-- Use `manualSorting`, `manualFiltering`, `manualPagination`, controlled state, and `pageCount` for server-side data workflows.
+- Use `manualSorting`, `manualFiltering`, `manualPagination`, controlled state, and the server's `rowCount` for server-side data workflows. Open Grid derives `pageCount` from the current page size; pass an explicit `pageCount` when the server cannot provide an exact row total.
 - Use arrow keys, Home, End, PageUp, PageDown, Ctrl/Meta+Home, and Ctrl/Meta+End to move the focused cell coordinate.
 - Playwright coverage verifies keyboard focus restoration when these keys move the focused cell outside the current virtualized row or column window.
 - Playwright coverage verifies Space toggles row selection from the focused cell without moving focus.

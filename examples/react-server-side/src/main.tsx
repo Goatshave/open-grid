@@ -229,7 +229,7 @@ function App() {
         manualSorting
         manualFiltering
         manualPagination
-        pageCount={serverResult.pageCount}
+        rowCount={serverResult.totalRows}
         initialState={{
           columnPinning: { left: ["id"], right: ["value"] },
         }}

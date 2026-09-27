@@ -401,6 +401,7 @@ interface GridOptions<TData> {
     manualGrouping?: boolean;
     manualPagination?: boolean;
     pageCount?: number;
+    rowCount?: number;
     editHistoryLimit?: number;
 }
 interface Grid<TData> {
@@ -429,6 +430,7 @@ interface Grid<TData> {
     getCacheDiagnostics: () => GridCacheDiagnostics;
     resetCacheDiagnostics: () => void;
     getPageCount: () => number;
+    getRowCount: () => number;
     getCanPreviousPage: () => boolean;
     getCanNextPage: () => boolean;
     firstPage: () => void;

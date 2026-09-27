@@ -4,6 +4,8 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Add a server-owned `rowCount` contract that derives page counts when `pageCount` is
+  absent and exposes exact manual-pagination totals to accessibility primitives.
 - Upgrade maintained examples and benchmarks to Vite 8.3, pairing React examples
   with `@vitejs/plugin-react` 6.1 so their peer dependency contract stays aligned.
 - Document the post-0.2.0 release state and define the pre-1.0 prerelease versioning

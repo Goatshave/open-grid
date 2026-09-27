@@ -1,6 +1,6 @@
 import { createHeaderGroupsFromLeafColumns, resolveColumns } from "./columns";
 import { createExportFile } from "./export";
-import { expandRows, filterRows, groupRows, normalizePaginationPageCount, normalizePaginationPageIndex, normalizePaginationPageSize, paginateRows, sortRows } from "./pipeline";
+import { expandRows, filterRows, groupRows, normalizePaginationPageCount, normalizePaginationPageIndex, normalizePaginationPageSize, normalizePaginationRowCount, paginateRows, sortRows } from "./pipeline";
 import {
   columnOrderReducers,
   columnPinningReducers,
@@ -1237,8 +1237,14 @@ export function createGrid<TData>(options: GridOptions<TData>): Grid<TData> {
         return normalizePaginationPageCount(currentOptions.pageCount);
       }
 
-      return normalizePaginationPageCount(Math.ceil(getPrePagination().rows.length / normalizePaginationPageSize(resolvedState.pagination.pageSize)));
+      return normalizePaginationPageCount(
+        Math.ceil(grid.getRowCount() / normalizePaginationPageSize(resolvedState.pagination.pageSize)),
+      );
     },
+    getRowCount: () =>
+      typeof currentOptions.rowCount === "number"
+        ? normalizePaginationRowCount(currentOptions.rowCount)
+        : getPrePagination().rows.length,
     getCanPreviousPage: () => normalizePaginationPageIndex(resolvedState.pagination.pageIndex) > 0,
     getCanNextPage: () => normalizePaginationPageIndex(resolvedState.pagination.pageIndex) < grid.getPageCount() - 1,
     firstPage: () =>

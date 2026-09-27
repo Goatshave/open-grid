@@ -971,9 +971,8 @@ export const GRID_INTERACTIVE_KEYBOARD_TARGET_SELECTOR =
 
 export function getGridProps<TData>(grid: Grid<TData>, options: GridRowCoordinateOptions = {}): PrimitiveProps {
   const headerRowCount = getGridHeaderRowCount(grid, options);
-  const rowCount = grid.getOptions().manualPagination
-    ? -1
-    : headerRowCount + Math.max(1, grid.getPrePaginationRowModel().rows.length);
+  const hasKnownRowCount = !grid.getOptions().manualPagination || typeof grid.getOptions().rowCount === "number";
+  const rowCount = hasKnownRowCount ? headerRowCount + Math.max(1, grid.getRowCount()) : -1;
   const columnCount = grid.getVisibleLeafColumns().length;
 
   return {
