@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Open Grid Open Syntax concept</title>
+  <g fill="none" stroke="#161616" stroke-width="13" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M48 16H18v96h30"/>
+    <path d="M80 16h30v62"/>
+  </g>
+  <g fill="#161616">
+    <rect x="58" y="39" width="14" height="14"/>
+    <rect x="58" y="69" width="14" height="14"/>
+  </g>
+  <path d="M80 112h36" stroke="#ff5a36" stroke-width="13" stroke-linecap="square"/>
+</svg>

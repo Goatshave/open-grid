@@ -48,46 +48,6 @@ body,
   letter-spacing: -0.025em;
 }
 
-.og-brand-lockup {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  max-width: 520px;
-  padding: 32px;
-  margin: 32px 0;
-  border: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg-alt);
-}
-
-.og-brand-lockup strong {
-  color: var(--vp-c-text-1);
-  font-size: 42px;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.og-brand-mark {
-  display: block;
-  width: 96px;
-  height: 96px;
-}
-
-@media (max-width: 640px) {
-  .og-brand-lockup {
-    gap: 18px;
-    padding: 24px;
-  }
-
-  .og-brand-lockup strong {
-    font-size: 32px;
-  }
-
-  .og-brand-mark {
-    width: 72px;
-    height: 72px;
-  }
-}
-
 .VPHomeHero .tagline {
   max-width: 660px;
 }
