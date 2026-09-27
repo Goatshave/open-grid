@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { requirePrereleaseNpmTagPolicy } from "./release-version-policy.mjs";
 
 const root = process.cwd();
 let args;
@@ -18,6 +19,7 @@ const rootPackage = readJson("package.json");
 const releaseVersion = args.version ?? rootPackage.version;
 try {
   requireValidSemver(releaseVersion);
+  requirePrereleaseNpmTagPolicy(releaseVersion, args.tag);
 } catch (error) {
   console.error(`Release trusted publishing plan failed: ${error.message}`);
   process.exit(1);
@@ -242,6 +244,10 @@ function validateWorkflow() {
     failures.push(`${args.workflow}: workflow must validate npm_tag before publishing`);
   }
 
+  if (!workflowHasPrereleaseChannelGuard(workflow)) {
+    failures.push(`${args.workflow}: workflow must restrict prereleases to alpha.N, beta.N, or rc.N with npm tag next`);
+  }
+
   if (!workflowHasReleaseVersionGuard(workflow)) {
     failures.push(`${args.workflow}: workflow must validate version before publishing`);
   }
@@ -327,6 +333,12 @@ function workflowInputIsRequired(workflow, inputName) {
 
 function workflowHasNpmDistTagGuard(workflow) {
   return workflow.includes('[[ "$NPM_TAG" =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]]') && workflow.includes('[[ ! "$NPM_TAG" =~ ^v?[0-9] ]]');
+}
+
+function workflowHasPrereleaseChannelGuard(workflow) {
+  return workflow.includes('[[ "$RELEASE_VERSION" == *-* ]]')
+    && workflow.includes('[[ "$RELEASE_VERSION" =~ -(alpha|beta|rc)\\.[1-9][0-9]*(\\+.*)?$ ]]')
+    && workflow.includes('test "$NPM_TAG" = "next"');
 }
 
 function workflowHasReleaseVersionGuard(workflow) {

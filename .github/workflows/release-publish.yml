@@ -73,6 +73,10 @@ jobs:
         run: |
           [[ "$NPM_TAG" =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]]
           [[ ! "$NPM_TAG" =~ ^v?[0-9] ]]
+          if [[ "$RELEASE_VERSION" == *-* ]]; then
+            [[ "$RELEASE_VERSION" =~ -(alpha|beta|rc)\.[1-9][0-9]*(\+.*)?$ ]]
+            test "$NPM_TAG" = "next"
+          fi
 
       - name: Require publish confirmation
         run: test "${{ github.event.inputs.confirm_publish }}" = "publish-open-grid"

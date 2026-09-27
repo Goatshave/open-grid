@@ -4,10 +4,14 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Document the post-0.2.0 release state and define the pre-1.0 prerelease versioning
+  policy for alpha, beta, release-candidate, and stable publications.
+- Prevent prerelease versions from being published under npm's `latest` dist-tag.
+
 ## 0.2.0 - 2026-09-27
 
-Release candidate prepared on this date; npm publication is pending the final manual
-UI/accessibility review and the protected publish workflow.
+Published to npm and GitHub on this date after the protected workflow completed the
+required release gates and final manual UI and accessibility review.
 
 - Require both general CI and release verification before merging to main, and fail
   the release gate when change detection fails or returns an invalid result.

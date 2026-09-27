@@ -18,12 +18,18 @@ declaration snapshots fail the check. An intentional public change requires
 
 ## Version policy
 
+- Versions below 1.0 are usable public releases, not automatically alpha software.
+  The minor number is the compatibility boundary for documented breaking changes.
 - Patch releases such as `0.1.1` contain compatible fixes. They do not remove public
   exports or make accepted inputs narrower.
 - Minor releases such as `0.2.0` may add APIs. A necessary breaking change must be
   called out in the changelog and include a migration example.
-- Prereleases such as `0.2.0-beta.1` are intended for integration testing and may
-  change before the corresponding stable release.
+- Prereleases use `alpha.N`, `beta.N`, or `rc.N` and npm dist-tag `next`. Alpha means
+  the release scope is incomplete, beta means feature work is complete and integration
+  feedback is still expected, and release candidate means only release-blocking fixes
+  are expected before the corresponding stable version.
+- Stable releases omit the prerelease suffix and are published with npm dist-tag
+  `latest`. A prerelease is never published under `latest`.
 - All ten packages use one fixed workspace version so consumers can keep adapter,
   renderer, core, primitive, virtual, and theme packages aligned.
 

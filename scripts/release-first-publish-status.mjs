@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { uiSmokeVerificationCommandArgs } from "./release-ui-gates.mjs";
+import { requirePrereleaseNpmTagPolicy } from "./release-version-policy.mjs";
 
 const root = process.cwd();
 let args;
@@ -19,6 +20,7 @@ const releaseVersion = args.version ?? rootPackage.version;
 
 try {
   requireValidSemver(releaseVersion);
+  requirePrereleaseNpmTagPolicy(releaseVersion, args.tag);
 } catch (error) {
   console.error(`First publish status failed: ${error.message}`);
   process.exit(1);

@@ -35,11 +35,12 @@ regression safety, and dependable releases.
 - [x] Add direct React adapter and Vue UI rendering tests instead of allowing empty
   package test suites.
 
-## 0.2.0 Release Candidate
+## 0.2.0 Release
 
-The planned features below are implemented. Publication is pending final manual
-UI/accessibility evidence and the protected publish workflow. See the
-[release checklist](https://github.com/Goatshave/open-grid/blob/main/docs/release.md#020-release-candidate).
+Open Grid 0.2.0 was published on 2026-09-27 after the protected publish workflow and
+the final manual UI and accessibility review completed. See the
+[GitHub release](https://github.com/Goatshave/open-grid/releases/tag/open-grid-v0.2.0)
+and [release record](https://github.com/Goatshave/open-grid/blob/main/docs/release.md).
 
 - [x] Define instance-scoped localization contracts for built-in labels, status text,
   controls, and accessibility labels across React, Vue, Svelte, and primitives.
@@ -50,6 +51,14 @@ UI/accessibility evidence and the protected publish workflow. See the
 - [x] Expand task-oriented API reference and integration examples from user reports.
 - Continue keyboard, screen-reader, forced-colors, mobile reflow, server-data, and
   export improvements where real integration evidence identifies a gap.
+
+## Next Direction
+
+The next minor release is not committed yet. Candidate work is driven by real
+integration evidence, with priority on server-data and export workflows,
+cross-framework API consistency, accessibility, mobile reflow, and task-oriented
+adoption examples. A versioned milestone should be created only after that evidence
+defines a concrete scope.
 
 ## Performance Direction
 
