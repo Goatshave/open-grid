@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const workspaceVersion = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")).version;
 const scriptPath = join(repoRoot, "scripts", "release-trusted-publishing.mjs");
 const firstPublishPreflightPath = join(repoRoot, "scripts", "release-first-publish-preflight.mjs");
 const firstPublishStatusPath = join(repoRoot, "scripts", "release-first-publish-status.mjs");
@@ -311,7 +312,7 @@ test("manual UI smoke preview command reports a manual inspection report", () =>
   assert.match(output, /- Automated follow-up: `pnpm e2e:smoke`/);
   assert.match(output, /- Open wait timeout: `30000ms`/);
   assert.match(output, /- Source revision: `[0-9a-f]{40}`/);
-  assert.match(output, /- Workspace version: `0\.1\.0`/);
+  assert.ok(output.includes(`- Workspace version: \`${workspaceVersion}\``));
   assert.match(output, /- Source fingerprint: `sha256:[0-9a-f]{64}` \(\d+ files\)/);
   assert.match(output, /- Relevant source tree dirty: `(true|false)`/);
   assert.match(output, /## Review Environment/);
@@ -355,7 +356,7 @@ test("manual UI smoke preview command reports a machine-readable inspection repo
 
   assert.equal(report.report, "ui-smoke-inspection");
   assert.match(report.source.revision, /^[0-9a-f]{40}$/);
-  assert.equal(report.source.workspaceVersion, "0.1.0");
+  assert.equal(report.source.workspaceVersion, workspaceVersion);
   assert.match(report.source.fingerprint, /^sha256:[0-9a-f]{64}$/);
   assert.equal(typeof report.source.dirty, "boolean");
   assert.ok(report.source.fileCount > 0);
@@ -2251,7 +2252,7 @@ test("release plan reports a markdown checklist", () => {
 
   assert.match(output, /# Release Plan/);
   assert.match(output, /- Version: 1\.2\.3/);
-  assert.match(output, /- Root version: 0\.1\.0/);
+  assert.ok(output.includes(`- Root version: ${workspaceVersion}`));
   assert.match(output, /- Publishable packages: 10/);
   assert.match(output, /- Result: ready/);
   assert.match(output, /## Publish Order/);
@@ -2315,7 +2316,7 @@ test("release plan reports release context in text failure output", () => {
   assert.equal(result.stdout, "");
   assert.match(result.stderr, /Release plan failed:/);
   assert.match(result.stderr, /Version: not-semver/);
-  assert.match(result.stderr, /Root version: 0\.1\.0/);
+  assert.ok(result.stderr.includes(`Root version: ${workspaceVersion}`));
   assert.match(result.stderr, /Package count: 10/);
   assert.match(result.stderr, /Publish order count: 10/);
   assert.match(result.stderr, /Prepublish gate count: 22/);
@@ -2905,7 +2906,7 @@ test("first publish preflight preserves stage json failures", () => {
     assert.equal(output.failures.length, 1);
     assert.equal(output.failures[0], `${outDir}: output directory must be empty or absent`);
     assert.deepEqual(output.releaseWorkflowInputs, {
-      version: "0.1.0",
+      version: workspaceVersion,
       repository_url: repositoryUrl,
       npm_tag: "next",
       confirm_publish: "publish-open-grid",
@@ -3009,7 +3010,7 @@ test("first publish preflight reports workflow inputs in text failure output", (
     assert.match(result.stderr, /First publish preflight failed:/);
     assert.match(result.stderr, new RegExp(`Repository URL: ${repositoryUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
     assert.match(result.stderr, /Release Publish workflow inputs:/);
-    assert.match(result.stderr, /- version: 0\.1\.0/);
+    assert.ok(result.stderr.includes(`- version: ${workspaceVersion}`));
     assert.match(result.stderr, new RegExp(`- repository_url: ${repositoryUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
     assert.match(result.stderr, /- npm_tag: next/);
     assert.match(result.stderr, /- confirm_publish: publish-open-grid/);
@@ -3027,9 +3028,9 @@ test("first publish preflight reports workflow inputs in text failure output", (
     assert.match(result.stderr, /  invalid edit target: INV-0001\/customer/);
     assert.match(result.stderr, /  validation message: Customer must be at least 3 characters/);
     assert.match(result.stderr, /Next verification commands:/);
-    assert.match(result.stderr, /pnpm release:first-publish-status -- --version 0\.1\.0 --tag next/);
-    assert.match(result.stderr, /pnpm release:first-publish-preflight -- --version 0\.1\.0 --tag next/);
-    assert.match(result.stderr, /pnpm release:trusted-publishing -- --version 0\.1\.0 --tag next/);
+    assert.ok(result.stderr.includes(`pnpm release:first-publish-status -- --version ${workspaceVersion} --tag next`));
+    assert.ok(result.stderr.includes(`pnpm release:first-publish-preflight -- --version ${workspaceVersion} --tag next`));
+    assert.ok(result.stderr.includes(`pnpm release:trusted-publishing -- --version ${workspaceVersion} --tag next`));
     assert.match(result.stderr, /pnpm preview:smoke-ui -- --markdown/);
     assert.match(result.stderr, /Failures:/);
     assert.match(result.stderr, new RegExp(`${outDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}: output directory must be empty or absent`));
@@ -3053,8 +3054,8 @@ test("first publish preflight reports a markdown verification report", () => {
     assert.equal(result.stderr, "");
     assert.match(result.stdout, /# First Publish Preflight Report/);
     assert.match(result.stdout, new RegExp(`- Repository URL: ${repositoryUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
-    assert.match(result.stdout, /- Version: 0\.1\.0/);
-    assert.match(result.stdout, /- Release tag: open-grid-v0\.1\.0/);
+    assert.ok(result.stdout.includes(`- Version: ${workspaceVersion}`));
+    assert.ok(result.stdout.includes(`- Release tag: open-grid-v${workspaceVersion}`));
     assert.match(result.stdout, /- npm tag: next/);
     assert.match(result.stdout, /- Result: blocked/);
     assert.match(result.stdout, /## Failures/);
@@ -3067,7 +3068,7 @@ test("first publish preflight reports a markdown verification report", () => {
     assert.match(result.stdout, /- \[x\] releaseStage/);
     assert.doesNotMatch(result.stdout, /- \[x\] publishDryRun/);
     assert.match(result.stdout, /## Release Publish Workflow Inputs/);
-    assert.match(result.stdout, /- \[ \] version: `0\.1\.0`/);
+    assert.ok(result.stdout.includes(`- [ ] version: \`${workspaceVersion}\``));
     assert.match(result.stdout, /- \[ \] npm_tag: `next`/);
     assert.match(result.stdout, /- \[ \] confirm_publish: `publish-open-grid`/);
     assert.match(result.stdout, /- \[ \] ui_smoke_report: `@\.release\/ui-smoke-report\.json`/);
@@ -3105,7 +3106,7 @@ test("first publish preflight reports a markdown verification report", () => {
     assert.match(result.stdout, /- Validation message: `City must be at least 3 characters`/);
     assert.match(result.stdout, /### Svelte/);
     assert.match(result.stdout, /## Next Verification Commands/);
-    assert.match(result.stdout, /- \[ \] `pnpm release:first-publish-status -- --version 0\.1\.0 --tag next/);
+    assert.ok(result.stdout.includes(`- [ ] \`pnpm release:first-publish-status -- --version ${workspaceVersion} --tag next`));
     assert.match(result.stdout, /- \[ \] `pnpm preview:smoke-ui -- --report --out-file \.release\/ui-smoke-report\.md`/);
     assert.match(result.stdout, /- \[ \] `pnpm preview:smoke-ui -- --report --json --out-file \.release\/ui-smoke-report\.json`/);
     assert.match(result.stdout, /- \[ \] `pnpm preview:smoke-ui -- --open`/);
