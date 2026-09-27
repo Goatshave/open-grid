@@ -1,4 +1,82 @@
-# Brand directions
+# Brand system
+
+## Selected mark — Shuttle through the grid
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="/brand/shuttle-mark-dark.svg">
+  <img src="/brand/shuttle-mark-light.svg" width="320" height="320" alt="Open Grid weaving shuttle symbol">
+</picture>
+
+The Open Grid mark combines a weaving shuttle with six structured warp columns.
+The shuttle represents one framework-independent core moving through different
+rendering environments. The columns connect the mark to grids and structured
+data without drawing a literal table. Its upward diagonal supplies the sense of
+speed and forward movement expected from a performance-conscious library.
+
+The selected construction keeps the approved B concept's silhouette, diagonal
+angle, six-column rhythm, central bobbin, and five winding bands. The production
+master is a fourteen-path SVG with a transparent canvas and a two-color palette.
+
+| Role | Value | Use |
+| --- | --- | --- |
+| Forest | `#0B3D2E` | Structure on light backgrounds |
+| Dark-mode forest | `#2B7458` | Structure on dark backgrounds |
+| Signal lime | `#A6E457` | Shuttle thread and brand accent |
+| Dark surface | `#171C1A` | Social and presentation backgrounds |
+
+### Canonical assets
+
+| Asset | Purpose |
+| --- | --- |
+| `/brand/shuttle-mark.svg` | Adaptive master using the viewer's color scheme |
+| `/brand/shuttle-mark-light.svg` | Static mark for light backgrounds |
+| `/brand/shuttle-mark-dark.svg` | Static mark for dark backgrounds |
+| `/brand/shuttle-mark-mono.svg` | Single-color reproduction |
+| `/brand/mark-white.svg` | Reversed single-color reproduction |
+| `/brand/icon-512.png` | Raster distribution icon |
+| `/favicon.svg`, `/favicon.ico` | Browser icons |
+| `/apple-touch-icon.png` | Saved-site icon |
+| `/brand/social-card.svg`, `/brand/social-card.png` | Social preview artwork |
+
+Use the supplied files without stretching, rotating, redrawing individual parts,
+changing the number of columns or winding bands, or placing the light-background
+version on a dark surface. Preserve the transparent clear space built into the
+square master.
+
+Broad category and reverse-image checks did not find an exact visual match. The
+literal shuttle-and-warp metaphor exists in textile illustration, and black with
+bright green is common in gaming and performance branding, which is why the final
+palette uses forest and restrained lime.
+
+### Preliminary trademark screening
+
+The selected name and mark received a preliminary public-register screening on
+September 27, 2026. Searches covered `OPEN GRID`, `OPENGRID`, and `오픈그리드` in
+software-related Nice classes 9 and 42, plus the closest figurative categories
+suggested by WIPO's Vienna Classification Assistant.
+
+- KIPRIS returned no complete-match Korean records for the three names in classes
+  9 or 42, and no class 9/42 record combining the suggested rocket/capsule and
+  vertical-line figurative codes.
+- The USPTO register contains a live `OPENGRID` application in class 42 for
+  energy-management and energy-savings cloud software. Its field differs from a
+  framework-independent data-grid library, but the identical wording makes it a
+  record to monitor.
+- EUIPO contains registered `Open Grid Europe` figurative marks in class 42. Their
+  services concern gas and energy transport networks, including related computer
+  programming, rather than general-purpose interface components.
+- WIPO's classification assistant did not identify one dominant object category:
+  its suggestions were spread across leaves, advertising structures, rockets,
+  vehicles, arrows, and geometric line categories. That ambiguity supports the
+  mark's abstract reading, but it is not an image-similarity clearance result.
+
+This is a documented preliminary search, not a legal opinion or a guarantee of
+registrability. The WIPO Global Brand Database was unavailable from the review
+environment, and EUIPO's image-similarity query did not complete after upload.
+Before filing a trademark or making a high-cost commercial launch, repeat the
+international figurative search and obtain advice for the intended jurisdictions.
+
+## Exploration archive
 
 These are broad explorations rather than final logos. The first study stayed too
 close to one visual grammar: right-angle geometry with a small accent. Later rounds
@@ -123,6 +201,6 @@ Compare the directions using the same criteria:
 - ability to work in one color
 - connection to the project's architecture without requiring an explanation
 
-The selected family should then receive optical spacing, small-size correction,
-wordmark drawing, monochrome validation, distinctiveness review, and final export.
-The unselected explorations will not ship in the public brand package.
+The selected family received optical spacing, small-size correction, monochrome
+validation, distinctiveness review, and final export. Unselected explorations are
+retained here as decision history and do not belong to the public brand package.

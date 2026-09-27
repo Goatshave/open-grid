@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/public/brand/open-path-signal.svg">
-    <img src="./docs/public/brand/open-path-ink.svg" width="88" height="88" alt="Open Grid symbol">
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/public/brand/shuttle-mark-dark.svg">
+    <img src="./docs/public/brand/shuttle-mark-light.svg" width="112" height="112" alt="Open Grid weaving shuttle symbol">
   </picture>
 </p>
 

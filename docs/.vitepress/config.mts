@@ -9,7 +9,7 @@ export default defineConfig({
   srcExclude: ["README.md", "agent-handoff.md", "release.md"],
   head: [
     ["link", { rel: "icon", href: "/open-grid/favicon.svg", type: "image/svg+xml" }],
-    ["link", { rel: "icon", href: "/open-grid/favicon.ico", sizes: "32x32" }],
+    ["link", { rel: "icon", href: "/open-grid/favicon.ico", sizes: "any" }],
     ["link", { rel: "apple-touch-icon", href: "/open-grid/apple-touch-icon.png", sizes: "180x180" }],
     ["meta", { property: "og:title", content: "Open Grid" }],
     ["meta", { property: "og:description", content: "One core. Native everywhere. Production data grids for React, Vue, and Svelte." }],
@@ -35,8 +35,8 @@ export default defineConfig({
   },
   themeConfig: {
     logo: {
-      light: "/brand/open-path-ink.svg",
-      dark: "/brand/open-path-signal.svg",
+      light: "/brand/shuttle-mark-light.svg",
+      dark: "/brand/shuttle-mark-dark.svg",
       alt: "Open Grid",
     },
     siteTitle: "Open Grid",
@@ -83,7 +83,7 @@ export default defineConfig({
           { text: "Contributing", link: "https://github.com/Goatshave/open-grid/blob/main/CONTRIBUTING.md" },
           { text: "Changelog", link: "https://github.com/Goatshave/open-grid/blob/main/CHANGELOG.md" },
           { text: "Security", link: "https://github.com/Goatshave/open-grid/blob/main/SECURITY.md" },
-          { text: "Brand concepts", link: "/brand-concepts" },
+          { text: "Brand", link: "/brand-concepts" },
         ],
       },
     ],
