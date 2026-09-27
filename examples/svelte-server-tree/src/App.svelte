@@ -1,5 +1,10 @@
 <script lang="ts">
-  import type { GridState, RowSelectionState } from "@open-grid/core";
+  import {
+    createServerRequestCoordinator,
+    type GridState,
+    type RowSelectionState,
+    type ServerRequestCoordinator,
+  } from "@open-grid/core";
   import {
     createServerTreePortfolios,
     createServerTreeWorkByPortfolio,
@@ -28,9 +33,11 @@
   } from "@open-grid/svelte-ui";
   import { onDestroy } from "svelte";
 
-  interface InFlightLoad {
-    controller: AbortController;
-    requestId: number;
+  interface ChildrenRequestInput {
+    portfolioId: string;
+    refreshVersion: number;
+    workMutationCounts: Record<string, number>;
+    workMergeCounts: Record<string, number>;
   }
 
   const column = createColumnHelper<ServerTreeRow>();
@@ -60,8 +67,6 @@
   ];
 
   const failOnceByPortfolio = new Set(["PFL-002"]);
-  const inFlightLoads = new Map<string, InFlightLoad>();
-  let requestSequence = 0;
   let sorting: SortingState = [];
   let expanded: ExpandedState = {};
   let pagination: PaginationState = { pageIndex: 0, pageSize: 6 };
@@ -82,17 +87,57 @@
   const optimisticMutationTargetWorkId = "PFL-001-WRK-2";
   const conflictMutationTargetWorkId = "PFL-001-WRK-3";
   const mergeTargetWorkId = "PFL-001-WRK-4";
+  const childrenRequests: ServerRequestCoordinator<string, ChildrenRequestInput, ServerTreeRow[]> =
+    createServerRequestCoordinator({
+      getKey: (input: ChildrenRequestInput) => input.portfolioId,
+      request: (input, { signal }) =>
+        loadChildrenFromServer(
+          input.portfolioId,
+          signal,
+          input.refreshVersion,
+          input.workMutationCounts,
+          input.workMergeCounts,
+        ),
+    });
+  const unsubscribeChildrenRequests = childrenRequests.subscribe((portfolioId, state) => {
+    const nextLoading = { ...loading };
+    if (state.status === "loading") {
+      nextLoading[portfolioId] = true;
+    } else {
+      delete nextLoading[portfolioId];
+    }
+    loading = nextLoading;
 
-  $: syncServerLoads(expanded, loadedChildren, loadErrors, refreshCounts, workMergeCounts);
+    if (state.status === "loading") {
+      const nextErrors = { ...loadErrors };
+      delete nextErrors[portfolioId];
+      loadErrors = nextErrors;
+      const nextCancelled = { ...cancelledLoads };
+      delete nextCancelled[portfolioId];
+      cancelledLoads = nextCancelled;
+    } else if (state.status === "success") {
+      loadedChildren = { ...loadedChildren, [portfolioId]: state.data ?? [] };
+    } else if (state.status === "error") {
+      loadErrors = {
+        ...loadErrors,
+        [portfolioId]: state.error instanceof Error ? state.error.message : "Unknown server error",
+      };
+    } else if (state.status === "cancelled") {
+      cancelledLoads = {
+        ...cancelledLoads,
+        [portfolioId]: typeof state.reason === "string" ? state.reason : "request cancelled",
+      };
+    }
+  });
+
+  $: syncServerLoads(expanded, loadedChildren, loading, loadErrors, refreshCounts, workMergeCounts);
   $: serverResult = queryServerTreeRows(portfolios, { sorting, expanded, pagination }, loadedChildren, loading, loadErrors);
   $: serverPageIndex = serverResult.pageIndex;
   $: gridOptions = createGridOptions(serverResult);
 
   onDestroy(() => {
-    for (const load of inFlightLoads.values()) {
-      load.controller.abort();
-    }
-    inFlightLoads.clear();
+    unsubscribeChildrenRequests();
+    childrenRequests.dispose();
   });
 
   function createGridOptions(result: ServerTreeResult): GridOptions<ServerTreeRow> {
@@ -170,20 +215,21 @@
   function syncServerLoads(
     expandedState: ExpandedState,
     loadedChildrenState: Record<string, ServerTreeRow[]>,
+    loadingState: Record<string, boolean>,
     loadErrorsState: Record<string, string>,
     refreshCountsState: Record<string, number>,
     workMergeCountsState: Record<string, number>,
   ) {
     const expandedIds = new Set(Object.entries(expandedState).flatMap(([id, value]) => (value ? [id] : [])));
 
-    for (const id of inFlightLoads.keys()) {
+    for (const id of Object.keys(loadingState)) {
       if (!expandedIds.has(id)) {
         cancelChildrenLoad(id, "collapsed before response");
       }
     }
 
     const loadableIds = Object.entries(expandedState)
-      .filter(([id, value]) => value && !loadedChildrenState[id] && !loadErrorsState[id] && !inFlightLoads.has(id))
+      .filter(([id, value]) => value && !loadedChildrenState[id] && !loadErrorsState[id] && !loadingState[id])
       .map(([id]) => id);
 
     for (const id of loadableIds) {
@@ -192,76 +238,20 @@
   }
 
   function startChildrenLoad(portfolioId: string, refreshVersion = 0, workMergeCountsState: Record<string, number> = workMergeCounts) {
-    const requestId = requestSequence + 1;
-    const controller = new AbortController();
-    requestSequence = requestId;
-    inFlightLoads.set(portfolioId, { controller, requestId });
-    loading = { ...loading, [portfolioId]: true };
-    const nextCancelled = { ...cancelledLoads };
-    delete nextCancelled[portfolioId];
-    cancelledLoads = nextCancelled;
-
-    void loadChildrenFromServer(portfolioId, controller.signal, refreshVersion, { ...workMutationCounts }, { ...workMergeCountsState })
-      .then((children) => {
-        if (!isCurrentRequest(portfolioId, requestId) || controller.signal.aborted) {
-          return;
-        }
-
-        loadedChildren = { ...loadedChildren, [portfolioId]: children };
-      })
-      .catch((error: unknown) => {
-        if (!isCurrentRequest(portfolioId, requestId) || controller.signal.aborted) {
-          return;
-        }
-
-        loadErrors = {
-          ...loadErrors,
-          [portfolioId]: error instanceof Error ? error.message : "Unknown server error",
-        };
-      })
-      .finally(() => {
-        if (!isCurrentRequest(portfolioId, requestId)) {
-          return;
-        }
-
-        const nextLoading = { ...loading };
-        delete nextLoading[portfolioId];
-        loading = nextLoading;
-        inFlightLoads.delete(portfolioId);
-      });
-  }
-
-  function isCurrentRequest(portfolioId: string, requestId: number): boolean {
-    return inFlightLoads.get(portfolioId)?.requestId === requestId;
+    void childrenRequests.run({
+      portfolioId,
+      refreshVersion,
+      workMutationCounts: { ...workMutationCounts },
+      workMergeCounts: { ...workMergeCountsState },
+    });
   }
 
   function cancelChildrenLoad(portfolioId: string, reason: string): boolean {
-    const load = inFlightLoads.get(portfolioId);
-
-    if (!load) {
-      return false;
-    }
-
-    load.controller.abort();
-    inFlightLoads.delete(portfolioId);
-    const nextLoading = { ...loading };
-    delete nextLoading[portfolioId];
-    loading = nextLoading;
-    cancelledLoads = { ...cancelledLoads, [portfolioId]: reason };
-    return true;
+    return childrenRequests.cancel(portfolioId, reason);
   }
 
   function retryChildren(portfolioId: string) {
-    cancelChildrenLoad(portfolioId, "retry replaced request");
-    const nextLoaded = { ...loadedChildren };
-    delete nextLoaded[portfolioId];
-    loadedChildren = nextLoaded;
-    const nextErrors = { ...loadErrors };
-    delete nextErrors[portfolioId];
-    loadErrors = nextErrors;
-    const nextCancelled = { ...cancelledLoads };
-    delete nextCancelled[portfolioId];
-    cancelledLoads = nextCancelled;
+    void childrenRequests.retry(portfolioId);
   }
 
   function refreshChildren(portfolioId: string) {

@@ -62,7 +62,7 @@ and retry logic, which now provides the integration evidence for this scope.
   exact total through shared accessibility primitives across all three UI renderers.
 - [x] Define a framework-neutral request lifecycle contract for cancellation,
   stale-response protection, retry, and retained data.
-- [ ] Adopt that lifecycle in the maintained React, Vue, and Svelte server examples
+- [x] Adopt that lifecycle in the maintained React, Vue, and Svelte server examples
   and document the product/server ownership boundary.
 - [ ] Complete cross-framework browser and accessibility regression coverage for the
   resulting server loading, error, retry, and pagination states.
