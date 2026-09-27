@@ -2944,9 +2944,9 @@ test("first publish preflight preserves stage json failures", () => {
       accessibilityChecks: manualAccessibilityChecks,
     });
     assert.deepEqual(output.nextVerificationCommands, [
-      `pnpm release:first-publish-status -- --version 0.1.0 --tag next --repository-url ${quotedRepositoryUrl} --check-auth`,
-      `pnpm release:first-publish-preflight -- --version 0.1.0 --tag next --repository-url ${quotedRepositoryUrl}`,
-      `pnpm release:trusted-publishing -- --version 0.1.0 --tag next --repository-url ${quotedRepositoryUrl}`,
+      `pnpm release:first-publish-status -- --version ${workspaceVersion} --tag next --repository-url ${quotedRepositoryUrl} --check-auth`,
+      `pnpm release:first-publish-preflight -- --version ${workspaceVersion} --tag next --repository-url ${quotedRepositoryUrl}`,
+      `pnpm release:trusted-publishing -- --version ${workspaceVersion} --tag next --repository-url ${quotedRepositoryUrl}`,
       "pnpm preview:smoke-ui -- --markdown",
       "pnpm preview:smoke-ui -- --report --out-file .release/ui-smoke-report.md",
       "pnpm preview:smoke-ui -- --report --json --out-file .release/ui-smoke-report.json",
