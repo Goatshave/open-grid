@@ -99,7 +99,9 @@ Server-driven lazy trees follow the same ownership split. Product code keeps `ex
 The maintained React, Vue, and Svelte server-tree examples delegate keyed request ordering,
 cancellation, retry, and stale-response protection to
 `createServerRequestCoordinator`. Their product state continues to own expansion and
-how successful child rows enter grid data.
+how successful child rows enter grid data. Loading, error, and pagination changes use
+polite atomic status regions, and one cross-framework browser suite verifies their
+keyboard behavior and automated WCAG A/AA results in stable error and paginated states.
 
 Row grouping, aggregation, and expansion are core pipeline features. Grouping state is an ordered list of leaf column ids, grouped rows expose `groupingColumnId`, `groupingValue`, `subRows`, `leafRows`, `getIsGrouped()`, and `getCanExpand()`, and aggregation is resolved through column `aggregationFn` values. Products can call `grid.moveGroupingColumn()` to reorder grouping depth without owning grouping state normalization. Setting `groupFooterMode: "expanded"` attaches non-selectable aggregate footer rows to expanded groups; footer rows expose `getIsGroupFooter()`, `groupFooterFor`, and aggregate `getValue()` output from the same aggregation functions. `grid.getGroupedRowModel()` preserves the grouped tree, while `grid.getExpandedRowModel()` flattens the currently expanded rows before pagination. Renderers can choose how to display group rows, group footers, and expansion controls without owning the grouping algorithm.
 

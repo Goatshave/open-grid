@@ -37,7 +37,8 @@ const childrenRequests = createServerRequestCoordinator<
 The maintained React, Vue, and Svelte server-tree examples use this contract for
 keyed request ordering, cancellation, retry, and stale-response protection. Their
 product state continues to own expansion and how successful child rows enter grid
-data.
+data. Loading, error, and pagination changes are exposed through polite atomic status
+regions so assistive technology receives the same lifecycle transitions.
 
 Call `run(query)` to load a key. The returned result is a discriminated union with a
 `success`, `error`, `cancelled`, or `stale` status, so callers do not need to identify

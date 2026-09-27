@@ -54,9 +54,10 @@ and [release record](https://github.com/Goatshave/open-grid/blob/main/docs/relea
 
 ## 0.3.0 Direction
 
-Open Grid 0.3 focuses on server-owned data workflows. Existing React, Vue, and Svelte
-examples show the same product-owned request sequencing, cancellation, stale-response,
-and retry logic, which now provides the integration evidence for this scope.
+Open Grid 0.3 focuses on server-owned data workflows. The maintained React, Vue, and
+Svelte examples now share the framework-neutral request lifecycle for sequencing,
+cancellation, stale-response protection, retained data, and retry while keeping query
+construction and successful data commits in product state.
 
 - [x] Accept a server-owned `rowCount`, derive page count when needed, and expose the
   exact total through shared accessibility primitives across all three UI renderers.
@@ -64,7 +65,7 @@ and retry logic, which now provides the integration evidence for this scope.
   stale-response protection, retry, and retained data.
 - [x] Adopt that lifecycle in the maintained React, Vue, and Svelte server examples
   and document the product/server ownership boundary.
-- [ ] Complete cross-framework browser and accessibility regression coverage for the
+- [x] Complete cross-framework browser and accessibility regression coverage for the
   resulting server loading, error, retry, and pagination states.
 
 ## Performance Direction

@@ -545,8 +545,8 @@
 
   <div class="server-state" aria-label="Svelte server tree query state">
     <span data-testid="svelte-tree-expanded">Expanded: {formatServerTreeExpanded(expanded)}</span>
-    <span data-testid="svelte-tree-loading">Loading: {formatServerTreeLoading(loading)}</span>
-    <span data-testid="svelte-tree-errors">Errors: {formatServerTreeErrors(loadErrors)}</span>
+    <span role="status" aria-live="polite" aria-atomic="true" data-testid="svelte-tree-loading">Loading: {formatServerTreeLoading(loading)}</span>
+    <span role="status" aria-live="polite" aria-atomic="true" data-testid="svelte-tree-errors">Errors: {formatServerTreeErrors(loadErrors)}</span>
     <span data-testid="svelte-tree-cancelled">Cancelled: {formatServerTreeCancelled(cancelledLoads)}</span>
     <span data-testid="svelte-tree-refreshes">Refreshes: {formatServerTreeRefreshes(refreshCounts)}</span>
     <span data-testid="svelte-tree-mutating">Mutating: {formatServerTreeMutating(mutatingWork)}</span>
@@ -570,7 +570,7 @@
     >
       Previous
     </button>
-    <span>Page {serverPageIndex + 1} / {serverResult.pageCount}</span>
+    <span role="status" aria-live="polite" aria-atomic="true">Page {serverPageIndex + 1} / {serverResult.pageCount}</span>
     <button
       type="button"
       disabled={serverPageIndex >= serverResult.pageCount - 1}

@@ -596,8 +596,16 @@ const App = defineComponent({
         ]),
         h("div", { class: "server-state", "aria-label": "Vue server tree query state" }, [
           h("span", { "data-testid": "vue-tree-expanded" }, `Expanded: ${formatServerTreeExpanded(expanded.value)}`),
-          h("span", { "data-testid": "vue-tree-loading" }, `Loading: ${formatServerTreeLoading(loading.value)}`),
-          h("span", { "data-testid": "vue-tree-errors" }, `Errors: ${formatServerTreeErrors(loadErrors.value)}`),
+          h(
+            "span",
+            { role: "status", "aria-live": "polite", "aria-atomic": "true", "data-testid": "vue-tree-loading" },
+            `Loading: ${formatServerTreeLoading(loading.value)}`,
+          ),
+          h(
+            "span",
+            { role: "status", "aria-live": "polite", "aria-atomic": "true", "data-testid": "vue-tree-errors" },
+            `Errors: ${formatServerTreeErrors(loadErrors.value)}`,
+          ),
           h("span", { "data-testid": "vue-tree-cancelled" }, `Cancelled: ${formatServerTreeCancelled(cancelledLoads.value)}`),
           h("span", { "data-testid": "vue-tree-refreshes" }, `Refreshes: ${formatServerTreeRefreshes(refreshCounts.value)}`),
           h("span", { "data-testid": "vue-tree-mutating" }, `Mutating: ${formatServerTreeMutating(mutatingWork.value)}`),
@@ -627,7 +635,11 @@ const App = defineComponent({
             },
             "Previous",
           ),
-          h("span", `Page ${serverPageIndex + 1} / ${result.pageCount}`),
+          h(
+            "span",
+            { role: "status", "aria-live": "polite", "aria-atomic": "true" },
+            `Page ${serverPageIndex + 1} / ${result.pageCount}`,
+          ),
           h(
             "button",
             {
