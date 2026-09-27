@@ -4,6 +4,8 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Upgrade maintained examples and benchmarks to Vite 8.3, pairing React examples
+  with `@vitejs/plugin-react` 6.1 so their peer dependency contract stays aligned.
 - Document the post-0.2.0 release state and define the pre-1.0 prerelease versioning
   policy for alpha, beta, release-candidate, and stable publications.
 - Prevent prerelease versions from being published under npm's `latest` dist-tag.
