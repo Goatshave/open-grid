@@ -924,7 +924,7 @@ test("release workflows run readiness and all benchmark budget checks", () => {
   assert.match(releaseVerifyWorkflow, /^  required-gate:$/m);
   assert.match(releaseVerifyWorkflow, /name: Release Gate/);
   assert.match(releaseVerifyWorkflow, /RELEASE_RELATED: \$\{\{ needs\.changes\.outputs\.release \}\}/);
-  assert.match(releaseVerifyWorkflow, /if \[ "\$RELEASE_RELATED" != "true" \]; then\s+exit 0/);
+  assert.match(releaseVerifyWorkflow, /if \[ "\$RELEASE_RELATED" = "false" \]; then\s+exit 0/);
   assert.match(releaseVerifyWorkflow, /test "\$ARTIFACTS_RESULT" = "success"/);
   assert.match(releaseVerifyWorkflow, /test "\$BROWSER_RESULT" = "success"/);
   assert.match(releaseVerifyWorkflow, /test "\$COMPUTE_RESULT" = "success"/);

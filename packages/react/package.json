@@ -1,6 +1,6 @@
 {
   "name": "@open-grid/react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React adapter for Open Grid.",
   "keywords": ["data-grid", "grid", "table", "react", "adapter"],
   "homepage": "https://goatshave.github.io/open-grid/packages#react",

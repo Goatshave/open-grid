@@ -4,6 +4,14 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+## 0.2.0 - 2026-09-27
+
+Release candidate prepared on this date; npm publication is pending the final manual
+UI/accessibility review and the protected publish workflow.
+
+- Require both general CI and release verification before merging to main, and fail
+  the release gate when change detection fails or returns an invalid result.
+
 - Align maintained React workspaces on React 19 with matching React DOM and type
   packages, and group future React major dependency updates to avoid mixed runtimes.
 - Rebaseline only framework-inclusive server transfer/decoded-size ceilings for the

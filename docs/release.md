@@ -2,6 +2,81 @@
 
 This project uses the workspace package version as the release version for every publishable package under `packages/*`.
 
+## 0.2.0 Release Candidate
+
+The workspace and all ten public packages are prepared as `0.2.0`. This is a release
+candidate in source; a dated changelog entry or a successful dry-run does not mean
+the version has been published. The last published release remains `0.1.0` until
+the protected workflow succeeds.
+
+Highlights are instance-scoped localization, framework-native custom cells and
+headers, toolbar/query-state composition, persisted preference migrations, reviewed
+public declaration contracts, external consumer verification, and core/server
+performance improvements. React 18/19, Vue 3.4+, and Svelte 4.2.20/5 support is
+unchanged. Repository development now requires Node 22.12+ (22.x) or 24+ and pnpm
+9.15.0; this tooling requirement is separate from framework peer compatibility.
+
+### Merge and artifact gates
+
+The `Protect main` repository ruleset requires both `Required Gate` and
+`Release Gate` from GitHub Actions. Release verification fails when change detection
+fails, its result is missing/invalid, or a required release job does not succeed.
+Only successfully detected non-release changes may skip the expensive release jobs.
+
+On the final, clean release commit, build and validate the candidate:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm build
+pnpm api:check
+pnpm release:policy -- --version 0.2.0 --tag open-grid-v0.2.0 --json
+pnpm release:check -- --json
+pnpm release:stage -- --version 0.2.0 --out-dir .release/0.2.0 --repository-url git+https://github.com/Goatshave/open-grid.git
+pnpm release:publish -- --version 0.2.0 --tag latest --out-dir .release/0.2.0 --repository-url git+https://github.com/Goatshave/open-grid.git --dry-run --json
+pnpm release:consumer-smoke -- --version 0.2.0 --tarball-dir .release/0.2.0 --json
+```
+
+The stage directory must be absent or empty. Preserve an existing candidate's
+artifacts and use a new empty directory when staging again. CI and Release
+Verification must also pass on the candidate, including full E2E and every required
+performance budget.
+
+### Final manual evidence and publication
+
+After the release preparation PR is merged, use the exact final `main` revision to
+generate the report. A report generated before a squash merge has a different
+revision and must be regenerated. Preserve older reports rather than reusing their
+pass results for changed source.
+
+```bash
+pnpm preview:smoke-ui -- --report --json --out-file .release/0.2.0-ui-smoke-report.json
+pnpm preview:smoke-ui -- --open
+# In another terminal, record the actual review:
+pnpm review:smoke-ui -- --file .release/0.2.0-ui-smoke-report.json
+pnpm release:ui-smoke-report-check -- --file .release/0.2.0-ui-smoke-report.json --version 0.2.0 --tag latest --repository-url git+https://github.com/Goatshave/open-grid.git --json
+```
+
+All 21 functional and 12 accessibility checks need actual evidence, including
+keyboard operation, real 200% browser zoom, 390 CSS px reflow, screen-reader output,
+and platform forced-colors/high-contrast behavior. Automated browser checks and an
+empty report template do not complete this review. Reports expire after seven days
+and are invalidated by relevant source or revision changes.
+
+Before publication, confirm the npm Trusted Publisher settings for all ten packages
+point to `Goatshave/open-grid`, `release-publish.yml`, environment `npm`, and action
+`npm publish`. The GitHub `npm` environment permits `main`. Local first-publish
+status tooling intentionally cannot attest to npm account settings. Verify the
+requested version is still unpublished before dispatching the protected workflow.
+
+Once the report passes and publication is authorized, dispatch `Release Publish`
+on that reviewed `main` revision with version `0.2.0`, npm tag `latest`, repository
+URL `git+https://github.com/Goatshave/open-grid.git`, confirmation `publish-open-grid`,
+and the completed JSON report as `ui_smoke_report`. After a successful workflow,
+verify all ten npm dist-tags and clean-consumer installation, then create the
+`open-grid-v0.2.0` tag and GitHub release for the published commit with the changelog
+notes. Update the candidate/publication status text and actual release date if
+publication occurs later than preparation.
+
 ## Publishable Packages
 
 The public package set is:

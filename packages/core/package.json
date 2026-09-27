@@ -1,6 +1,6 @@
 {
   "name": "@open-grid/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Framework-agnostic data grid engine.",
   "keywords": ["data-grid", "grid", "table", "headless", "typescript"],
   "homepage": "https://goatshave.github.io/open-grid/packages#core",

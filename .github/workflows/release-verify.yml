@@ -247,16 +247,20 @@ jobs:
     steps:
       - name: Verify required release jobs
         env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
           RELEASE_RELATED: ${{ needs.changes.outputs.release }}
           ARTIFACTS_RESULT: ${{ needs.release-artifacts.result }}
           BROWSER_RESULT: ${{ needs.browser-budgets.result }}
           COMPUTE_RESULT: ${{ needs.compute-budgets.result }}
           E2E_RESULT: ${{ needs.full-e2e.result }}
         run: |
-          if [ "$RELEASE_RELATED" != "true" ]; then
+          test "$CHANGES_RESULT" = "success"
+
+          if [ "$RELEASE_RELATED" = "false" ]; then
             exit 0
           fi
 
+          test "$RELEASE_RELATED" = "true"
           test "$ARTIFACTS_RESULT" = "success"
           test "$BROWSER_RESULT" = "success"
           test "$COMPUTE_RESULT" = "success"
