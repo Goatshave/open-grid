@@ -7,9 +7,9 @@ All notable Open Grid release changes should be documented here before a package
 - Add a keyed, framework-neutral server request coordinator with same-key
   supersession, stale-response protection, retained data, retry, cancellation, reset,
   subscriptions, and disposal.
-- Migrate the React server-tree example from product-owned request ids and controller
-  maps to the shared coordinator while preserving its loading, retry, refresh,
-  cancellation, and stale-response behavior.
+- Migrate the React and Vue server-tree examples from product-owned request ids and
+  controller maps to the shared coordinator while preserving their loading, retry,
+  refresh, cancellation, and stale-response behavior.
 - Rebaseline the required core gzip ceiling from 23,000 to 24,000 bytes after
   measuring the server request coordinator, retaining regression headroom.
 - Add a server-owned `rowCount` contract that derives page counts when `pageCount` is

@@ -34,8 +34,8 @@ const childrenRequests = createServerRequestCoordinator<
 });
 ```
 
-The maintained React server-tree example uses this contract for keyed request
-ordering, cancellation, retry, and stale-response protection. Its product state
+The maintained React and Vue server-tree examples use this contract for keyed request
+ordering, cancellation, retry, and stale-response protection. Their product state
 continues to own expansion and how successful child rows enter grid data.
 
 Call `run(query)` to load a key. The returned result is a discriminated union with a
