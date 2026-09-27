@@ -4,6 +4,9 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Upgrade Svelte 5 example and benchmark tooling to Vite 8 with the Svelte Vite
+  plugin 7, and align the workspace Node requirement with their supported runtimes.
+
 - Defer nested and expanded row ID indexes until lookup and skip expansion-state
   lookups for terminal rows, reducing server-grouping work without raising server
   performance budgets.

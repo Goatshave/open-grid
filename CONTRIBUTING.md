@@ -14,7 +14,7 @@ work, and features that fit the public roadmap.
 
 ## Local Development
 
-Open Grid requires Node.js 22 or newer and pnpm 9.15, as declared by the root
+Open Grid requires Node.js 22.12+ (22.x) or 24+ and pnpm 9.15, as declared by the root
 workspace.
 
 ```bash

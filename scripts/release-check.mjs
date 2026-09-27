@@ -6,7 +6,7 @@ const root = process.cwd();
 const packageDocumentationBase = "https://goatshave.github.io/open-grid";
 const packageBugsUrl = "https://github.com/Goatshave/open-grid/issues";
 const expectedPackageManager = "pnpm@9.15.0";
-const expectedNodeEngine = ">=22.0.0";
+const expectedNodeEngine = "^22.12.0 || >=24.0.0";
 let args;
 
 try {

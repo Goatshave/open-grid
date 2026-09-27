@@ -3320,7 +3320,7 @@ function createFirstPublishStatusWorkspace() {
     version: "0.0.0",
     packageManager: "pnpm@9.15.0",
     engines: {
-      node: ">=22.0.0",
+      node: "^22.12.0 || >=24.0.0",
     },
     scripts: {
       "release:first-publish-status": "node scripts/release-first-publish-status.mjs",
@@ -3452,7 +3452,7 @@ function createFirstPublishReadinessFailureWorkspace() {
     version: "0.0.0",
     packageManager: "pnpm@9.15.0",
     engines: {
-      node: ">=22.0.0",
+      node: "^22.12.0 || >=24.0.0",
     },
   });
   writeFile(join(workspace, "CHANGELOG.md"), "# Changelog\n\n## 0.0.0 - 2026-07-04\n\n- Fixture release.\n");
