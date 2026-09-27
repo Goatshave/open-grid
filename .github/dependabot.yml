@@ -7,6 +7,14 @@ updates:
     exclude-paths:
       - "compatibility/**"
     groups:
+      react-major:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+        update-types:
+          - major
       npm-minor-patch:
         patterns:
           - "*"

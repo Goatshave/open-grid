@@ -12,6 +12,7 @@ as the source-tree index when browsing the repository directly.
 - [Localization](localization.md)
 - [Custom rendering](custom-rendering.md)
 - [Product composition](composition.md)
+- [Persisted preferences](preferences.md)
 - [Project overview](https://github.com/Goatshave/open-grid#readme)
 - [React UI](react-ui.md)
 - [Vue UI](vue-ui.md)

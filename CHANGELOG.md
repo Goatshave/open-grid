@@ -4,6 +4,17 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Align maintained React workspaces on React 19 with matching React DOM and type
+  packages, and group future React major dependency updates to avoid mixed runtimes.
+- Upgrade Svelte 5 example and benchmark tooling to Vite 8 with the Svelte Vite
+  plugin 7, and align the workspace Node requirement with their supported runtimes.
+
+- Defer nested and expanded row ID indexes until lookup and skip expansion-state
+  lookups for terminal rows, reducing server-grouping work without raising server
+  performance budgets.
+- Stabilize the one-million-row core compute gate with workload-specific sorting
+  ceilings backed by repeated hosted Linux and local macOS measurements, while
+  retaining stricter row-model and filtering limits and quadratic-regression tests.
 - Add a shared, typed, instance-scoped localization contract for built-in text and
   accessibility labels across primitives and the React, Vue, and Svelte UI packages.
 - Rebaseline the required primitives gzip ceiling to 14,500 bytes after measuring
@@ -15,6 +26,10 @@ All notable Open Grid release changes should be documented here before a package
   and rebaseline the Svelte-to-Vue document-node delta to 80 after measurement.
 - Rebaseline the required Svelte UI gzip ceiling to 21,000 bytes after measuring
   the component-renderer addition.
+- Add explicit forward-only persisted preference migrations with guarded failure
+  handling and task-oriented customization, composition, and upgrade guides.
+- Rebaseline the required primitives gzip ceiling from 14,500 to 15,000 bytes after
+  measuring the preference migration addition.
 - Add generated public export and declaration contracts, including CSS entry points
   and removal detection, plus a documented pre-1.0 compatibility and deprecation
   policy enforced by CI and the protected publish workflow.

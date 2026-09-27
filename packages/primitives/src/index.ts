@@ -153,6 +153,16 @@ export interface GridPreferencesOptions {
   validColumnIds?: readonly string[] | undefined;
 }
 
+export interface GridPreferencesMigration {
+  fromVersion: number;
+  toVersion: number;
+  migrate: (preferences: Readonly<Record<string, unknown>>) => unknown;
+}
+
+export interface GridPreferencesParseOptions extends GridPreferencesOptions {
+  migrations?: readonly GridPreferencesMigration[] | undefined;
+}
+
 export interface GridPreferencesStorageLike {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
@@ -1281,6 +1291,62 @@ function getGridPreferenceRecord(value: unknown): Record<string, unknown> | null
     : null;
 }
 
+function getGridPreferenceVersion(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : null;
+}
+
+export function migrateGridPreferences(
+  value: unknown,
+  migrations: readonly GridPreferencesMigration[] = [],
+): Record<string, unknown> | null {
+  let preferences = getGridPreferenceRecord(value);
+  const initialVersion = getGridPreferenceVersion(preferences?.version);
+
+  if (!preferences || initialVersion === null || initialVersion > GRID_PREFERENCES_VERSION) {
+    return null;
+  }
+
+  const migrationsByVersion = new Map<number, GridPreferencesMigration>();
+
+  for (const migration of migrations) {
+    if (
+      getGridPreferenceVersion(migration.fromVersion) === null
+      || getGridPreferenceVersion(migration.toVersion) === null
+      || migration.toVersion <= migration.fromVersion
+      || migration.toVersion > GRID_PREFERENCES_VERSION
+      || migrationsByVersion.has(migration.fromVersion)
+    ) {
+      return null;
+    }
+
+    migrationsByVersion.set(migration.fromVersion, migration);
+  }
+
+  let version = initialVersion;
+
+  while (version < GRID_PREFERENCES_VERSION) {
+    const migration = migrationsByVersion.get(version);
+
+    if (!migration) {
+      return null;
+    }
+
+    try {
+      preferences = getGridPreferenceRecord(migration.migrate(preferences));
+    } catch {
+      return null;
+    }
+
+    if (!preferences || preferences.version !== migration.toVersion) {
+      return null;
+    }
+
+    version = migration.toVersion;
+  }
+
+  return preferences;
+}
+
 function getGridPreferenceColumnIds(value: unknown, validColumnIds?: readonly string[]): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -1339,9 +1405,9 @@ export function serializeGridPreferences(preferences: GridPreferences, options: 
   return JSON.stringify(createGridPreferences(preferences.state, preferences.density, options));
 }
 
-export function parseGridPreferences(value: string, options: GridPreferencesOptions = {}): GridPreferences | null {
+export function parseGridPreferences(value: string, options: GridPreferencesParseOptions = {}): GridPreferences | null {
   try {
-    const parsed = getGridPreferenceRecord(JSON.parse(value));
+    const parsed = migrateGridPreferences(JSON.parse(value), options.migrations);
 
     if (!parsed || parsed.version !== GRID_PREFERENCES_VERSION) {
       return null;
@@ -1382,7 +1448,7 @@ export function getBrowserGridPreferencesStorage(
 export function readGridPreferences(
   storage: GridPreferencesStorageLike | null | undefined,
   key: string,
-  options: GridPreferencesOptions = {},
+  options: GridPreferencesParseOptions = {},
 ): GridPreferences | null {
   if (!storage) {
     return null;
