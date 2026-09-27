@@ -6,8 +6,9 @@ hero:
   text: Production data grids across frameworks
   tagline: One framework-agnostic engine with maintained React, Vue, and Svelte renderers, server workflows, and measurable performance contracts.
   image:
-    src: /logo.svg
-    alt: Open Grid mark
+    light: /brand/shuttle-mark-light.svg
+    dark: /brand/shuttle-mark-dark.svg
+    alt: Open Grid shuttle mark
   actions:
     - theme: brand
       text: Get started
