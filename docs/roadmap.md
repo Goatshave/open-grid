@@ -35,7 +35,11 @@ regression safety, and dependable releases.
 - [x] Add direct React adapter and Vue UI rendering tests instead of allowing empty
   package test suites.
 
-## 0.2.0 Direction
+## 0.2.0 Release Candidate
+
+The planned features below are implemented. Publication is pending final manual
+UI/accessibility evidence and the protected publish workflow. See the
+[release checklist](https://github.com/Goatshave/open-grid/blob/main/docs/release.md#020-release-candidate).
 
 - [x] Define instance-scoped localization contracts for built-in labels, status text,
   controls, and accessibility labels across React, Vue, Svelte, and primitives.

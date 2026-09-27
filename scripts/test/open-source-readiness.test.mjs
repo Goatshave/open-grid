@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -124,4 +125,36 @@ test("release workflows enforce API and staged consumer contracts", () => {
   assert.match(publish, /run: pnpm api:check/);
   assert.match(publish, /run: pnpm compatibility:check/);
   assert.match(publish, /run: pnpm release:consumer-smoke/);
+});
+
+test("release gate fails closed when change detection or required jobs fail", () => {
+  const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "release-verify.yml"), "utf8");
+  const gate = workflow.split("      - name: Verify required release jobs\n")[1];
+  assert.ok(gate, "release gate step must exist");
+  const script = gate.split("        run: |\n")[1].replace(/^          /gm, "");
+  const passing = {
+    CHANGES_RESULT: "success",
+    RELEASE_RELATED: "true",
+    ARTIFACTS_RESULT: "success",
+    BROWSER_RESULT: "success",
+    COMPUTE_RESULT: "success",
+    E2E_RESULT: "success",
+  };
+  const run = (overrides) => spawnSync("bash", ["-e", "-c", script], {
+    env: { ...process.env, ...passing, ...overrides },
+  }).status;
+
+  assert.equal(run({}), 0);
+  assert.equal(run({ RELEASE_RELATED: "false", ARTIFACTS_RESULT: "skipped", BROWSER_RESULT: "skipped", COMPUTE_RESULT: "skipped", E2E_RESULT: "skipped" }), 0);
+  for (const CHANGES_RESULT of ["failure", "cancelled", "skipped", ""]) {
+    assert.notEqual(run({ CHANGES_RESULT, RELEASE_RELATED: "false" }), 0);
+  }
+  for (const RELEASE_RELATED of ["", "unknown"]) {
+    assert.notEqual(run({ RELEASE_RELATED }), 0);
+  }
+  for (const job of ["ARTIFACTS_RESULT", "BROWSER_RESULT", "COMPUTE_RESULT", "E2E_RESULT"]) {
+    for (const result of ["failure", "cancelled", "skipped"]) {
+      assert.notEqual(run({ [job]: result }), 0, `${job}=${result} must fail`);
+    }
+  }
 });

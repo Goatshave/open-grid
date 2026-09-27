@@ -33,7 +33,7 @@ export default defineConfig({
       { text: "Frameworks", link: "/react-ui" },
       { text: "Packages", link: "/packages" },
       { text: "Performance", link: "/performance" },
-      { text: "v0.1.0", link: "https://github.com/Goatshave/open-grid/releases" },
+      { text: "Releases", link: "https://github.com/Goatshave/open-grid/releases" },
     ],
     sidebar: [
       {
