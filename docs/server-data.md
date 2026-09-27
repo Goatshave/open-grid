@@ -34,6 +34,10 @@ const childrenRequests = createServerRequestCoordinator<
 });
 ```
 
+The maintained React server-tree example uses this contract for keyed request
+ordering, cancellation, retry, and stale-response protection. Its product state
+continues to own expansion and how successful child rows enter grid data.
+
 Call `run(query)` to load a key. The returned result is a discriminated union with a
 `success`, `error`, `cancelled`, or `stale` status, so callers do not need to identify
 abort errors from each transport. `getState(key)` reports `idle`, `loading`, `success`,
