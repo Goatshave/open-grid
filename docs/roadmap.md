@@ -42,7 +42,7 @@ regression safety, and dependable releases.
 - [x] Expand typed custom renderer parity across React, Vue, and Svelte.
 - [x] Add product toolbar and loading, error, and empty-state composition points without
   coupling product UI to the grid core.
-- Version persisted preference migrations and document upgrade behavior.
+- [x] Version persisted preference migrations and document upgrade behavior.
 - [x] Expand task-oriented API reference and integration examples from user reports.
 - Continue keyboard, screen-reader, forced-colors, mobile reflow, server-data, and
   export improvements where real integration evidence identifies a gap.

@@ -122,6 +122,36 @@ describe("createGrid", () => {
     expect(grid.getRowModel().rows.map((row) => row.id)).toEqual(["docs", "intro", "guides", "api", "readme"]);
   });
 
+  it("indexes nested and displayed rows on demand without retaining collapsed descendants", () => {
+    const grid = createGrid({
+      data: treeData,
+      columns: treeColumns,
+      getRowId: (row) => row.id,
+      getSubRows: (row) => row.children,
+      initialState: { expanded: { docs: true, guides: true } },
+      manualPagination: true,
+    });
+    const core = grid.getCoreRowModel();
+    const expanded = grid.getExpandedRowModel();
+
+    for (const model of [core, expanded]) {
+      expect(Object.getOwnPropertyDescriptor(model, "rowsById")?.get).toBeTypeOf("function");
+      expect(Object.keys(model.rowsById)).toEqual(["docs", "intro", "guides", "api", "readme"]);
+      expect(model.rowsById.api).toBe(core.rows[0]?.subRows[1]?.subRows[0]);
+      expect(model.rowsById).toBe(model.rowsById);
+    }
+
+    grid.toggleRowExpanded("guides", false);
+    const collapsed = grid.getExpandedRowModel();
+    expect(collapsed).not.toBe(expanded);
+    expect(collapsed.rowsById.api).toBeUndefined();
+    expect(Object.keys(collapsed.rowsById)).toEqual(["docs", "intro", "guides", "readme"]);
+    expect(core.rowsById.api).toBe(expanded.rowsById.api);
+
+    grid.toggleRowExpanded("guides", true);
+    expect(grid.getRowModel().rowsById.api).toBe(core.rowsById.api);
+  });
+
   it("supports lazy tree parents that can expand before sub rows are loaded", () => {
     const lazyTreeData: TreeItem[] = [
       { id: "remote", name: "Remote", type: "folder", size: 0 },

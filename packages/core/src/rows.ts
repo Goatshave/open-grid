@@ -54,7 +54,7 @@ export function createCoreRowModel<TData>(
   const rows = createRows(data, undefined, null, 0);
   return createRowModel(rows, {
     includeSubRows: hasNestedRows,
-    lazyRowsById: !hasNestedRows,
+    lazyRowsById: true,
   });
 }
 
@@ -64,13 +64,21 @@ export function createRowModel<TData>(
 ): RowModel<TData> {
   const includeSubRows = options.includeSubRows ?? true;
 
-  if (!includeSubRows && options.lazyRowsById) {
+  if (options.lazyRowsById) {
+    const flatRows: Row<TData>[] = includeSubRows ? [] : rows;
+    if (includeSubRows) {
+      const visit = (row: Row<TData>) => {
+        flatRows.push(row);
+        for (const subRow of row.subRows) visit(subRow);
+      };
+      for (const row of rows) visit(row);
+    }
     let lazyRowsById: Record<RowId, Row<TData>> | undefined;
     return {
       rows,
-      flatRows: rows,
+      flatRows,
       get rowsById() {
-        lazyRowsById ??= indexRowsById(rows);
+        lazyRowsById ??= indexRowsById(flatRows);
         return lazyRowsById;
       },
     };
