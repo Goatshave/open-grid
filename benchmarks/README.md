@@ -38,7 +38,10 @@ pnpm benchmark:server:budget:run
 - `framework:heap:budget:run` enforces settled-workload memory ceilings.
 - `core-filter:massive:run` covers deterministic 100,000- and 1,000,000-row core
   processing with two warmups and 20 recorded runs so p95 is not determined by one
-  outlier.
+  outlier. Per-row scaling ceilings remain `2.0x` for row-model and filter workloads,
+  while numeric sorting uses `2.5x` and repeated direction flips use `3.0x` to account
+  for the stable allocation and garbage-collection cost observed at one million rows.
+  These workload-specific ceilings still reject quadratic growth.
 - `server:budget:run` covers controlled standard and stress server workloads.
 
 ## Diagnostic Measurements

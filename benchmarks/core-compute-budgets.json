@@ -22,12 +22,12 @@
       "maxP95PerRowRatio": 2
     },
     "numeric-sort": {
-      "maxMedianPerRowRatio": 2,
-      "maxP95PerRowRatio": 2
+      "maxMedianPerRowRatio": 2.5,
+      "maxP95PerRowRatio": 2.5
     },
     "numeric-sort-flip": {
-      "maxMedianPerRowRatio": 2,
-      "maxP95PerRowRatio": 2
+      "maxMedianPerRowRatio": 3,
+      "maxP95PerRowRatio": 3
     },
     "global-filter": {
       "maxMedianPerRowRatio": 2,

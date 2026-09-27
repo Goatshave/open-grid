@@ -4,6 +4,12 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Defer nested and expanded row ID indexes until lookup and skip expansion-state
+  lookups for terminal rows, reducing server-grouping work without raising server
+  performance budgets.
+- Stabilize the one-million-row core compute gate with workload-specific sorting
+  ceilings backed by repeated hosted Linux and local macOS measurements, while
+  retaining stricter row-model and filtering limits and quadratic-regression tests.
 - Add a shared, typed, instance-scoped localization contract for built-in text and
   accessibility labels across primitives and the React, Vue, and Svelte UI packages.
 - Rebaseline the required primitives gzip ceiling to 14,500 bytes after measuring

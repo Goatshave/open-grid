@@ -45,6 +45,40 @@ test("recomputes core statistics and rejects quadratic massive scaling", () => {
   ]));
 });
 
+test("enforces workload-specific sorting scale ceilings", () => {
+  const config = createConfig();
+  assert.equal(config.workloads["initial-row-model"].maxMedianPerRowRatio, 2);
+  assert.equal(config.workloads["global-filter"].maxMedianPerRowRatio, 2);
+  assert.equal(config.workloads["column-filter"].maxMedianPerRowRatio, 2);
+  assert.deepEqual(config.workloads["numeric-sort"], {
+    maxMedianPerRowRatio: 2.5,
+    maxP95PerRowRatio: 2.5,
+  });
+  assert.deepEqual(config.workloads["numeric-sort-flip"], {
+    maxMedianPerRowRatio: 3,
+    maxP95PerRowRatio: 3,
+  });
+
+  const withinBudget = createResult(config);
+  setNormalizedWorkloadScale(withinBudget, config, "numeric-sort", 2.49);
+  setNormalizedWorkloadScale(withinBudget, config, "numeric-sort-flip", 2.99);
+  assert.equal(evaluateCoreComputeBudgets(config, withinBudget).passed, true);
+
+  const numericSortRegression = createResult(config);
+  setNormalizedWorkloadScale(numericSortRegression, config, "numeric-sort", 2.51);
+  assert.deepEqual(
+    evaluateCoreComputeBudgets(config, numericSortRegression).failures.map((item) => item.id),
+    ["scale:numeric-sort:median", "scale:numeric-sort:p95"],
+  );
+
+  const sortFlipRegression = createResult(config);
+  setNormalizedWorkloadScale(sortFlipRegression, config, "numeric-sort-flip", 3.01);
+  assert.deepEqual(
+    evaluateCoreComputeBudgets(config, sortFlipRegression).failures.map((item) => item.id),
+    ["scale:numeric-sort-flip:median", "scale:numeric-sort-flip:p95"],
+  );
+});
+
 test("rejects malformed core policies, stale summaries, and incomparable runs", () => {
   assert.throws(() => validateCoreComputeBudgetConfig({}), /schemaVersion/);
   const missingWorkload = createConfig();
@@ -151,6 +185,18 @@ function createProfile(profile, runs, warmups, durationBase) {
 
 function refreshSummary(workload) {
   workload.summary = summarizeCoreComputeDurations(workload.runs.filter((run) => !run.warmup).map((run) => run.durationMs));
+}
+
+function setNormalizedWorkloadScale(result, config, workloadId, normalizedRatio) {
+  const baseline = result.profiles.find((profile) => profile.profileId === config.baselineProfile.id)
+    .workloads.find((workload) => workload.workloadId === workloadId);
+  const candidate = result.profiles.find((profile) => profile.profileId === config.candidateProfile.id)
+    .workloads.find((workload) => workload.workloadId === workloadId);
+  const rowScale = config.candidateProfile.rowCount / config.baselineProfile.rowCount;
+  for (let index = 0; index < candidate.runs.length; index += 1) {
+    candidate.runs[index].durationMs = baseline.runs[index].durationMs * rowScale * normalizedRatio;
+  }
+  refreshSummary(candidate);
 }
 
 function runCli(configPath, inputPath) {
