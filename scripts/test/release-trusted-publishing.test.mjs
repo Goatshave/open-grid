@@ -996,6 +996,7 @@ test("release trusted publishing plan rejects missing publish workflow guards", 
     assert.equal(result.status, 1);
     assert.deepEqual(plan.failures, [
       "release-publish.yml: workflow must validate npm_tag before publishing",
+      "release-publish.yml: workflow must restrict prereleases to alpha.N, beta.N, or rc.N with npm tag next",
       "release-publish.yml: workflow must validate version before publishing",
       "release-publish.yml: workflow_dispatch must require confirm_publish",
       "release-publish.yml: workflow_dispatch must require ui_smoke_report",
@@ -2704,6 +2705,27 @@ test("release publish rejects invalid requested versions before running gates", 
   assert.match(result.stderr, /Release publish failed: --version must be a valid semver version/);
 });
 
+test("release entrypoints reject prereleases published under latest before running gates", () => {
+  const commands = [
+    [releasePublishDryRunPath, "Release publish dry-run failed"],
+    [releasePublishPath, "Release publish failed"],
+    [firstPublishPreflightPath, "First publish preflight failed"],
+    [scriptPath, "Release trusted publishing plan failed"],
+  ];
+
+  for (const [entrypoint, prefix] of commands) {
+    const result = spawnSync(
+      process.execPath,
+      [entrypoint, "--", "--version", "0.3.0-rc.1", "--tag", "latest", "--repository-url", repositoryUrl],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, new RegExp(prefix));
+    assert.match(result.stderr, /prerelease version "0\.3\.0-rc\.1" must use npm dist-tag "next"/);
+  }
+});
+
 test("release publish dry-run reports a markdown publish command checklist", () => {
   const result = spawnSync(
     process.execPath,
@@ -3568,6 +3590,10 @@ jobs:
       - run: |
           [[ "$NPM_TAG" =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]]
           [[ ! "$NPM_TAG" =~ ^v?[0-9] ]]
+          if [[ "$RELEASE_VERSION" == *-* ]]; then
+            [[ "$RELEASE_VERSION" =~ -(alpha|beta|rc)\\.[1-9][0-9]*(\\+.*)?$ ]]
+            test "$NPM_TAG" = "next"
+          fi
       - run: test "\${{ github.event.inputs.confirm_publish }}" = "publish-open-grid"
       - env:
           UI_SMOKE_REPORT: \${{ github.event.inputs.ui_smoke_report }}
@@ -3650,6 +3676,10 @@ jobs:
       - run: |
           [[ "$NPM_TAG" =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]]
           [[ ! "$NPM_TAG" =~ ^v?[0-9] ]]
+          if [[ "$RELEASE_VERSION" == *-* ]]; then
+            [[ "$RELEASE_VERSION" =~ -(alpha|beta|rc)\\.[1-9][0-9]*(\\+.*)?$ ]]
+            test "$NPM_TAG" = "next"
+          fi
       - run: test "\${{ github.event.inputs.confirm_publish }}" = "publish-open-grid"
       - env:
           UI_SMOKE_REPORT: \${{ github.event.inputs.ui_smoke_report }}
@@ -3703,6 +3733,10 @@ jobs:
       - run: |
           [[ "$NPM_TAG" =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]]
           [[ ! "$NPM_TAG" =~ ^v?[0-9] ]]
+          if [[ "$RELEASE_VERSION" == *-* ]]; then
+            [[ "$RELEASE_VERSION" =~ -(alpha|beta|rc)\\.[1-9][0-9]*(\\+.*)?$ ]]
+            test "$NPM_TAG" = "next"
+          fi
       - run: test "\${{ github.event.inputs.confirm_publish }}" = "publish-open-grid"
       - env:
           UI_SMOKE_REPORT: \${{ github.event.inputs.ui_smoke_report }}
@@ -3755,6 +3789,10 @@ jobs:
       - run: |
           [[ "$NPM_TAG" =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]]
           [[ ! "$NPM_TAG" =~ ^v?[0-9] ]]
+          if [[ "$RELEASE_VERSION" == *-* ]]; then
+            [[ "$RELEASE_VERSION" =~ -(alpha|beta|rc)\\.[1-9][0-9]*(\\+.*)?$ ]]
+            test "$NPM_TAG" = "next"
+          fi
       - run: test "\${{ github.event.inputs.confirm_publish }}" = "publish-open-grid"
       - env:
           UI_SMOKE_REPORT: \${{ github.event.inputs.ui_smoke_report }}

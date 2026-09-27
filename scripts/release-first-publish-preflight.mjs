@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { releaseWorkflowUiGates, uiSmokeVerificationCommandArgs } from "./release-ui-gates.mjs";
+import { requirePrereleaseNpmTagPolicy } from "./release-version-policy.mjs";
 import {
   defaultUiSmokeOpenWaitTimeoutMs,
   formatPnpmCommand,
@@ -24,6 +25,7 @@ const rootPackage = readJson("package.json");
 const releaseVersion = args.version ?? rootPackage.version;
 try {
   requireValidSemver(releaseVersion);
+  requirePrereleaseNpmTagPolicy(releaseVersion, args.tag);
 } catch (error) {
   console.error(`First publish preflight failed: ${error.message}`);
   process.exit(1);

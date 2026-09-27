@@ -2,12 +2,13 @@
 
 This project uses the workspace package version as the release version for every publishable package under `packages/*`.
 
-## 0.2.0 Release Candidate
+## 0.2.0 Release Record
 
-The workspace and all ten public packages are prepared as `0.2.0`. This is a release
-candidate in source; a dated changelog entry or a successful dry-run does not mean
-the version has been published. The last published release remains `0.1.0` until
-the protected workflow succeeds.
+Open Grid 0.2.0 and all ten public packages were published on 2026-09-27 with npm
+dist-tag `latest`. The protected publish workflow completed the required automated
+gates and the source-bound manual UI and accessibility review. The Git tag and
+[GitHub release](https://github.com/Goatshave/open-grid/releases/tag/open-grid-v0.2.0)
+identify commit `d4834632df4c94aba983880762a736f98f662cad`.
 
 Highlights are instance-scoped localization, framework-native custom cells and
 headers, toolbar/query-state composition, persisted preference migrations, reviewed
@@ -23,7 +24,7 @@ The `Protect main` repository ruleset requires both `Required Gate` and
 fails, its result is missing/invalid, or a required release job does not succeed.
 Only successfully detected non-release changes may skip the expensive release jobs.
 
-On the final, clean release commit, build and validate the candidate:
+The final clean release commit was built and validated with:
 
 ```bash
 pnpm install --frozen-lockfile
@@ -36,12 +37,11 @@ pnpm release:publish -- --version 0.2.0 --tag latest --out-dir .release/0.2.0 --
 pnpm release:consumer-smoke -- --version 0.2.0 --tarball-dir .release/0.2.0 --json
 ```
 
-The stage directory must be absent or empty. Preserve an existing candidate's
-artifacts and use a new empty directory when staging again. CI and Release
-Verification must also pass on the candidate, including full E2E and every required
-performance budget.
+The stage directory must be absent or empty. Preserve existing release artifacts and
+use a new empty directory when staging again. CI and Release Verification must pass,
+including full E2E and every required performance budget.
 
-### Final manual evidence and publication
+### Manual evidence and publication procedure
 
 After the release preparation PR is merged, use the exact final `main` revision to
 generate the report. A report generated before a squash merge has a different
@@ -62,20 +62,19 @@ and platform forced-colors/high-contrast behavior. Automated browser checks and 
 empty report template do not complete this review. Reports expire after seven days
 and are invalidated by relevant source or revision changes.
 
-Before publication, confirm the npm Trusted Publisher settings for all ten packages
+Before each publication, confirm the npm Trusted Publisher settings for all ten packages
 point to `Goatshave/open-grid`, `release-publish.yml`, environment `npm`, and action
 `npm publish`. The GitHub `npm` environment permits `main`. Local first-publish
 status tooling intentionally cannot attest to npm account settings. Verify the
 requested version is still unpublished before dispatching the protected workflow.
 
-Once the report passes and publication is authorized, dispatch `Release Publish`
-on that reviewed `main` revision with version `0.2.0`, npm tag `latest`, repository
+For 0.2.0, the passing report was supplied to `Release Publish` on the reviewed
+`main` revision with version `0.2.0`, npm tag `latest`, repository
 URL `git+https://github.com/Goatshave/open-grid.git`, confirmation `publish-open-grid`,
 and the completed JSON report as `ui_smoke_report`. After a successful workflow,
-verify all ten npm dist-tags and clean-consumer installation, then create the
+All ten npm dist-tags and clean-consumer installation were verified before creating the
 `open-grid-v0.2.0` tag and GitHub release for the published commit with the changelog
-notes. Update the candidate/publication status text and actual release date if
-publication occurs later than preparation.
+notes.
 
 ## Publishable Packages
 
@@ -224,6 +223,28 @@ pnpm release:first-publish-preflight -- --version 0.1.0 --tag latest --repositor
 
 The preflight reports the Release Publish workflow UI gates for the manual checklist, Markdown notes, structured JSON report generation, browser-open inspection, structured report validation, quick UI smoke, and full e2e. Its `nextVerificationCommands` preserve the same order for the final local checks to rerun after external setup. Text, Markdown, and JSON output include the React/Vue/Svelte manual smoke targets with URL, build, preview, direct open command, default open wait timeout, smoke assertions, and manual checks. When `--out-dir` is supplied for persistent staged tarball inspection, it must include a non-empty directory value before the preflight runs child release gates. With `--json`, the workflow input bundle is available as `releaseWorkflowInputs`, the UI gate list as `releaseWorkflowGates`, the manual smoke targets as `manualUiSmokeTargets`, and the rerun command list as `nextVerificationCommands`. Use `--markdown` for a copyable verification report with verified steps, failures, Release Publish inputs, UI gates, the manual UI smoke checklist, remaining external actions, and next verification commands. Failed child steps that return JSON preserve their original failure details. Text failures still include workflow inputs, UI gates, targets, and next commands before the failures. The command never publishes packages.
 
+## Version and prerelease policy
+
+Open Grid is pre-1.0, but a version such as `0.2.0` is still a stable public release.
+Before 1.0, minor releases are the documented compatibility boundary: patches contain
+compatible fixes, while breaking API changes require a minor release, changelog callout,
+and migration guidance.
+
+Use prereleases only when users should test a version before it becomes stable:
+
+| Stage | Version example | Meaning | npm dist-tag |
+| --- | --- | --- | --- |
+| Alpha | `0.3.0-alpha.1` | Scope and APIs may still change. | `next` |
+| Beta | `0.3.0-beta.1` | Planned features are complete; integration feedback may still cause changes. | `next` |
+| Release candidate | `0.3.0-rc.1` | Only release-blocking fixes are expected. | `next` |
+| Stable | `0.3.0` | Approved public release for the documented compatibility boundary. | `latest` |
+
+Increment the numeric suffix for another build in the same stage. Move forward from
+alpha to beta to release candidate as the release stabilizes; stages may be skipped
+when the change is low risk. Every published version, including a prerelease, gets its
+own dated changelog section and `open-grid-v<version>` Git tag. Release commands reject
+undocumented prerelease identifiers and prevent a prerelease from using `latest`.
+
 ## Release Policy
 
 Use the local policy command before a release candidate is tagged:
@@ -244,7 +265,7 @@ The GitHub Actions workflow at `.github/workflows/release-verify.yml` runs relea
 
 ## Release Publish Workflow
 
-The GitHub Actions workflow at `.github/workflows/release-publish.yml` is a manual publish workflow. It requires and validates a semver `version`, validates the npm dist-tag, requires the public git `repository_url`, requires the exact confirmation input `publish-open-grid`, and requires the completed source-bound JSON report as `ui_smoke_report`; uses the protected `npm` environment; grants `id-token: write` for npm trusted publishing; installs npm CLI 11; materializes and validates the report without the development-only dirty-tree override; reruns the full release gates including API contracts and framework compatibility; stages tarballs with the supplied repository URL; runs a repository-verified publish dry-run and external consumer smoke against those staged tarballs; runs `pnpm e2e:smoke` before the full e2e suite; and only then calls `pnpm release:publish -- --out-dir .release/<version> --repository-url <repository_url> --provenance --confirm publish-open-grid`.
+The GitHub Actions workflow at `.github/workflows/release-publish.yml` is a manual publish workflow. It requires and validates a semver `version`, validates the npm dist-tag, restricts prereleases to the documented alpha, beta, and release-candidate forms with npm tag `next`, requires the public git `repository_url`, requires the exact confirmation input `publish-open-grid`, and requires the completed source-bound JSON report as `ui_smoke_report`; uses the protected `npm` environment; grants `id-token: write` for npm trusted publishing; installs npm CLI 11; materializes and validates the report without the development-only dirty-tree override; reruns the full release gates including API contracts and framework compatibility; stages tarballs with the supplied repository URL; runs a repository-verified publish dry-run and external consumer smoke against those staged tarballs; runs `pnpm e2e:smoke` before the full e2e suite; and only then calls `pnpm release:publish -- --out-dir .release/<version> --repository-url <repository_url> --provenance --confirm publish-open-grid`.
 
 After completing the report on the clean reviewed revision, supply the file contents through GitHub CLI:
 
@@ -290,14 +311,16 @@ The full Playwright configuration uses ports 4173-4187 by default, and automated
 
 ## Prepublish Notes
 
-The manual report now contains 21 functional checks, including visible text plus distinct semantic status/risk markers. A report generated before that marker contract changed is rejected as stale. Automated shell smoke also requires the contracted marker classes and visible values, 7px dimensions, and distinct computed cues in light and dark themes. A 2026-07-20 hands-on pass completed all 21 functional checks across React, Vue, and Svelte, including real Chromium CSV downloads and the connected preference-reload workflow. The same review completed the six keyboard and zoom/reflow checks after resolving its findings. This intermediate result is not release approval: rebind the observations to the final clean revision and complete the six screen-reader and platform high-contrast checks before running the report checker.
+The manual report contains 21 functional checks, including visible text plus distinct semantic status/risk markers. A report generated before that marker contract changed is rejected as stale. Automated shell smoke also requires the contracted marker classes and visible values, 7px dimensions, and distinct computed cues in light and dark themes. The early 0.2.0 review completed all 21 functional checks across React, Vue, and Svelte, including real Chromium CSV downloads, the connected preference-reload workflow, keyboard operation, and zoom/reflow. The final source-bound review also completed the screen-reader and platform high-contrast checks before publication.
 
 The manual inspection report separates functional checks from accessibility checks. Record the reviewer, local-calendar `YYYY-MM-DD` date, OS, browser, exact browser zoom `200%`, exact viewport `390 CSS px`, screen reader, forced-colors/high-contrast setup, and `pass` plus non-empty evidence for every target and check. The guided command accepts `pass`/`p`, `follow-up`/`f`, and `todo`/`t`, requires evidence for pass or follow-up, clears stale evidence when an item returns to todo, supports `--framework`, `--file`, and read-only `--status [--json]`, and writes through an atomic temporary file so interruption leaves the last completed item resumable. Status lists each non-passing check, canonical target URL, and framework resume command; JSON exposes structured `pendingChecks`, and framework-scoped status narrows progress without treating partial completion as whole-report approval. It does not infer or bulk-approve results. `pnpm release:ui-smoke-report-check` requires all current React/Vue/Svelte targets, those exact display settings, the exact generated source identity, a clean relevant source tree, and a review date no more than seven days old. It rejects future dates and source, URL, smoke-contract, check-text, zoom, or viewport drift. It also reserves a 60,000-character and 60,000-byte encoded report budget below GitHub's 65,535-character workflow-dispatch input limit. In Release Publish, `--version`, `--tag`, and `--repository-url` are supplied together so the checker measures the exact complete input object and rejects either character or UTF-8 byte overflow before browser or publish work starts. Use `--max-age-days <days>` to make the freshness policy stricter. `--allow-dirty` is for development-time review/checker tests only and must not be used for release approval. First-publish plan/preflight/status output carries template generation, guided review, and validation commands in order. An unfilled, oversized, source-stale, or display-setting-stale template is not release evidence. See GitHub's [workflow dispatch input limits](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputs) and [`gh workflow run -F` file input](https://cli.github.com/manual/gh_workflow_run).
 
-`pnpm e2e:smoke` first rebuilds all public packages so browser evidence cannot use stale shared primitives. It then runs Chromium accessibility-tree checks for the product-specific grid name, primary header, focused-cell value, and logical row/column count attributes; `@axe-core/playwright` WCAG A/AA scans; an actual CSV download with a non-empty Open Grid filename; a product-header policy check that direct pinning groups are absent while the action menu remains visible; contrast-aware light/dark product-token inheritance checks for accent, focus, and radius values on the semantic grid; keyboard-only toolbar focus order, Tab entry into the grid root, header-menu open/close and trigger-focus return, grid movement, and edit-cancel cell-focus return with computed two-pixel visible-focus indicators; 390px document-reflow, expanded column-manager command-boundary, and internal-grid-scroll assertions; a dedicated 640x450 CSS pixel/DPR 2 context that approximates 200% reflow and verifies initial grid visibility, product-control boundaries and non-overlap, column-panel expansion, and internal horizontal scrolling; and forced-colors focus, selection, disabled-control, loading, error, retry, and invalid-edit checks against the React, Vue, and Svelte reference pages. The product-header policy, product-theme token map, zoom-equivalent viewport, state, and accessibility-tree target contract are included in preview, report, preflight, and status metadata, and reduced motion must stop spinner animation. A 2026-07-20 hands-on pass separately verified Chrome's actual 200% host zoom, 390 CSS pixel layout, and keyboard-only workflow for every renderer. Release approval still requires actual screen-reader and platform high-contrast evidence.
+`pnpm e2e:smoke` first rebuilds all public packages so browser evidence cannot use stale shared primitives. It then runs Chromium accessibility-tree checks for the product-specific grid name, primary header, focused-cell value, and logical row/column count attributes; `@axe-core/playwright` WCAG A/AA scans; an actual CSV download with a non-empty Open Grid filename; a product-header policy check that direct pinning groups are absent while the action menu remains visible; contrast-aware light/dark product-token inheritance checks for accent, focus, and radius values on the semantic grid; keyboard-only toolbar focus order, Tab entry into the grid root, header-menu open/close and trigger-focus return, grid movement, and edit-cancel cell-focus return with computed two-pixel visible-focus indicators; 390px document-reflow, expanded column-manager command-boundary, and internal-grid-scroll assertions; a dedicated 640x450 CSS pixel/DPR 2 context that approximates 200% reflow and verifies initial grid visibility, product-control boundaries and non-overlap, column-panel expansion, and internal horizontal scrolling; and forced-colors focus, selection, disabled-control, loading, error, retry, and invalid-edit checks against the React, Vue, and Svelte reference pages. The product-header policy, product-theme token map, zoom-equivalent viewport, state, and accessibility-tree target contract are included in preview, report, preflight, and status metadata, and reduced motion must stop spinner animation. The 0.2.0 release review separately verified actual browser zoom, 390 CSS pixel layout, keyboard-only operation, screen-reader output, and platform high-contrast behavior for every renderer.
 
 - Keep `examples/*` private.
 - Keep package versions aligned with the root workspace version.
+- Publish documented prereleases (`alpha.N`, `beta.N`, or `rc.N`) with npm tag `next`;
+  publish stable versions without a suffix using npm tag `latest`.
 - Keep internal workspace dependencies as `workspace:*` until the publish tool rewrites them for the published artifacts.
 - Use `pnpm release:policy -- --version <version> --tag open-grid-v<version>` to require a matching changelog entry and tag name before release approval.
 - Use `pnpm release:plan -- --version <version>` to review the publish order and internal dependency rewrites before tagging or publishing.

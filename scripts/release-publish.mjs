@@ -2,6 +2,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { requirePrereleaseNpmTagPolicy } from "./release-version-policy.mjs";
 
 const root = process.cwd();
 const confirmPhrase = "publish-open-grid";
@@ -18,6 +19,7 @@ const rootPackage = readJson("package.json");
 const releaseVersion = args.version ?? rootPackage.version;
 try {
   requireValidSemver(releaseVersion);
+  requirePrereleaseNpmTagPolicy(releaseVersion, args.tag);
 } catch (error) {
   console.error(`Release publish failed: ${error.message}`);
   process.exit(1);
