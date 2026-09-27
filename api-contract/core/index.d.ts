@@ -544,6 +544,48 @@ declare function createExportFile(text: string, options?: ExportFileOptions): Ex
 
 declare function createGrid<TData>(options: GridOptions<TData>): Grid<TData>;
 
+type ServerRequestStatus = "idle" | "loading" | "success" | "error" | "cancelled";
+interface ServerRequestState<TData> {
+    readonly status: ServerRequestStatus;
+    readonly requestId: number | null;
+    readonly data: TData | undefined;
+    readonly error: unknown;
+    readonly reason: unknown;
+}
+interface ServerRequestContext<TKey> {
+    readonly key: TKey;
+    readonly requestId: number;
+    readonly signal: AbortSignal;
+}
+type ServerRequestResult<TData> = {
+    readonly status: "success";
+    readonly requestId: number;
+    readonly data: TData;
+} | {
+    readonly status: "error";
+    readonly requestId: number;
+    readonly error: unknown;
+} | {
+    readonly status: "cancelled" | "stale";
+    readonly requestId: number;
+};
+interface ServerRequestCoordinatorOptions<TKey, TInput, TData> {
+    getKey: (input: TInput) => TKey;
+    request: (input: TInput, context: ServerRequestContext<TKey>) => TData | Promise<TData>;
+}
+type ServerRequestListener<TKey, TData> = (key: TKey, state: ServerRequestState<TData>) => void;
+interface ServerRequestCoordinator<TKey, TInput, TData> {
+    run: (input: TInput) => Promise<ServerRequestResult<TData>>;
+    retry: (key: TKey) => Promise<ServerRequestResult<TData>> | null;
+    cancel: (key: TKey, reason?: unknown) => boolean;
+    cancelAll: (reason?: unknown) => number;
+    reset: (key: TKey) => boolean;
+    getState: (key: TKey) => ServerRequestState<TData>;
+    subscribe: (listener: ServerRequestListener<TKey, TData>) => () => void;
+    dispose: () => void;
+}
+declare function createServerRequestCoordinator<TKey, TInput, TData>(options: ServerRequestCoordinatorOptions<TKey, TInput, TData>): ServerRequestCoordinator<TKey, TInput, TData>;
+
 declare const sortingReducers: {
     set: (previous: SortingState, updater: Updater<SortingState>) => SortingState;
     toggleColumn: (previous: SortingState, columnId: ColumnId, desc?: boolean, multi?: boolean) => SortingState;
@@ -631,4 +673,4 @@ declare function getOrderableLeafColumns<TData>(columns: readonly Column<TData, 
 declare const defaultState: GridState;
 declare function mergeState(...states: Array<Partial<GridState> | undefined>): GridState;
 
-export { type AccessorColumnOptions, type AccessorFnColumnDef, type AccessorKey, type AccessorKeyColumnDef, type AggregationContext, type AggregationFn, type AnyColumnDef, type BuiltInAggregationFn, type CellContext, type CellCoordinate, type CellEditEvent, type CellEditEventParams, type CellEditHistoryAction, type CellEditHistoryState, type CellEditOption, type CellEditParserContext, type CellEditPhase, type CellEditValidationContext, type CellEditValidationResult, type CellEditValidationState, type CellEditingState, type CellFillOptions, type CellInteractionEvent, type CellInteractionEventParams, type CellRange, type CellRangeSelectionState, type ClipboardCellContext, type ClipboardCopyOptions, type ClipboardPasteCellContext, type ClipboardPasteCommittedCell, type ClipboardPasteOptions, type ClipboardPasteResult, type ClipboardPasteSkippedCell, type ClipboardPasteSkippedReason, type ClipboardPasteValidationError, type Column, type ColumnDef, type ColumnFilter, type ColumnFiltersState, type ColumnHelper, type ColumnId, type ColumnLayout, type ColumnMovePosition, type ColumnOrderState, type ColumnPinningPosition, type ColumnPinningState, type ColumnResizeEvent, type ColumnResizeEventParams, type ColumnResizePhase, type ColumnSizingState, type ColumnVisibilityState, type DisplayColumnDef, type ExpandedState, type ExportCellContext, type ExportFile, type ExportFileOptions, type ExportRowScope, type ExportTextFormat, type ExportTextOptions, type FilterFn, type FitColumnsToWidthOptions, type FocusDirection, type Grid, type GridCacheDiagnostics, type GridCacheDiagnosticsEntry, type GridCacheKey, type GridOptions, type GridSelector, type GridSelectorListener, type GridSelectorSubscriptionOptions, type GridState, type GroupColumnDef, type GroupFooterMode, type GroupingState, type GroupingValueContext, type Header, type HeaderContext, type HeaderGroup, type MoveFocusOptions, type PaginationState, type Row, type RowId, type RowInteractionEvent, type RowInteractionEventParams, type RowModel, type RowSelectionCleanupScope, type RowSelectionState, type SortDirection, type SortFn, type SortingRule, type SortingState, type Updater, columnOrderReducers, columnPinningReducers, columnSizingReducers, columnVisibilityReducers, createColumnHelper, createExportFile, createGrid, defaultState, expandedReducers, filterReducers, fitColumnsToWidth, focusReducers, getExportFileExtension, getExportMimeType, getOrderableLeafColumns, getRowIdsForSelectionCleanup, groupingReducers, mergeState, orderLeafColumns, paginationReducers, rowSelectionReducers, sortingReducers };
+export { type AccessorColumnOptions, type AccessorFnColumnDef, type AccessorKey, type AccessorKeyColumnDef, type AggregationContext, type AggregationFn, type AnyColumnDef, type BuiltInAggregationFn, type CellContext, type CellCoordinate, type CellEditEvent, type CellEditEventParams, type CellEditHistoryAction, type CellEditHistoryState, type CellEditOption, type CellEditParserContext, type CellEditPhase, type CellEditValidationContext, type CellEditValidationResult, type CellEditValidationState, type CellEditingState, type CellFillOptions, type CellInteractionEvent, type CellInteractionEventParams, type CellRange, type CellRangeSelectionState, type ClipboardCellContext, type ClipboardCopyOptions, type ClipboardPasteCellContext, type ClipboardPasteCommittedCell, type ClipboardPasteOptions, type ClipboardPasteResult, type ClipboardPasteSkippedCell, type ClipboardPasteSkippedReason, type ClipboardPasteValidationError, type Column, type ColumnDef, type ColumnFilter, type ColumnFiltersState, type ColumnHelper, type ColumnId, type ColumnLayout, type ColumnMovePosition, type ColumnOrderState, type ColumnPinningPosition, type ColumnPinningState, type ColumnResizeEvent, type ColumnResizeEventParams, type ColumnResizePhase, type ColumnSizingState, type ColumnVisibilityState, type DisplayColumnDef, type ExpandedState, type ExportCellContext, type ExportFile, type ExportFileOptions, type ExportRowScope, type ExportTextFormat, type ExportTextOptions, type FilterFn, type FitColumnsToWidthOptions, type FocusDirection, type Grid, type GridCacheDiagnostics, type GridCacheDiagnosticsEntry, type GridCacheKey, type GridOptions, type GridSelector, type GridSelectorListener, type GridSelectorSubscriptionOptions, type GridState, type GroupColumnDef, type GroupFooterMode, type GroupingState, type GroupingValueContext, type Header, type HeaderContext, type HeaderGroup, type MoveFocusOptions, type PaginationState, type Row, type RowId, type RowInteractionEvent, type RowInteractionEventParams, type RowModel, type RowSelectionCleanupScope, type RowSelectionState, type ServerRequestContext, type ServerRequestCoordinator, type ServerRequestCoordinatorOptions, type ServerRequestListener, type ServerRequestResult, type ServerRequestState, type ServerRequestStatus, type SortDirection, type SortFn, type SortingRule, type SortingState, type Updater, columnOrderReducers, columnPinningReducers, columnSizingReducers, columnVisibilityReducers, createColumnHelper, createExportFile, createGrid, createServerRequestCoordinator, defaultState, expandedReducers, filterReducers, fitColumnsToWidth, focusReducers, getExportFileExtension, getExportMimeType, getOrderableLeafColumns, getRowIdsForSelectionCleanup, groupingReducers, mergeState, orderLeafColumns, paginationReducers, rowSelectionReducers, sortingReducers };

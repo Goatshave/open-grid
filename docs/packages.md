@@ -10,7 +10,7 @@ JavaScript projects.
 <a id="core"></a>
 ## `@open-grid/core`
 
-Framework-agnostic grid state, typed columns, row models, sorting, filtering, grouping, tree data, pagination, selection, editing, and export contracts.
+Framework-agnostic grid state, typed columns, row models, sorting, filtering, grouping, tree data, pagination, selection, editing, export, and keyed server-request lifecycle contracts. See the [server data guide](./server-data).
 
 <a id="react"></a>
 ## `@open-grid/react`

@@ -60,7 +60,7 @@ and retry logic, which now provides the integration evidence for this scope.
 
 - [x] Accept a server-owned `rowCount`, derive page count when needed, and expose the
   exact total through shared accessibility primitives across all three UI renderers.
-- [ ] Define a framework-neutral request lifecycle contract for cancellation,
+- [x] Define a framework-neutral request lifecycle contract for cancellation,
   stale-response protection, retry, and retained data.
 - [ ] Adopt that lifecycle in the maintained React, Vue, and Svelte server examples
   and document the product/server ownership boundary.

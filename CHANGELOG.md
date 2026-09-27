@@ -4,6 +4,11 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Add a keyed, framework-neutral server request coordinator with same-key
+  supersession, stale-response protection, retained data, retry, cancellation, reset,
+  subscriptions, and disposal.
+- Rebaseline the required core gzip ceiling from 23,000 to 24,000 bytes after
+  measuring the server request coordinator, retaining regression headroom.
 - Add a server-owned `rowCount` contract that derives page counts when `pageCount` is
   absent and exposes exact manual-pagination totals to accessibility primitives.
 - Upgrade maintained examples and benchmarks to Vite 8.3, pairing React examples
