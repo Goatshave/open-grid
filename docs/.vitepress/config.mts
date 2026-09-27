@@ -7,7 +7,15 @@ export default defineConfig({
   base: "/open-grid/",
   cleanUrls: true,
   srcExclude: ["README.md", "agent-handoff.md", "release.md"],
-  head: [["link", { rel: "icon", href: "/open-grid/favicon.ico", sizes: "any" }]],
+  head: [
+    ["link", { rel: "icon", href: "/open-grid/favicon.svg", type: "image/svg+xml" }],
+    ["link", { rel: "icon", href: "/open-grid/favicon.ico", sizes: "32x32" }],
+    ["link", { rel: "apple-touch-icon", href: "/open-grid/apple-touch-icon.png", sizes: "180x180" }],
+    ["meta", { property: "og:title", content: "Open Grid" }],
+    ["meta", { property: "og:description", content: "One core. Native everywhere. Production data grids for React, Vue, and Svelte." }],
+    ["meta", { property: "og:image", content: "https://goatshave.github.io/open-grid/brand/social-card.png" }],
+    ["meta", { name: "twitter:card", content: "summary_large_image" }],
+  ],
   markdown: {
     lineNumbers: true,
   },
@@ -26,7 +34,11 @@ export default defineConfig({
     ],
   },
   themeConfig: {
-    logo: "/logo.svg",
+    logo: {
+      light: "/brand/open-path-ink.svg",
+      dark: "/brand/open-path-signal.svg",
+      alt: "Open Grid",
+    },
     siteTitle: "Open Grid",
     nav: [
       { text: "Guide", link: "/getting-started" },
@@ -71,6 +83,7 @@ export default defineConfig({
           { text: "Contributing", link: "https://github.com/Goatshave/open-grid/blob/main/CONTRIBUTING.md" },
           { text: "Changelog", link: "https://github.com/Goatshave/open-grid/blob/main/CHANGELOG.md" },
           { text: "Security", link: "https://github.com/Goatshave/open-grid/blob/main/SECURITY.md" },
+          { text: "Brand assets", link: "/brand" },
         ],
       },
     ],

@@ -1,27 +1,27 @@
 :root {
-  --vp-c-brand-1: #087f5b;
-  --vp-c-brand-2: #066649;
-  --vp-c-brand-3: #075d45;
-  --vp-c-brand-soft: rgba(8, 127, 91, 0.12);
-  --vp-c-bg-alt: #f6f8f7;
+  --vp-c-brand-1: #087a55;
+  --vp-c-brand-2: #066344;
+  --vp-c-brand-3: #0b503a;
+  --vp-c-brand-soft: rgba(8, 122, 85, 0.12);
+  --vp-c-bg-alt: #f3f7f1;
   --vp-c-divider: #d9dfdc;
-  --vp-button-brand-border: #087f5b;
-  --vp-button-brand-bg: #087f5b;
-  --vp-button-brand-hover-border: #066649;
-  --vp-button-brand-hover-bg: #066649;
-  --vp-home-hero-name-color: #153c32;
+  --vp-button-brand-border: #087a55;
+  --vp-button-brand-bg: #087a55;
+  --vp-button-brand-hover-border: #066344;
+  --vp-button-brand-hover-bg: #066344;
+  --vp-home-hero-name-color: #0b241c;
   --vp-home-hero-image-background-image: none;
   --vp-home-hero-image-filter: none;
 }
 
 .dark {
-  --vp-c-brand-1: #66d9b1;
-  --vp-c-brand-2: #8ae4c4;
-  --vp-c-brand-3: #3cc795;
-  --vp-c-brand-soft: rgba(102, 217, 177, 0.14);
+  --vp-c-brand-1: #b5ef6f;
+  --vp-c-brand-2: #c8f78e;
+  --vp-c-brand-3: #91d83d;
+  --vp-c-brand-soft: rgba(181, 239, 111, 0.14);
   --vp-c-bg-alt: #171c1a;
   --vp-c-divider: #38413e;
-  --vp-home-hero-name-color: #b7f4df;
+  --vp-home-hero-name-color: #e9f7df;
 }
 
 body,
@@ -36,6 +36,56 @@ body,
 .VPHomeHero .text {
   max-width: 720px;
   letter-spacing: 0;
+}
+
+.VPNavBarTitle .logo {
+  width: 24px;
+  height: 24px;
+}
+
+.VPNavBarTitle .title {
+  font-weight: 720;
+  letter-spacing: -0.025em;
+}
+
+.og-brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  max-width: 520px;
+  padding: 32px;
+  margin: 32px 0;
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-alt);
+}
+
+.og-brand-lockup strong {
+  color: var(--vp-c-text-1);
+  font-size: 42px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.og-brand-mark {
+  display: block;
+  width: 96px;
+  height: 96px;
+}
+
+@media (max-width: 640px) {
+  .og-brand-lockup {
+    gap: 18px;
+    padding: 24px;
+  }
+
+  .og-brand-lockup strong {
+    font-size: 32px;
+  }
+
+  .og-brand-mark {
+    width: 72px;
+    height: 72px;
+  }
 }
 
 .VPHomeHero .tagline {

@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title description">
   <title id="title">Open Grid</title>
-  <rect width="128" height="128" rx="20" fill="#102a24"/>
-  <path d="M25 28h78v72H25z" fill="none" stroke="#66d9b1" stroke-width="8"/>
-  <path d="M51 28v72M77 28v72M25 52h78M25 76h78" stroke="#d9fff1" stroke-width="6"/>
-  <path d="M77 52h26v24H77z" fill="#ff8a65"/>
+  <desc id="description">A continuous orthogonal path forms an open grid.</desc>
+  <style>
+    .mark { stroke: #0b241c; }
+    @media (prefers-color-scheme: dark) { .mark { stroke: #b5ef6f; } }
+  </style>
+  <path class="mark" d="M108 16H16v96h64V48H48v32h64" fill="none" stroke-width="16" stroke-linecap="square" stroke-linejoin="miter"/>
 </svg>

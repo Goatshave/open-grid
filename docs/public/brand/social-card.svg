@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">Open Grid</title>
+  <desc id="description">Production data grids across frameworks.</desc>
+  <rect width="1280" height="640" fill="#0b241c"/>
+  <g stroke="#b5ef6f" stroke-width="1" opacity=".12">
+    <path d="M0 96h1280M0 320h1280M0 544h1280M96 0v640M320 0v640M544 0v640M768 0v640M992 0v640M1216 0v640"/>
+  </g>
+  <path d="M347 212H140v216h144V284h-72v72h216" fill="none" stroke="#b5ef6f" stroke-width="36" stroke-linecap="square" stroke-linejoin="miter"/>
+  <text x="484" y="292" fill="#f2f7ef" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" font-size="86" font-weight="720" letter-spacing="-4">Open Grid</text>
+  <text x="489" y="356" fill="#afc1b9" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" font-size="28" font-weight="500">One core. Native everywhere.</text>
+  <text x="489" y="410" fill="#b5ef6f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" letter-spacing="1">REACT  /  VUE  /  SVELTE</text>
+</svg>

@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/public/brand/open-path-signal.svg">
+    <img src="./docs/public/brand/open-path-ink.svg" width="88" height="88" alt="Open Grid symbol">
+  </picture>
+</p>
+
 # Open Grid
 
 [![CI](https://github.com/Goatshave/open-grid/actions/workflows/ci.yml/badge.svg)](https://github.com/Goatshave/open-grid/actions/workflows/ci.yml)
