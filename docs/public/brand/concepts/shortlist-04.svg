@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="780" viewBox="0 0 1500 780" role="img" aria-labelledby="title description">
+  <title id="title">Open Grid vector symbol shortlist</title>
+  <desc id="description">Five distinct symbol territories redrawn as one-color vector forms with compact-size tests.</desc>
+  <rect width="1500" height="780" fill="#f1f3f0"/>
+  <style>
+    .eyebrow { font: 700 16px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; }
+    .name { font: 700 24px Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: -.025em; }
+    .body { font: 400 16px Inter, ui-sans-serif, system-ui, sans-serif; }
+  </style>
+  <text x="58" y="62" class="eyebrow" fill="#5d6964">OPEN GRID / VECTOR SHORTLIST 04</text>
+  <text x="58" y="105" class="name" font-size="36" fill="#10221c">Five different symbol systems</text>
+  <text x="58" y="138" class="body" fill="#66726d">Original one-color redraws. The small marks test whether each silhouette survives compact navigation and favicon use.</text>
+
+  <!-- 01 woven core -->
+  <g transform="translate(48 190)">
+    <rect width="264" height="520" rx="8" fill="#fff"/>
+    <text x="24" y="42" class="eyebrow" fill="#63706a">01 / WEAVE</text>
+    <g transform="translate(38 92) scale(1.46)" fill="none" stroke="#10221c" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter">
+      <path d="M20 50h38V20h50v38H78v50H28V78h30"/>
+      <path d="M108 78H88v30H58V88" stroke="#52b82a"/>
+    </g>
+    <text x="24" y="330" class="name" fill="#10221c">Interwoven core</text>
+    <text x="24" y="360" class="body" fill="#66726d">One route crossing native</text>
+    <text x="24" y="383" class="body" fill="#66726d">render paths.</text>
+    <g transform="translate(24 426)"><g transform="scale(.34)" fill="none" stroke="#10221c" stroke-width="14"><path d="M20 50h38V20h50v38H78v50H28V78h30"/><path d="M108 78H88v30H58V88" stroke="#52b82a"/></g><text x="54" y="30" class="body" fill="#66726d">32 px</text></g>
+  </g>
+
+  <!-- 02 contour stack -->
+  <g transform="translate(330 190)">
+    <rect width="264" height="520" rx="8" fill="#fff"/>
+    <text x="24" y="42" class="eyebrow" fill="#63706a">02 / CONTOUR</text>
+    <g transform="translate(38 104) scale(1.45)" fill="none" stroke="#10221c" stroke-width="7" stroke-linecap="square">
+      <path d="M14 42Q58 5 108 42"/>
+      <path d="M14 58Q60 20 108 58"/>
+      <path d="M14 74Q62 38 108 74"/>
+      <path d="M14 90Q64 56 108 90"/>
+      <path d="M14 106Q66 74 108 106"/>
+      <path d="M14 42v64M108 42v64" opacity=".16"/>
+    </g>
+    <text x="24" y="330" class="name" fill="#10221c">Contour stack</text>
+    <text x="24" y="360" class="body" fill="#66726d">Rows become movement,</text>
+    <text x="24" y="383" class="body" fill="#66726d">scale, and depth.</text>
+    <g transform="translate(24 426)"><g transform="scale(.34)" fill="none" stroke="#10221c" stroke-width="9"><path d="M14 42Q58 5 108 42M14 58Q60 20 108 58M14 74Q62 38 108 74M14 90Q64 56 108 90M14 106Q66 74 108 106"/></g><text x="54" y="30" class="body" fill="#66726d">32 px</text></g>
+  </g>
+
+  <!-- 03 folded plane -->
+  <g transform="translate(612 190)">
+    <rect width="264" height="520" rx="8" fill="#fff"/>
+    <text x="24" y="42" class="eyebrow" fill="#63706a">03 / FOLD</text>
+    <g transform="translate(42 95) scale(1.42)">
+      <path d="M16 34 68 10v78L16 116Z" fill="#10221c"/>
+      <path d="m68 42 52 18v64L68 88Z" fill="#10221c"/>
+      <path d="M68 42v46L45 78V34Z" fill="#52b82a"/>
+    </g>
+    <text x="24" y="330" class="name" fill="#10221c">Folded plane</text>
+    <text x="24" y="360" class="body" fill="#66726d">A structured surface opens</text>
+    <text x="24" y="383" class="body" fill="#66726d">into another renderer.</text>
+    <g transform="translate(24 426)"><g transform="scale(.34)"><path d="M16 34 68 10v78L16 116Z" fill="#10221c"/><path d="m68 42 52 18v64L68 88Z" fill="#10221c"/><path d="M68 42v46L45 78V34Z" fill="#52b82a"/></g><text x="54" y="30" class="body" fill="#66726d">32 px</text></g>
+  </g>
+
+  <!-- 04 modular flow -->
+  <g transform="translate(894 190)">
+    <rect width="264" height="520" rx="8" fill="#fff"/>
+    <text x="24" y="42" class="eyebrow" fill="#63706a">04 / FLOW</text>
+    <g transform="translate(38 102) scale(1.48)" fill="#10221c">
+      <rect x="16" y="12" width="54" height="42" rx="15"/>
+      <rect x="48" y="44" width="54" height="42" rx="15"/>
+      <rect x="80" y="76" width="38" height="38" rx="13"/>
+      <circle cx="118" cy="28" r="9" fill="#52b82a"/>
+    </g>
+    <text x="24" y="330" class="name" fill="#10221c">Modular flow</text>
+    <text x="24" y="360" class="body" fill="#66726d">Composable pieces keep</text>
+    <text x="24" y="383" class="body" fill="#66726d">their native shape.</text>
+    <g transform="translate(24 426)"><g transform="scale(.34)" fill="#10221c"><rect x="16" y="12" width="54" height="42" rx="15"/><rect x="48" y="44" width="54" height="42" rx="15"/><rect x="80" y="76" width="38" height="38" rx="13"/><circle cx="118" cy="28" r="9" fill="#52b82a"/></g><text x="54" y="30" class="body" fill="#66726d">32 px</text></g>
+  </g>
+
+  <!-- 05 data depth -->
+  <g transform="translate(1176 190)">
+    <rect width="264" height="520" rx="8" fill="#fff"/>
+    <text x="24" y="42" class="eyebrow" fill="#63706a">05 / DEPTH</text>
+    <g transform="translate(34 106) scale(1.52)" fill="#10221c">
+      <path d="M12 18 36 8v108l-24-10Z"/>
+      <path d="M44 30 64 22v82l-20-8Z"/>
+      <path d="M72 42 89 35v58l-17-7Z"/>
+      <path d="M97 54 111 48v34l-14-6Z"/>
+      <path d="M119 64 128 60v16l-9-4Z" fill="#52b82a"/>
+    </g>
+    <text x="24" y="330" class="name" fill="#10221c">Data depth</text>
+    <text x="24" y="360" class="body" fill="#66726d">Scale and disclosure move</text>
+    <text x="24" y="383" class="body" fill="#66726d">through measured steps.</text>
+    <g transform="translate(24 426)"><g transform="scale(.34)" fill="#10221c"><path d="M12 18 36 8v108l-24-10Z"/><path d="M44 30 64 22v82l-20-8Z"/><path d="M72 42 89 35v58l-17-7Z"/><path d="M97 54 111 48v34l-14-6Z"/><path d="M119 64 128 60v16l-9-4Z" fill="#52b82a"/></g><text x="54" y="30" class="body" fill="#66726d">32 px</text></g>
+  </g>
+
+  <text x="58" y="750" class="body" fill="#66726d">Exploration only. Selection is followed by optical correction, distinctiveness review, and final monochrome construction.</text>
+</svg>

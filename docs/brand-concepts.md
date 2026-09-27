@@ -5,6 +5,18 @@ close to one visual grammar: right-angle geometry with a small accent. Later rou
 separate typography, form, rhythm, mood, and finally standalone symbol quality
 before any direction is selected.
 
+## Round 04 — Vector shortlist
+
+Five territories from the symbol study were redrawn as original one-color SVG
+forms. This pass tests silhouette, spacing, and compact-size survival without
+depending on generated pixels or presentation mockups.
+
+![Five Open Grid vector symbol systems](/brand/concepts/shortlist-04.svg)
+
+These drawings remain structural drafts. A chosen system still needs proprietary
+path logic, optical correction, monochrome and reversed versions, and similarity
+review before it can become the project mark.
+
 ## Round 03 — Symbol-first exploration
 
 This round removes wordmarks, mockups, and color systems so each candidate has to
