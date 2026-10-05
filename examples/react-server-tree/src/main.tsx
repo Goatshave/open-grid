@@ -31,7 +31,7 @@ import {
   serverTreeWorkToRow,
   type ServerTreeRow,
 } from "@open-grid/example-shared-server";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { StrictMode, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 interface ChildrenRequestInput {
@@ -160,8 +160,8 @@ function App() {
   const [workMergeCounts, setWorkMergeCounts] = useState<Record<string, number>>({});
   const [branchMergeConflicts, setBranchMergeConflicts] = useState<Record<string, string>>({});
   const childrenRequestsRef = useRef<ServerRequestCoordinator<string, ChildrenRequestInput, ServerTreeRow[]> | null>(null);
-  if (!childrenRequestsRef.current) {
-    childrenRequestsRef.current = createServerRequestCoordinator({
+  useEffect(() => {
+    const childrenRequests = createServerRequestCoordinator<string, ChildrenRequestInput, ServerTreeRow[]>({
       getKey: (input: ChildrenRequestInput) => input.portfolioId,
       request: (input, { signal }) =>
         loadChildrenFromServer(
@@ -172,10 +172,7 @@ function App() {
           input.workMergeCounts,
         ),
     });
-  }
-  const childrenRequests = childrenRequestsRef.current;
-
-  useEffect(() => {
+    childrenRequestsRef.current = childrenRequests;
     const unsubscribe = childrenRequests.subscribe((portfolioId, state) => {
       setLoading((previous) => {
         const next = { ...previous };
@@ -215,9 +212,10 @@ function App() {
 
     return () => {
       unsubscribe();
+      childrenRequestsRef.current = null;
       childrenRequests.dispose();
     };
-  }, [childrenRequests]);
+  }, []);
 
   useEffect(() => {
     const expandedIds = new Set(Object.entries(expanded).flatMap(([id, value]) => (value ? [id] : [])));
@@ -233,14 +231,14 @@ function App() {
       .map(([id]) => id);
 
     for (const id of loadableIds) {
-      void childrenRequests.run({
+      void childrenRequestsRef.current?.run({
         portfolioId: id,
         refreshVersion: refreshCounts[id] ?? 0,
         workMutationCounts: { ...workMutationCounts },
         workMergeCounts: { ...workMergeCounts },
       });
     }
-  }, [childrenRequests, expanded, loadedChildren, loadErrors, loading, refreshCounts, workMergeCounts, workMutationCounts]);
+  }, [expanded, loadedChildren, loadErrors, loading, refreshCounts, workMergeCounts, workMutationCounts]);
 
   const serverResult = useMemo(
     () => queryServerTreeRows(portfolios, { sorting, expanded, pagination }, loadedChildren, loading, loadErrors),
@@ -256,7 +254,7 @@ function App() {
   };
 
   const retryChildren = (portfolioId: string) => {
-    void childrenRequests.retry(portfolioId);
+    void childrenRequestsRef.current?.retry(portfolioId);
   };
 
   const refreshChildren = (portfolioId: string) => {
@@ -515,7 +513,7 @@ function App() {
   };
 
   function cancelChildrenLoad(portfolioId: string, reason: string): boolean {
-    return childrenRequests.cancel(portfolioId, reason);
+    return childrenRequestsRef.current?.cancel(portfolioId, reason) ?? false;
   }
 
   const hasRefreshableLoadedChildren = Object.keys(loadedChildren).some((id) => !loading[id]);
@@ -644,4 +642,4 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root") as HTMLElement).render(<App />);
+createRoot(document.getElementById("root") as HTMLElement).render(<StrictMode><App /></StrictMode>);

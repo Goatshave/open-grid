@@ -44,7 +44,7 @@ export default defineConfig({
     },
     {
       command:
-        "pnpm --filter @open-grid/react-ui build && pnpm --filter @open-grid/example-react-server-tree build && pnpm --filter @open-grid/example-react-server-tree preview --port 4177",
+        "pnpm --filter @open-grid/react-ui build && pnpm --filter @open-grid/example-react-server-tree dev --port 4177 --strictPort",
       url: "http://127.0.0.1:4177",
       reuseExistingServer: false,
       timeout: 120_000,

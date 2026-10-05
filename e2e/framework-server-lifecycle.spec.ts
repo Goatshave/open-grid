@@ -4,6 +4,28 @@ import { getE2eUrl } from "../scripts/e2e-ports.mjs";
 
 const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
+test("React development StrictMode keeps server requests usable after effect replay", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(getE2eUrl(4177));
+  // A production preview would skip StrictMode's setup/cleanup/setup replay.
+  await expect(page.locator('script[src="/@vite/client"]')).toHaveCount(1);
+
+  await page.getByRole("button", { name: "Toggle PFL-001" }).click();
+  await expect(page.locator('[role="row"][data-row-id="PFL-001-WRK-1"]')).toBeVisible();
+  await page.getByRole("button", { name: "Refresh PFL-001" }).click();
+  await expect(page.getByTestId("tree-refreshes")).toContainText("PFL-001: 1");
+  await expect(page.getByTestId("tree-loading")).toHaveText("Loading: none");
+  await expect(page.locator('[role="row"][data-row-id="PFL-001-WRK-1"]')).toBeVisible();
+
+  await page.getByRole("button", { name: "Expand PFL-002" }).click();
+  await expect(page.getByTestId("tree-errors")).toContainText("Temporary server error");
+  await page.getByRole("button", { name: "Retry PFL-002" }).click();
+  await expect(page.locator('[role="row"][data-row-id="PFL-002-WRK-1"]')).toBeVisible();
+  await expect(page.getByTestId("tree-errors")).toHaveText("Errors: none");
+  expect(errors).toEqual([]);
+});
+
 const examples = [
   {
     framework: "React",

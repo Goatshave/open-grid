@@ -4,6 +4,9 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Keep the React server-tree request coordinator usable through development
+  StrictMode effect replay, with browser regression coverage for loading, refresh,
+  and retry against the development server.
 - Add a keyed, framework-neutral server request coordinator with same-key
   supersession, stale-response protection, retained data, retry, cancellation, reset,
   subscriptions, and disposal.
