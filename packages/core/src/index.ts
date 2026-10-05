@@ -2,6 +2,16 @@ export { createColumnHelper } from "./column-helper";
 export { fitColumnsToWidth } from "./column-fit";
 export { createExportFile, getExportFileExtension, getExportMimeType } from "./export";
 export { createGrid } from "./grid";
+export { createServerRequestCoordinator } from "./server-request";
+export type {
+  ServerRequestContext,
+  ServerRequestCoordinator,
+  ServerRequestCoordinatorOptions,
+  ServerRequestListener,
+  ServerRequestResult,
+  ServerRequestState,
+  ServerRequestStatus,
+} from "./server-request";
 export {
   columnOrderReducers,
   columnPinningReducers,

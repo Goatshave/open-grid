@@ -2,6 +2,10 @@ import "@open-grid/theme/css";
 import "@open-grid/vue-ui/css";
 import "./styles.css";
 import {
+  createServerRequestCoordinator,
+  type ServerRequestCoordinator,
+} from "@open-grid/core";
+import {
   createColumnHelper,
   createDataGrid,
   type AnyColumnDef,
@@ -30,9 +34,11 @@ import {
 } from "@open-grid/example-shared-server";
 import { computed, createApp, defineComponent, h, onBeforeUnmount, ref, watchEffect } from "vue";
 
-interface InFlightLoad {
-  controller: AbortController;
-  requestId: number;
+interface ChildrenRequestInput {
+  portfolioId: string;
+  refreshVersion: number;
+  workMutationCounts: Record<string, number>;
+  workMergeCounts: Record<string, number>;
 }
 
 const column = createColumnHelper<ServerTreeRow>();
@@ -157,89 +163,80 @@ const App = defineComponent({
     const branchMergeCounts = ref<Record<string, number>>({});
     const workMergeCounts = ref<Record<string, number>>({});
     const branchMergeConflicts = ref<Record<string, string>>({});
-    const inFlightLoads = new Map<string, InFlightLoad>();
-    let requestSequence = 0;
+    const childrenRequests: ServerRequestCoordinator<string, ChildrenRequestInput, ServerTreeRow[]> =
+      createServerRequestCoordinator({
+        getKey: (input: ChildrenRequestInput) => input.portfolioId,
+        request: (input, { signal }) =>
+          loadChildrenFromServer(
+            input.portfolioId,
+            signal,
+            input.refreshVersion,
+            input.workMutationCounts,
+            input.workMergeCounts,
+          ),
+      });
+
+    const unsubscribeChildrenRequests = childrenRequests.subscribe((portfolioId, state) => {
+      const nextLoading = { ...loading.value };
+      if (state.status === "loading") {
+        nextLoading[portfolioId] = true;
+      } else {
+        delete nextLoading[portfolioId];
+      }
+      loading.value = nextLoading;
+
+      if (state.status === "loading") {
+        const nextErrors = { ...loadErrors.value };
+        delete nextErrors[portfolioId];
+        loadErrors.value = nextErrors;
+        const nextCancelled = { ...cancelledLoads.value };
+        delete nextCancelled[portfolioId];
+        cancelledLoads.value = nextCancelled;
+      } else if (state.status === "success") {
+        loadedChildren.value = { ...loadedChildren.value, [portfolioId]: state.data ?? [] };
+      } else if (state.status === "error") {
+        loadErrors.value = {
+          ...loadErrors.value,
+          [portfolioId]: state.error instanceof Error ? state.error.message : "Unknown server error",
+        };
+      } else if (state.status === "cancelled") {
+        cancelledLoads.value = {
+          ...cancelledLoads.value,
+          [portfolioId]: typeof state.reason === "string" ? state.reason : "request cancelled",
+        };
+      }
+    });
 
     const cancelChildrenLoad = (portfolioId: string, reason: string): boolean => {
-      const load = inFlightLoads.get(portfolioId);
-
-      if (!load) {
-        return false;
-      }
-
-      load.controller.abort();
-      inFlightLoads.delete(portfolioId);
-      const nextLoading = { ...loading.value };
-      delete nextLoading[portfolioId];
-      loading.value = nextLoading;
-      cancelledLoads.value = { ...cancelledLoads.value, [portfolioId]: reason };
-      return true;
+      return childrenRequests.cancel(portfolioId, reason);
     };
-
-    const isCurrentRequest = (portfolioId: string, requestId: number): boolean => inFlightLoads.get(portfolioId)?.requestId === requestId;
 
     watchEffect(() => {
       const expandedIds = new Set(Object.entries(expanded.value).flatMap(([id, value]) => (value ? [id] : [])));
 
-      for (const id of inFlightLoads.keys()) {
+      for (const id of Object.keys(loading.value)) {
         if (!expandedIds.has(id)) {
           cancelChildrenLoad(id, "collapsed before response");
         }
       }
 
       const loadableIds = Object.entries(expanded.value)
-        .filter(([id, value]) => value && !loadedChildren.value[id] && !loadErrors.value[id] && !inFlightLoads.has(id))
+        .filter(([id, value]) => value && !loadedChildren.value[id] && !loadErrors.value[id] && !loading.value[id])
         .map(([id]) => id);
 
       for (const id of loadableIds) {
-        const requestId = requestSequence + 1;
-        const controller = new AbortController();
-        const refreshVersion = refreshCounts.value[id] ?? 0;
-        const mutationSnapshot = { ...workMutationCounts.value };
-        const mergeSnapshot = { ...workMergeCounts.value };
-        requestSequence = requestId;
-        inFlightLoads.set(id, { controller, requestId });
-        loading.value = { ...loading.value, [id]: true };
-        const nextCancelled = { ...cancelledLoads.value };
-        delete nextCancelled[id];
-        cancelledLoads.value = nextCancelled;
-
-        void loadChildrenFromServer(id, controller.signal, refreshVersion, mutationSnapshot, mergeSnapshot)
-          .then((children) => {
-            if (!isCurrentRequest(id, requestId) || controller.signal.aborted) {
-              return;
-            }
-
-            loadedChildren.value = { ...loadedChildren.value, [id]: children };
-          })
-          .catch((error: unknown) => {
-            if (!isCurrentRequest(id, requestId) || controller.signal.aborted) {
-              return;
-            }
-
-            loadErrors.value = {
-              ...loadErrors.value,
-              [id]: error instanceof Error ? error.message : "Unknown server error",
-            };
-          })
-          .finally(() => {
-            if (!isCurrentRequest(id, requestId)) {
-              return;
-            }
-
-            const nextLoading = { ...loading.value };
-            delete nextLoading[id];
-            loading.value = nextLoading;
-            inFlightLoads.delete(id);
-          });
+        void childrenRequests.run({
+          portfolioId: id,
+          refreshVersion: refreshCounts.value[id] ?? 0,
+          workMutationCounts: { ...workMutationCounts.value },
+          workMergeCounts: { ...workMergeCounts.value },
+        });
       }
     });
 
     onBeforeUnmount(() => {
-      for (const load of inFlightLoads.values()) {
-        load.controller.abort();
-      }
-      inFlightLoads.clear();
+      unsubscribeChildrenRequests();
+      childrenRequests.dispose();
     });
 
     const serverResult = computed(() =>
@@ -257,16 +254,7 @@ const App = defineComponent({
     );
 
     const retryChildren = (portfolioId: string) => {
-      cancelChildrenLoad(portfolioId, "retry replaced request");
-      const nextLoaded = { ...loadedChildren.value };
-      delete nextLoaded[portfolioId];
-      loadedChildren.value = nextLoaded;
-      const nextErrors = { ...loadErrors.value };
-      delete nextErrors[portfolioId];
-      loadErrors.value = nextErrors;
-      const nextCancelled = { ...cancelledLoads.value };
-      delete nextCancelled[portfolioId];
-      cancelledLoads.value = nextCancelled;
+      void childrenRequests.retry(portfolioId);
     };
 
     const refreshChildren = (portfolioId: string) => {
@@ -608,8 +596,16 @@ const App = defineComponent({
         ]),
         h("div", { class: "server-state", "aria-label": "Vue server tree query state" }, [
           h("span", { "data-testid": "vue-tree-expanded" }, `Expanded: ${formatServerTreeExpanded(expanded.value)}`),
-          h("span", { "data-testid": "vue-tree-loading" }, `Loading: ${formatServerTreeLoading(loading.value)}`),
-          h("span", { "data-testid": "vue-tree-errors" }, `Errors: ${formatServerTreeErrors(loadErrors.value)}`),
+          h(
+            "span",
+            { role: "status", "aria-live": "polite", "aria-atomic": "true", "data-testid": "vue-tree-loading" },
+            `Loading: ${formatServerTreeLoading(loading.value)}`,
+          ),
+          h(
+            "span",
+            { role: "status", "aria-live": "polite", "aria-atomic": "true", "data-testid": "vue-tree-errors" },
+            `Errors: ${formatServerTreeErrors(loadErrors.value)}`,
+          ),
           h("span", { "data-testid": "vue-tree-cancelled" }, `Cancelled: ${formatServerTreeCancelled(cancelledLoads.value)}`),
           h("span", { "data-testid": "vue-tree-refreshes" }, `Refreshes: ${formatServerTreeRefreshes(refreshCounts.value)}`),
           h("span", { "data-testid": "vue-tree-mutating" }, `Mutating: ${formatServerTreeMutating(mutatingWork.value)}`),
@@ -639,7 +635,11 @@ const App = defineComponent({
             },
             "Previous",
           ),
-          h("span", `Page ${serverPageIndex + 1} / ${result.pageCount}`),
+          h(
+            "span",
+            { role: "status", "aria-live": "polite", "aria-atomic": "true" },
+            `Page ${serverPageIndex + 1} / ${result.pageCount}`,
+          ),
           h(
             "button",
             {

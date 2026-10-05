@@ -329,6 +329,7 @@ const grid = {
   getVisibleLeafColumns: () => [nameColumn, ageColumn],
   getColumnSortDirection: () => false,
   getPageCount: () => 1,
+  getRowCount: () => 2,
 } as Grid<Person>;
 
 describe("primitives", () => {
@@ -387,9 +388,24 @@ describe("primitives", () => {
     } as Grid<Person>;
     expect(getGridProps(manualGrid)).toMatchObject({ "aria-rowcount": -1 });
 
+    const manualGridWithTotal = {
+      ...manualGrid,
+      getOptions: () => ({ data: [], columns: [], manualPagination: true, rowCount: 42 }),
+      getRowCount: () => 42,
+    } as Grid<Person>;
+    expect(getGridProps(manualGridWithTotal)).toMatchObject({ "aria-rowcount": 43 });
+
+    const emptyManualGridWithTotal = {
+      ...manualGridWithTotal,
+      getOptions: () => ({ data: [], columns: [], manualPagination: true, rowCount: 0 }),
+      getRowCount: () => 0,
+    } as Grid<Person>;
+    expect(getGridProps(emptyManualGridWithTotal)).toMatchObject({ "aria-rowcount": 2 });
+
     const emptyGrid = {
       ...grid,
       getPrePaginationRowModel: () => ({ rows: [] }),
+      getRowCount: () => 0,
     } as Grid<Person>;
     expect(getGridProps(emptyGrid)).toMatchObject({ "aria-rowcount": 2 });
   });

@@ -32,6 +32,29 @@ const rows = grid.getRowModel().rows;
 
 The core is DOM-free and framework-free. Product code owns data mutation, controlled state, and rendering.
 
+## Server Pagination Totals
+
+Pass `rowCount` with `manualPagination` when the server knows the exact result total.
+`grid.getRowCount()` returns that normalized total and `grid.getPageCount()` derives
+the number of pages from the current page size. An explicit `pageCount` takes
+precedence when a backend exposes page counts without an exact row total.
+
+Maintained renderers also use `rowCount` for exact WAI-ARIA row coordinates. Manual
+pagination without it reports an unknown accessible total instead of deriving one
+from `pageCount`.
+
+## Server Request Coordination
+
+Use `createServerRequestCoordinator({ getKey, request })` to share server request
+lifecycle behavior across framework integrations. Different keys run concurrently;
+a newer request for the same key aborts and supersedes the older request. The
+coordinator retains the last successful data during loading and error states and
+exposes explicit cancellation, retry, reset, subscriptions, and disposal without
+owning product query or transport policy.
+
+See the [server data guide](https://goatshave.github.io/open-grid/server-data) for the
+typed request and state contracts.
+
 ## Fit Columns To Width
 
 Import `fitColumnsToWidth` and call `fitColumnsToWidth(grid, width)` to

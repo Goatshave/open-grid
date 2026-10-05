@@ -4,6 +4,22 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Keep the React server-tree request coordinator usable through development
+  StrictMode effect replay, with browser regression coverage for loading, refresh,
+  and retry against the development server.
+- Add a keyed, framework-neutral server request coordinator with same-key
+  supersession, stale-response protection, retained data, retry, cancellation, reset,
+  subscriptions, and disposal.
+- Migrate the React, Vue, and Svelte server-tree examples from product-owned request
+  ids and controller maps to the shared coordinator while preserving their loading,
+  retry, refresh, cancellation, and stale-response behavior.
+- Announce server-tree loading, error, and pagination changes through polite live
+  status regions and add shared keyboard and automated WCAG regression coverage for
+  those states across React, Vue, and Svelte.
+- Rebaseline the required core gzip ceiling from 23,000 to 24,000 bytes after
+  measuring the server request coordinator, retaining regression headroom.
+- Add a server-owned `rowCount` contract that derives page counts when `pageCount` is
+  absent and exposes exact manual-pagination totals to accessibility primitives.
 - Upgrade maintained examples and benchmarks to Vite 8.3, pairing React examples
   with `@vitejs/plugin-react` 6.1 so their peer dependency contract stays aligned.
 - Document the post-0.2.0 release state and define the pre-1.0 prerelease versioning

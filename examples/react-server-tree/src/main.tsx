@@ -1,7 +1,11 @@
 import "@open-grid/theme/css";
 import "@open-grid/react-ui/css";
 import "./styles.css";
-import type { RowSelectionState } from "@open-grid/core";
+import {
+  createServerRequestCoordinator,
+  type RowSelectionState,
+  type ServerRequestCoordinator,
+} from "@open-grid/core";
 import {
   createColumnHelper,
   DataGrid,
@@ -27,12 +31,14 @@ import {
   serverTreeWorkToRow,
   type ServerTreeRow,
 } from "@open-grid/example-shared-server";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { StrictMode, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-interface InFlightLoad {
-  controller: AbortController;
-  requestId: number;
+interface ChildrenRequestInput {
+  portfolioId: string;
+  refreshVersion: number;
+  workMutationCounts: Record<string, number>;
+  workMergeCounts: Record<string, number>;
 }
 
 const column = createColumnHelper<ServerTreeRow>();
@@ -153,78 +159,86 @@ function App() {
   const [branchMergeCounts, setBranchMergeCounts] = useState<Record<string, number>>({});
   const [workMergeCounts, setWorkMergeCounts] = useState<Record<string, number>>({});
   const [branchMergeConflicts, setBranchMergeConflicts] = useState<Record<string, string>>({});
-  const inFlightLoads = useRef(new Map<string, InFlightLoad>());
-  const requestSequence = useRef(0);
+  const childrenRequestsRef = useRef<ServerRequestCoordinator<string, ChildrenRequestInput, ServerTreeRow[]> | null>(null);
+  useEffect(() => {
+    const childrenRequests = createServerRequestCoordinator<string, ChildrenRequestInput, ServerTreeRow[]>({
+      getKey: (input: ChildrenRequestInput) => input.portfolioId,
+      request: (input, { signal }) =>
+        loadChildrenFromServer(
+          input.portfolioId,
+          signal,
+          input.refreshVersion,
+          input.workMutationCounts,
+          input.workMergeCounts,
+        ),
+    });
+    childrenRequestsRef.current = childrenRequests;
+    const unsubscribe = childrenRequests.subscribe((portfolioId, state) => {
+      setLoading((previous) => {
+        const next = { ...previous };
+        if (state.status === "loading") {
+          next[portfolioId] = true;
+        } else {
+          delete next[portfolioId];
+        }
+        return next;
+      });
+
+      if (state.status === "loading") {
+        setLoadErrors((previous) => {
+          const next = { ...previous };
+          delete next[portfolioId];
+          return next;
+        });
+        setCancelledLoads((previous) => {
+          const next = { ...previous };
+          delete next[portfolioId];
+          return next;
+        });
+      } else if (state.status === "success") {
+        setLoadedChildren((previous) => ({ ...previous, [portfolioId]: state.data ?? [] }));
+      } else if (state.status === "error") {
+        setLoadErrors((previous) => ({
+          ...previous,
+          [portfolioId]: state.error instanceof Error ? state.error.message : "Unknown server error",
+        }));
+      } else if (state.status === "cancelled") {
+        setCancelledLoads((previous) => ({
+          ...previous,
+          [portfolioId]: typeof state.reason === "string" ? state.reason : "request cancelled",
+        }));
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      childrenRequestsRef.current = null;
+      childrenRequests.dispose();
+    };
+  }, []);
 
   useEffect(() => {
     const expandedIds = new Set(Object.entries(expanded).flatMap(([id, value]) => (value ? [id] : [])));
 
-    for (const id of inFlightLoads.current.keys()) {
+    for (const id of Object.keys(loading)) {
       if (!expandedIds.has(id)) {
         cancelChildrenLoad(id, "collapsed before response");
       }
     }
 
     const loadableIds = Object.entries(expanded)
-      .filter(([id, value]) => value && !loadedChildren[id] && !loadErrors[id] && !inFlightLoads.current.has(id))
+      .filter(([id, value]) => value && !loadedChildren[id] && !loadErrors[id] && !loading[id])
       .map(([id]) => id);
 
     for (const id of loadableIds) {
-      const requestId = requestSequence.current + 1;
-      const controller = new AbortController();
-      const refreshVersion = refreshCounts[id] ?? 0;
-      const mutationSnapshot = { ...workMutationCounts };
-      const mergeSnapshot = { ...workMergeCounts };
-      requestSequence.current = requestId;
-      inFlightLoads.current.set(id, { controller, requestId });
-      setLoading((previous) => ({ ...previous, [id]: true }));
-      setCancelledLoads((previous) => {
-        const next = { ...previous };
-        delete next[id];
-        return next;
+      void childrenRequestsRef.current?.run({
+        portfolioId: id,
+        refreshVersion: refreshCounts[id] ?? 0,
+        workMutationCounts: { ...workMutationCounts },
+        workMergeCounts: { ...workMergeCounts },
       });
-      void loadChildrenFromServer(id, controller.signal, refreshVersion, mutationSnapshot, mergeSnapshot)
-        .then((children) => {
-          if (!isCurrentRequest(id, requestId) || controller.signal.aborted) {
-            return;
-          }
-
-          setLoadedChildren((previous) => ({ ...previous, [id]: children }));
-        })
-        .catch((error: unknown) => {
-          if (!isCurrentRequest(id, requestId) || controller.signal.aborted) {
-            return;
-          }
-
-          setLoadErrors((previous) => ({
-            ...previous,
-            [id]: error instanceof Error ? error.message : "Unknown server error",
-          }));
-        })
-        .finally(() => {
-          if (!isCurrentRequest(id, requestId)) {
-            return;
-          }
-
-          setLoading((previous) => {
-            const next = { ...previous };
-            delete next[id];
-            return next;
-          });
-          inFlightLoads.current.delete(id);
-        });
     }
-  }, [expanded, loadedChildren, loadErrors, refreshCounts, workMergeCounts, workMutationCounts]);
-
-  useEffect(
-    () => () => {
-      for (const load of inFlightLoads.current.values()) {
-        load.controller.abort();
-      }
-      inFlightLoads.current.clear();
-    },
-    [],
-  );
+  }, [expanded, loadedChildren, loadErrors, loading, refreshCounts, workMergeCounts, workMutationCounts]);
 
   const serverResult = useMemo(
     () => queryServerTreeRows(portfolios, { sorting, expanded, pagination }, loadedChildren, loading, loadErrors),
@@ -240,22 +254,7 @@ function App() {
   };
 
   const retryChildren = (portfolioId: string) => {
-    cancelChildrenLoad(portfolioId, "retry replaced request");
-    setLoadedChildren((previous) => {
-      const next = { ...previous };
-      delete next[portfolioId];
-      return next;
-    });
-    setLoadErrors((previous) => {
-      const next = { ...previous };
-      delete next[portfolioId];
-      return next;
-    });
-    setCancelledLoads((previous) => {
-      const next = { ...previous };
-      delete next[portfolioId];
-      return next;
-    });
+    void childrenRequestsRef.current?.retry(portfolioId);
   };
 
   const refreshChildren = (portfolioId: string) => {
@@ -513,26 +512,8 @@ function App() {
     setBranchMergeConflicts(nextMergeConflicts);
   };
 
-  function isCurrentRequest(portfolioId: string, requestId: number): boolean {
-    return inFlightLoads.current.get(portfolioId)?.requestId === requestId;
-  }
-
   function cancelChildrenLoad(portfolioId: string, reason: string): boolean {
-    const load = inFlightLoads.current.get(portfolioId);
-
-    if (!load) {
-      return false;
-    }
-
-    load.controller.abort();
-    inFlightLoads.current.delete(portfolioId);
-    setLoading((previous) => {
-      const next = { ...previous };
-      delete next[portfolioId];
-      return next;
-    });
-    setCancelledLoads((previous) => ({ ...previous, [portfolioId]: reason }));
-    return true;
+    return childrenRequestsRef.current?.cancel(portfolioId, reason) ?? false;
   }
 
   const hasRefreshableLoadedChildren = Object.keys(loadedChildren).some((id) => !loading[id]);
@@ -600,8 +581,12 @@ function App() {
 
       <div className="server-state" aria-label="Server tree query state">
         <span data-testid="tree-expanded">Expanded: {formatServerTreeExpanded(expanded)}</span>
-        <span data-testid="tree-loading">Loading: {formatServerTreeLoading(loading)}</span>
-        <span data-testid="tree-errors">Errors: {formatServerTreeErrors(loadErrors)}</span>
+        <span role="status" aria-live="polite" aria-atomic="true" data-testid="tree-loading">
+          Loading: {formatServerTreeLoading(loading)}
+        </span>
+        <span role="status" aria-live="polite" aria-atomic="true" data-testid="tree-errors">
+          Errors: {formatServerTreeErrors(loadErrors)}
+        </span>
         <span data-testid="tree-cancelled">Cancelled: {formatServerTreeCancelled(cancelledLoads)}</span>
         <span data-testid="tree-refreshes">Refreshes: {formatServerTreeRefreshes(refreshCounts)}</span>
         <span data-testid="tree-mutating">Mutating: {formatServerTreeMutating(mutatingWork)}</span>
@@ -642,7 +627,7 @@ function App() {
         >
           Previous
         </button>
-        <span>
+        <span role="status" aria-live="polite" aria-atomic="true">
           Page {serverPageIndex + 1} / {serverResult.pageCount}
         </span>
         <button
@@ -657,4 +642,4 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root") as HTMLElement).render(<App />);
+createRoot(document.getElementById("root") as HTMLElement).render(<StrictMode><App /></StrictMode>);

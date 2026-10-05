@@ -603,6 +603,10 @@ export function normalizePaginationPageCount(pageCount: number): number {
   return Number.isFinite(pageCount) ? Math.max(1, Math.floor(pageCount)) : 1;
 }
 
+export function normalizePaginationRowCount(rowCount: number): number {
+  return Number.isFinite(rowCount) ? Math.max(0, Math.floor(rowCount)) : 0;
+}
+
 function groupRowsByDepth<TData>(
   rows: Row<TData>[],
   columns: readonly Column<TData, unknown>[],

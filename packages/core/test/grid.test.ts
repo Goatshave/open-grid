@@ -909,6 +909,43 @@ describe("createGrid", () => {
     expect(grid.getPageCount()).toBe(2);
   });
 
+  it("uses a server row count to report totals and derive page counts", () => {
+    const grid = createGrid({
+      data,
+      columns,
+      manualPagination: true,
+      rowCount: 23,
+      initialState: {
+        pagination: { pageIndex: 0, pageSize: 10 },
+      },
+    });
+
+    expect(grid.getRowCount()).toBe(23);
+    expect(grid.getPageCount()).toBe(3);
+
+    grid.setOptions((previous) => ({ ...previous, pageCount: 7 }));
+    expect(grid.getPageCount()).toBe(7);
+
+    grid.setOptions((previous) => {
+      const { pageCount: _pageCount, ...options } = previous;
+      return { ...options, rowCount: 3.8 };
+    });
+    expect(grid.getRowCount()).toBe(3);
+    expect(grid.getPageCount()).toBe(1);
+
+    grid.setOptions((previous) => ({ ...previous, rowCount: -1 }));
+    expect(grid.getRowCount()).toBe(0);
+
+    grid.setOptions((previous) => ({ ...previous, rowCount: Number.NaN }));
+    expect(grid.getRowCount()).toBe(0);
+  });
+
+  it("reports the pre-pagination row count when no server total is provided", () => {
+    const grid = createGrid({ data, columns });
+
+    expect(grid.getRowCount()).toBe(3);
+  });
+
   it("groups sorted rows and aggregates grouped values", () => {
     const grid = createGrid({
       data,
