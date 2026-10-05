@@ -1,6 +1,6 @@
 {
   "name": "@open-grid/primitives",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Unstyled primitive prop helpers for Open Grid.",
   "keywords": ["data-grid", "grid", "table", "primitives", "accessibility"],
   "homepage": "https://goatshave.github.io/open-grid/packages#primitives",

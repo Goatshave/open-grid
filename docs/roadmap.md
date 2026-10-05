@@ -52,7 +52,7 @@ and [release record](https://github.com/Goatshave/open-grid/blob/main/docs/relea
 - Continue keyboard, screen-reader, forced-colors, mobile reflow, server-data, and
   export improvements where real integration evidence identifies a gap.
 
-## 0.3.0 Direction
+## 0.3.0 Release Candidate
 
 Open Grid 0.3 focuses on server-owned data workflows. The maintained React, Vue, and
 Svelte examples now share the framework-neutral request lifecycle for sequencing,
@@ -67,6 +67,11 @@ construction and successful data commits in product state.
   and document the product/server ownership boundary.
 - [x] Complete cross-framework browser and accessibility regression coverage for the
   resulting server loading, error, retry, and pagination states.
+
+- [ ] Complete release artifact and performance gates for the final 0.3.0 candidate.
+- [ ] Complete the source-bound manual UI and accessibility review after the release
+  preparation PR is merged.
+- [ ] Publish all ten packages and the `open-grid-v0.3.0` GitHub release.
 
 ## Performance Direction
 

@@ -4,6 +4,11 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+## 0.3.0 - 2026-10-05
+
+Release candidate prepared on this date. Publication is pending the final release
+gates and source-bound manual UI and accessibility review.
+
 - Keep the React server-tree request coordinator usable through development
   StrictMode effect replay, with browser regression coverage for loading, refresh,
   and retry against the development server.
