@@ -1,6 +1,6 @@
 {
   "name": "@open-grid/theme",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CSS variables, base themes, and typed product token adapters for Open Grid.",
   "keywords": ["data-grid", "grid", "table", "css", "theme"],
   "homepage": "https://goatshave.github.io/open-grid/packages#theme",
