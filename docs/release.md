@@ -2,55 +2,33 @@
 
 This project uses the workspace package version as the release version for every publishable package under `packages/*`.
 
-## 0.3.0 Release Candidate
+## 0.3.0 Release Record
 
-The workspace and all ten public packages are prepared for 0.3.0 as of 2026-10-05.
-Publication is pending the final automated gates and manual UI and accessibility
-review. The release focuses on exact server-owned row totals and a shared keyed
-request coordinator for cancellation, stale-response protection, retained data,
-and retry. React, Vue, and Svelte server-tree examples use the coordinator; the
-React example also covers development StrictMode effect replay.
+Open Grid 0.3.0 and all ten public packages were published on 2026-10-05 with npm
+dist-tag `latest` and provenance. The
+[protected publish workflow](https://github.com/Goatshave/open-grid/actions/runs/37306949834)
+passed automated release gates, including framework compatibility, full E2E,
+performance budgets, staged artifact checks, and clean external consumer builds.
+The final source-bound manual review covered 21 functional and 12 accessibility
+checks; Codex reviewed the UI directly and the maintainer confirmed the remaining
+VoiceOver checks. Published packages were then installed and checked for ESM
+imports, TypeScript declarations, and a Svelte build in a clean external project.
 
-Both `Required Gate` and `Release Gate` must pass on the release preparation PR,
-including full E2E, framework compatibility, release artifacts, and required
-performance budgets. Validate candidate artifacts with:
+The [GitHub release](https://github.com/Goatshave/open-grid/releases/tag/open-grid-v0.3.0)
+and tag identify the published commit
+`e019d4110b6e5e7cbb56c7e643aa7469d51d08f5`. Do not republish this version or move
+its tag when applying subsequent maintenance changes.
 
-```bash
-pnpm install --frozen-lockfile
-pnpm build
-pnpm api:check
-pnpm release:policy -- --version 0.3.0 --tag open-grid-v0.3.0 --json
-pnpm release:check -- --json
-pnpm release:stage -- --version 0.3.0 --out-dir .release/0.3.0 --repository-url git+https://github.com/Goatshave/open-grid.git
-pnpm release:publish -- --version 0.3.0 --tag latest --out-dir .release/0.3.0 --repository-url git+https://github.com/Goatshave/open-grid.git --dry-run --json
-pnpm release:consumer-smoke -- --version 0.3.0 --tarball-dir .release/0.3.0 --json
-```
+The release adds exact server-owned row counts and a shared keyed request
+coordinator for cancellation, stale-response protection, retained data, and retry.
+React, Vue, and Svelte server-tree examples use the coordinator; the React example
+also covers development StrictMode effect replay. React 18/19, Vue 3.4+, and
+Svelte 4.2.20/5 compatibility remains unchanged.
 
-Use an absent or empty staging directory; preserve previous artifacts and choose a
-new directory for each subsequent run. After this PR is merged, generate a fresh
-report from the exact final clean `main` revision:
-
-```bash
-pnpm preview:smoke-ui -- --report --json --out-file .release/0.3.0-ui-smoke-report.json
-pnpm preview:smoke-ui -- --open
-pnpm review:smoke-ui -- --file .release/0.3.0-ui-smoke-report.json
-pnpm release:ui-smoke-report-check -- --file .release/0.3.0-ui-smoke-report.json --version 0.3.0 --tag latest --repository-url git+https://github.com/Goatshave/open-grid.git --json
-```
-
-All 21 functional and 12 accessibility checks require actual evidence, including
-keyboard operation, real 200% browser zoom, 390 CSS px reflow, screen-reader output,
-and platform high-contrast behavior. Reports from 0.2.0 or from a pre-merge revision
-cannot approve this release. Reports expire after seven days.
-
-Before publication, verify that 0.3.0 is unpublished and confirm all ten npm Trusted
-Publisher settings for `Goatshave/open-grid`, `release-publish.yml`, environment
-`npm`, and action `npm publish`. Dispatch the protected `Release Publish` workflow
-on the reviewed final `main` revision with version `0.3.0`, npm tag `latest`,
-repository URL `git+https://github.com/Goatshave/open-grid.git`, confirmation
-`publish-open-grid`, and the completed report as `ui_smoke_report`. After successful
-publication, verify all ten npm versions and dist-tags plus clean consumer
-installation, then create `open-grid-v0.3.0` and its GitHub release from the published
-commit using the 0.3.0 changelog notes.
+Future releases must generate a fresh manual review report from their own final
+clean source revision and pass both `Required Gate` and `Release Gate`. A prior
+release report cannot approve changed sources, and reports expire after seven days.
+See the release commands and manual inspection process below.
 
 ## 0.2.0 Release Record
 

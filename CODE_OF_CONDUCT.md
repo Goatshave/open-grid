@@ -21,8 +21,9 @@ project communication spaces, and when representing Open Grid publicly.
 
 ## Reporting and Enforcement
 
-Report conduct concerns privately through a
-[GitHub security advisory](https://github.com/Goatshave/open-grid/security/advisories/new).
+Report conduct concerns privately to
+[junghyeonkim.dev@gmail.com](mailto:junghyeonkim.dev@gmail.com).
+Security vulnerabilities use the separate process in [SECURITY.md](SECURITY.md).
 Do not expose sensitive personal information in a public issue. Maintainers will
 review reports as promptly and impartially as practical, protect reporter privacy
 where possible, and may remove content, issue a warning, temporarily restrict

@@ -23,6 +23,13 @@ will aim to acknowledge a complete report within seven days and will coordinate
 validation, remediation, and disclosure through the advisory. Timing depends on
 severity and the complexity of a compatible fix.
 
-If private vulnerability reporting is unavailable in the repository, contact the
-repository owner privately and ask for a secure reporting channel without
-including vulnerability details in the initial message.
+If private vulnerability reporting is unavailable in the repository, email
+[junghyeonkim.dev@gmail.com](mailto:junghyeonkim.dev@gmail.com) to arrange a secure
+reporting channel. Do not include vulnerability details in the initial email.
+
+## Dependency maintenance
+
+CI and Release Publish run `pnpm security:audit`. Known compatibility-fixture and
+unpatched upstream findings require dated, path-scoped review as described in
+[Dependency security](docs/dependency-security.md). Automatic Dependabot security
+update pull requests and private vulnerability reporting are enabled.
