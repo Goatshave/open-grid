@@ -1,7 +1,23 @@
 {
   "version": 1,
-  "reviewed": "2026-10-22",
+  "reviewed": "2026-10-23",
   "exceptions": [
+    {
+      "advisory": "GHSA-9jrq-w75r-8gcw",
+      "package": "vite",
+      "version": "5.4.21",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Build-only Svelte 4 lower-bound fixture rejects dev and preview server commands in its Vite config. It does not embed a custom middleware server or pass request URLs to transformIndexHtml."
+    },
+    {
+      "advisory": "GHSA-rq7h-c2jc-7f22",
+      "package": "vite",
+      "version": "5.4.21",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Build-only Svelte 4 lower-bound fixture rejects dev and preview server commands in its Vite config, preventing the vulnerable development-server file-serving path. No server is exposed or deployed."
+    },
     {
       "advisory": "GHSA-67mh-4wv8-2f99",
       "package": "esbuild",
@@ -86,17 +102,17 @@
       "advisory": "GHSA-86w9-cpqp-85rv",
       "package": "node-forge",
       "version": "1.4.0",
-      "pathPrefix": "examples/nuxt-server-export > nuxt@4.6.1 > @nuxt/nitro-server@4.6.1 > nitropack@2.13.4 > ",
+      "pathPrefix": "examples/nuxt-server-export > nuxt@4.6.2 > @nuxt/nitro-server@4.6.2 > nitropack@2.13.4 > ",
       "expires": "2026-11-22",
-      "reason": "No patched upstream release as of 2026-10-22. Used only by listhen local HTTPS certificate tooling; the example binds HTTP to 127.0.0.1 and its production start uses the generated Nitro server."
+      "reason": "No patched upstream release as of 2026-10-23. Used only by listhen local HTTPS certificate tooling; the example binds HTTP to 127.0.0.1 and its production start uses the generated Nitro server."
     },
     {
       "advisory": "GHSA-vfj7-8cjw-p6xm",
       "package": "braces",
       "version": "3.0.3",
-      "pathPrefix": "examples/nuxt-server-export > nuxt@4.6.1 > @nuxt/nitro-server@4.6.1 > nitropack@2.13.4 > ",
+      "pathPrefix": "examples/nuxt-server-export > nuxt@4.6.2 > @nuxt/nitro-server@4.6.2 > nitropack@2.13.4 > ",
       "expires": "2026-11-22",
-      "reason": "No patched upstream release as of 2026-10-22. Nitro build tooling receives repository-owned glob patterns; the example does not pass request input into glob expansion."
+      "reason": "No patched upstream release as of 2026-10-23. Nitro build tooling receives repository-owned glob patterns; the example does not pass request input into glob expansion."
     },
     {
       "advisory": "GHSA-g2v6-rqmx-r4w6",
