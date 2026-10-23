@@ -45,9 +45,9 @@ examples and the complete validation commands.
 - Run `pnpm test && pnpm check` before requesting review.
 - Make sure the general CI workflow passes. Changes to release or benchmark
   contracts also run the dedicated, parallel Release Verification jobs; general
-  type, unit, example-build, and quick-smoke checks remain owned by CI. Use each
-  workflow's `Required Gate` as the final result while retaining job-level failures
-  for diagnosis.
+  type, unit, example-build, and quick-smoke checks remain owned by CI. Use CI /
+  `Required Gate` and Release Verification / `Release Gate` as the final results,
+  while retaining job-level failures for diagnosis.
 - Include reproducible evidence for performance claims. Do not commit
   `.benchmark-results/` or `.release/` artifacts.
 
@@ -58,5 +58,10 @@ updates separately. Major npm updates stay isolated for explicit review. The
 `compatibility/` fixtures are excluded from automated version updates because
 their pinned versions define the supported framework lower bounds; update those
 pins only when the documented compatibility contract changes.
+
+Run `pnpm security:audit` after dependency changes. The audit policy and dated,
+path-scoped exceptions are documented in [Dependency security](docs/dependency-security.md).
+Do not upgrade the pinned legacy framework fixtures merely to suppress an audit
+finding; they verify the documented lower bounds.
 
 By participating, you agree to follow [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

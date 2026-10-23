@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "reviewed": "2026-10-23",
+  "exceptions": [
+    {
+      "advisory": "GHSA-9jrq-w75r-8gcw",
+      "package": "vite",
+      "version": "5.4.21",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Build-only Svelte 4 lower-bound fixture rejects dev and preview server commands in its Vite config. It does not embed a custom middleware server or pass request URLs to transformIndexHtml."
+    },
+    {
+      "advisory": "GHSA-rq7h-c2jc-7f22",
+      "package": "vite",
+      "version": "5.4.21",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Build-only Svelte 4 lower-bound fixture rejects dev and preview server commands in its Vite config, preventing the vulnerable development-server file-serving path. No server is exposed or deployed."
+    },
+    {
+      "advisory": "GHSA-67mh-4wv8-2f99",
+      "package": "esbuild",
+      "version": "0.21.5",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-crpf-4hrx-3jrp",
+      "package": "svelte",
+      "version": "4.2.20",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-m56q-vw4c-c2cp",
+      "package": "svelte",
+      "version": "4.2.20",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-f7gr-6p89-r883",
+      "package": "svelte",
+      "version": "4.2.20",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-phwv-c562-gvmh",
+      "package": "svelte",
+      "version": "4.2.20",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-4w7w-66w2-5vf9",
+      "package": "vite",
+      "version": "5.4.21",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-rcqx-6q8c-2c42",
+      "package": "svelte",
+      "version": "4.2.20",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-pr6f-5x2q-rwfp",
+      "package": "svelte",
+      "version": "4.2.20",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-v6wh-96g9-6wx3",
+      "package": "vite",
+      "version": "5.4.21",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-fx2h-pf6j-xcff",
+      "package": "vite",
+      "version": "5.4.21",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-86w9-cpqp-85rv",
+      "package": "node-forge",
+      "version": "1.4.0",
+      "pathPrefix": "examples/nuxt-server-export > nuxt@4.6.2 > @nuxt/nitro-server@4.6.2 > nitropack@2.13.4 > ",
+      "expires": "2026-11-22",
+      "reason": "No patched upstream release as of 2026-10-23. Used only by listhen local HTTPS certificate tooling; the example binds HTTP to 127.0.0.1 and its production start uses the generated Nitro server."
+    },
+    {
+      "advisory": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "version": "3.0.3",
+      "pathPrefix": "examples/nuxt-server-export > nuxt@4.6.2 > @nuxt/nitro-server@4.6.2 > nitropack@2.13.4 > ",
+      "expires": "2026-11-22",
+      "reason": "No patched upstream release as of 2026-10-23. Nitro build tooling receives repository-owned glob patterns; the example does not pass request input into glob expansion."
+    },
+    {
+      "advisory": "GHSA-g2v6-rqmx-r4w6",
+      "package": "@vue/server-renderer",
+      "version": "3.4.38",
+      "pathPrefix": "compatibility/vue-3.4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Vue 3.4.38 fixture is typechecked only; it is not an SSR server or a deployed application."
+    },
+    {
+      "advisory": "GHSA-698v-4r3x-3vcv",
+      "package": "vite",
+      "version": "5.4.21",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-r825-w8mm-5pxw",
+      "package": "vite",
+      "version": "5.4.21",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    },
+    {
+      "advisory": "GHSA-587h-7wmj-h5pm",
+      "package": "vite",
+      "version": "5.4.21",
+      "pathPrefix": "compatibility/svelte-4 > ",
+      "expires": "2026-11-22",
+      "reason": "Pinned lower-bound Svelte 4.2.20 / Vite 5 fixture is built locally for compatibility only; no dev or SSR server is started or deployed."
+    }
+  ]
+}

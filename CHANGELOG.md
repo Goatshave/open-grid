@@ -4,10 +4,16 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Update vulnerable development dependencies and enforce a path-scoped dependency
+  security audit in CI, with dated exceptions for legacy compatibility fixtures
+  and reviewed upstream issues.
+- Record the completed 0.3.0 publication and clarify private security and conduct
+  reporting channels.
+
 ## 0.3.0 - 2026-10-05
 
-Release candidate prepared on this date. Publication is pending the final release
-gates and source-bound manual UI and accessibility review.
+Published all ten packages to npm with the `latest` dist-tag and provenance after
+the protected release workflow and final UI and accessibility review passed.
 
 - Keep the React server-tree request coordinator usable through development
   StrictMode effect replay, with browser regression coverage for loading, refresh,

@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/fabric0de/open-grid/security/advisories/new
+    url: https://github.com/Goatshave/open-grid/security/advisories/new
     about: Report suspected vulnerabilities privately.
+  - name: Code of conduct concern
+    url: mailto:junghyeonkim.dev@gmail.com
+    about: Report conduct concerns privately to the maintainer.

@@ -84,6 +84,7 @@ export default defineConfig({
           { text: "Contributing", link: "https://github.com/Goatshave/open-grid/blob/main/CONTRIBUTING.md" },
           { text: "Changelog", link: "https://github.com/Goatshave/open-grid/blob/main/CHANGELOG.md" },
           { text: "Security", link: "https://github.com/Goatshave/open-grid/blob/main/SECURITY.md" },
+          { text: "Dependency security", link: "/dependency-security" },
         ],
       },
     ],
