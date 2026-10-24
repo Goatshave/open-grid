@@ -1,50 +1,51 @@
 <script lang="ts">
+  import { isISOCalendarDate } from "@open-grid/core";
+  import TicketEditor from "./TicketEditor.svelte";
+  import { createSvelteDataGridRenderer } from "@open-grid/svelte-ui";
+  import { onMount, onDestroy } from "svelte";
+  import { createTicketClient, getTicketPaginationLocalization, getTicketSaveSummary } from "@open-grid/example-shared-server/ticket-client";
   import type { GridState } from "@open-grid/core";
   import {
     createChunkedServerCsvExport,
     createServerSideTicketExportColumns,
-    createServerSideTickets,
     createStreamingServerCsvResponse,
-    getServerSideTicketRows,
-    queryServerSideTickets,
     type ServerCsvExportColumn,
     type ServerSideTicket,
-    type ServerSideTicketQuery,
-    type ServerSideTicketResult,
   } from "@open-grid/example-shared-server";
   import {
     createColumnHelper,
     DataGrid,
     downloadExportFile,
     type AnyColumnDef,
-    type ColumnFiltersState,
-    type GridOptions,
-    type PaginationState,
-    type SortingState,
   } from "@open-grid/svelte-ui";
 
   const column = createColumnHelper<ServerSideTicket>();
-  const allTickets = createServerSideTickets("SVL", { valueBase: 1_350, valueStep: 89, openedMonth: "2026-08" });
 
   const columns: AnyColumnDef<ServerSideTicket>[] = [
     column.accessor("id", { header: "Ticket", size: 120 }),
-    column.accessor("account", { header: "Account", size: 190 }),
+    column.accessor("account", { header: "Account", size: 280, enableEditing: true, validateEditValue: (value) => String(value).trim().length >= 3 || "Account must be at least 3 characters" }),
     column.accessor("owner", { header: "Owner", size: 120 }),
-    column.accessor("status", { header: "Status", size: 120 }),
+    column.accessor("status", { header: "Status", filterType: "set", filterOptions: ["Backlog", "Open", "Waiting", "Resolved"].map((value) => ({ value })), size: 180 }),
     column.accessor("priority", { header: "Priority", size: 110 }),
     column.accessor("value", {
-      header: "Value",
+      header: "Value", filterType: "number-range",
       size: 120,
       cell: ({ value }) => `$${Number(value ?? 0).toLocaleString()}`,
     }),
-    column.accessor("openedAt", { header: "Opened", size: 130 }),
+    column.accessor("openedAt", { header: "Opened", filterType: "date-range", size: 280, enableEditing: true, validateEditValue: (value) => isISOCalendarDate(value) || "Use an ISO calendar date" }),
   ];
 
   const serverExportColumns: ServerCsvExportColumn<ServerSideTicket>[] = createServerSideTicketExportColumns();
 
-  let sorting: SortingState = [];
-  let columnFilters: ColumnFiltersState = [];
-  let pagination: PaginationState = { pageIndex: 0, pageSize: 25 };
+  const client = createTicketClient();
+  let remote = client.getSnapshot();
+  const unsubscribe = client.subscribe(() => { remote = client.getSnapshot(); });
+  onMount(() => { void client.start(); });
+  onDestroy(() => { unsubscribe(); client.dispose(); });
+  $: sorting = remote.requested.sorting;
+  $: columnFilters = remote.requested.columnFilters;
+  $: pagination = remote.requested.pagination;
+  $: saveSummary = getTicketSaveSummary(remote);
   let exportStatus = "Server export idle";
   let streamStatus = "Streaming export idle";
   let streamingActive = false;
@@ -52,34 +53,12 @@
   let streamProgress = 0;
   let streamCancelRequested = false;
 
-  $: serverResult = queryServerSideTickets(allTickets, { sorting, columnFilters, pagination });
+  $: serverResult = remote.page;
   $: accountFilter = String(columnFilters.find((filter) => filter.id === "account")?.value ?? "");
   $: serverPageIndex = serverResult.pageIndex;
-  $: gridOptions = createGridOptions(serverResult);
+  $: gridOptions = (remote, { ...client.gridOptions(columns), onStateChange: handleStateChange, onCellEdit: client.onCellEdit });
 
-  function createGridOptions(result: ServerSideTicketResult): GridOptions<ServerSideTicket> {
-    return {
-      data: result.rows,
-      columns,
-      getRowId: (row) => row.id,
-      state: {
-        sorting,
-        columnFilters,
-        pagination,
-      },
-      onStateChange: handleStateChange,
-      manualSorting: true,
-      manualFiltering: true,
-      manualPagination: true,
-      rowCount: result.totalRows,
-      initialState: {
-        columnPinning: { left: ["id"], right: ["value"] },
-      },
-    };
-  }
-
-  async function exportTicketsFromServer(query: Pick<ServerSideTicketQuery, "columnFilters" | "sorting">) {
-    const rows = getServerSideTicketRows(allTickets, query);
+  async function exportTicketsFromServer(rows: ServerSideTicket[]) {
 
     return createChunkedServerCsvExport({
       rows,
@@ -107,30 +86,34 @@
     }
   }
 
-  function handleStateChange(state: GridState) {
-    sorting = state.sorting;
-    columnFilters = state.columnFilters;
-    pagination = state.pagination;
-  }
-
-  function setAccountFilter(value: string) {
-    columnFilters = value ? [{ id: "account", value }] : [];
-    pagination = { ...pagination, pageIndex: 0 };
-  }
+  function handleStateChange(state: GridState) { client.onStateChange(state); }
+  function setAccountFilter(value: string) { void client.setAccountFilter(value); }
 
   async function handleServerExport() {
     exportStatus = "Exporting server CSV...";
-    const result = await exportTicketsFromServer({ sorting, columnFilters });
-    const downloaded = downloadExportFile(result.file);
-    exportStatus = downloaded ? `Exported ${result.rowCount} server rows` : "Server export unavailable";
+    try {
+      const result = await exportTicketsFromServer(await client.exportRows({ sorting, columnFilters }));
+      const downloaded = downloadExportFile(result.file);
+      exportStatus = downloaded ? `Exported ${result.rowCount} server rows` : "Server export unavailable";
+    } catch (error) {
+      exportStatus = error instanceof Error ? `Server export failed: ${error.message}` : "Server export failed";
+    }
   }
 
   async function handleStreamingExport() {
-    if (streamReader) {
+    if (streamingActive) {
       return;
     }
 
-    const rows = getServerSideTicketRows(allTickets, { sorting, columnFilters });
+    streamingActive = true;
+    streamStatus = "Loading server rows for streaming export...";
+    let rows: ServerSideTicket[];
+    try { rows = await client.exportRows({ sorting, columnFilters }); }
+    catch (error) {
+      streamStatus = error instanceof Error ? `Streaming export failed: ${error.message}` : "Streaming export failed";
+      streamingActive = false;
+      return;
+    }
     let streamedRows = 0;
     let cancelled = false;
     let streamedBytes = 0;
@@ -204,11 +187,11 @@
   }
 </script>
 
-<main class="app-shell">
+<main class="app-shell" on:input|capture={client.onEditorInput}>
   <section class="toolbar" aria-label="Svelte server-side grid controls">
     <div>
       <h1>Svelte server-side tickets</h1>
-      <p>{serverResult.totalRows} matching rows · page {serverPageIndex + 1} of {serverResult.pageCount}</p>
+      <p>{serverResult.totalRows ?? "Unknown total"} matching rows · page {serverPageIndex + 1}{serverResult.pageCount === undefined ? "" : ` of ${serverResult.pageCount}`}</p>
     </div>
     <label class="filter-control">
       Account
@@ -216,33 +199,43 @@
     </label>
     <div class="export-control">
       <button type="button" on:click={handleServerExport}>Export server CSV</button>
-      <span data-testid="svelte-server-export-status">{exportStatus}</span>
+      <span role="status" aria-live="polite" data-testid="svelte-server-export-status">{exportStatus}</span>
     </div>
     <div class="export-control">
       <button type="button" disabled={streamingActive} on:click={handleStreamingExport}>Preview streaming CSV</button>
       <button type="button" disabled={!streamingActive} on:click={handleStreamingCancel}>Cancel stream</button>
-      <span data-testid="svelte-server-stream-status">{streamStatus}</span>
+      <span role="status" aria-live="polite" data-testid="svelte-server-stream-status">{streamStatus}</span>
     </div>
   </section>
 
-  <DataGrid options={gridOptions} columnPinningControls={true} style="height: 500px" />
+  <section aria-label="Remote data controls">
+    <button type="button" disabled={remote.loading} on:click={() => void client.refresh()}>Refresh tickets</button>
+    <button type="button" disabled={remote.loading} on:click={() => void client.failRefresh()}>Simulate load failure</button>
+    <button type="button" disabled={!remote.error || remote.loading} on:click={() => void client.retry()}>Retry load</button>
+    <label><input type="checkbox" checked={remote.unknownTotal} on:change={(event) => void client.setUnknownTotal(event.currentTarget.checked)} />Hide total count</label>
+    <p role="status" aria-live="polite" aria-atomic="true" data-testid="remote-load-status">{remote.loading ? `Loading tickets; showing page ${serverPageIndex + 1}` : remote.error ? `${remote.error}; retained page ${serverPageIndex + 1}` : `Loaded page ${serverPageIndex + 1}`}</p>
+  </section>
+  <section aria-label="Server editing">
+    <button type="button" on:click={() => client.setSaveScenario("fail-once")}>Fail next save</button>
+    <button type="button" on:click={() => client.setSaveScenario("conflict-once")}>Conflict next save</button>
+    <button type="button" on:click={() => client.setSaveScenario("validation")}>Reject next save</button>
+    <button type="button" disabled={!saveSummary.failed || saveSummary.pending > 0} on:click={() => void client.retryFailed()}>Retry failed saves</button>
+    <button type="button" disabled={saveSummary.pending > 0} on:click={() => void client.discardAndReload()}>Discard edits and reload</button>
+    <p role="status" aria-live="polite" aria-atomic="true" data-testid="server-save-summary">Pending {saveSummary.pending} · Saved {saveSummary.saved} · Failed {saveSummary.failed}</p>
+    <p role="status" aria-live="polite" data-testid="server-save-message">{remote.saveMessage}</p>
+    <ul>{#each [...remote.saves] as [key, save] (key)}<li><span role={["error", "validation-error", "conflict"].includes(save.status) ? "alert" : undefined}>{save.input?.rowId}: {save.status}{save.error instanceof Error ? ` — ${save.error.message}` : ""}</span></li>{/each}</ul>
+  </section>
+  <section aria-label="Server selection">
+    <button type="button" disabled={remote.loading || Boolean(remote.error) || remote.bulk.pending} on:click={() => client.selectAllMatching()}>Select all matching tickets</button>
+    <button type="button" on:click={() => client.clearSelection()}>Clear server selection</button>
+    <button type="button" disabled={remote.loading || Boolean(remote.error) || remote.bulk.pending || saveSummary.pending > 0 || (remote.selection.mode === "explicit" && !remote.selection.ids.length)} on:click={() => void client.resolveSelected()}>Resolve selected tickets</button>
+    <button type="button" disabled={!remote.bulk.error || remote.bulk.pending || remote.loading} on:click={() => void client.retryBulk()}>Retry bulk action</button>
+    <p role="status" data-testid="server-selection-summary">{remote.selection.mode === "all-matching" ? `All matching tickets · ${remote.selection.excludedIds.length} excluded` : `${remote.selection.ids.length} tickets selected`}</p>
+    <p role="status" data-testid="server-bulk-status">{remote.bulk.message}</p>
+  </section>
+  <DataGrid options={gridOptions} renderEditor={(context) => ["account", "openedAt"].includes(context.column.id) ? createSvelteDataGridRenderer(TicketEditor)(context) : null}
+    localization={getTicketPaginationLocalization("Svelte server pagination")} loading={remote.loading} loadingState="Refreshing tickets..." paginationControls={true} columnPinningControls={true} columnFilterControls={true} rowSelectionControls={true} style="height: 500px" />
 
-  <nav class="pagination" aria-label="Svelte server pagination">
-    <button type="button" disabled={serverPageIndex === 0} on:click={() => (pagination = { ...pagination, pageIndex: 0 })}>First</button>
-    <button
-      type="button"
-      disabled={serverPageIndex === 0}
-      on:click={() => (pagination = { ...pagination, pageIndex: Math.max(0, serverPageIndex - 1) })}
-    >
-      Previous
-    </button>
-    <span>Page {serverPageIndex + 1} / {serverResult.pageCount}</span>
-    <button
-      type="button"
-      disabled={serverPageIndex >= serverResult.pageCount - 1}
-      on:click={() => (pagination = { ...pagination, pageIndex: Math.min(serverResult.pageCount - 1, serverPageIndex + 1) })}
-    >
-      Next
-    </button>
-  </nav>
+
+
 </main>

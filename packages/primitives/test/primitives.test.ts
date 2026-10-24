@@ -1,4 +1,5 @@
 import type { Column, Grid, Row } from "@open-grid/core";
+import { createGrid } from "@open-grid/core";
 import type {
   ElementIdLookupLike,
   HeaderActionMenuFocusTargetLike,
@@ -113,6 +114,7 @@ import {
   getGridKeyboardEditAction,
   getGridKeyboardFocusMove,
   getGridKeyboardShortcutAction,
+  getIsGridKeyboardComposing,
   getGridErrorOverlayProps,
   getGridErrorRetryButtonProps,
   getGridErrorRetryButtonText,
@@ -731,6 +733,14 @@ describe("primitives", () => {
     expect(getPaginationPageSizeOptionText(50)).toBe("50 rows");
   });
 
+  it("formats an unknown page count without inventing a total and supports localization", () => {
+    const unknown = createGrid({ data: [], columns: [], manualPagination: true,
+      hasNextPage: true, initialState: { pagination: { pageIndex: 4, pageSize: 25 } } });
+    expect(getPaginationPageText(unknown)).toBe("Page 5");
+    expect(getPaginationPageText(unknown, createGridLocalization({ pageStatusUnknown: (page) => `${page} 페이지` }))).toBe("5 페이지");
+    expect(getGridProps(unknown)["aria-rowcount"]).toBe(-1);
+  });
+
   it("returns grid structure props", () => {
     expect(getGridHeaderProps()).toMatchObject({
       role: "rowgroup",
@@ -1274,6 +1284,19 @@ describe("primitives", () => {
     expect(getCellEditorKeyboardAction({ key: "Escape" })).toBe("cancel-edit");
     expect(getCellEditorKeyboardAction({ key: "Esc" })).toBeNull();
     expect(getCellEditorKeyboardAction({ key: "ArrowDown" })).toBeNull();
+  });
+
+  it("leaves composition keys to the IME, including React native events and composition-end 229", () => {
+    for (const composition of [{ isComposing: true }, { keyCode: 229 },
+      { nativeEvent: { isComposing: true } }, { isComposing: false, nativeEvent: { keyCode: 229 } }]) {
+      expect(getIsGridKeyboardComposing(composition)).toBe(true);
+      expect(getCellEditorKeyboardAction({ key: "Enter", ...composition })).toBeNull();
+      expect(getCellEditorKeyboardAction({ key: "Escape", ...composition })).toBeNull();
+      expect(getGridKeyboardEditAction({ key: "Enter", ...composition })).toBeNull();
+      expect(getGridKeyboardShortcutAction({ key: "z", ctrlKey: true, ...composition })).toBeNull();
+      expect(getGridKeyboardFocusMove({ key: "ArrowDown", ...composition })).toBeNull();
+    }
+    expect(getIsGridKeyboardComposing({ isComposing: false, keyCode: 13 })).toBe(false);
   });
 
   it("returns shared grid keyboard focus moves", () => {

@@ -4,7 +4,7 @@ import { getE2eUrl, withE2ePortOffset } from "./scripts/e2e-ports.mjs";
 export default defineConfig({
   testDir: "./e2e",
   testIgnore:
-    /(ui-smoke|product-workflow|accessibility(?:-(?:display|keyboard|tree))?|framework-benchmark|server-benchmark|structure-budget)\.spec\.ts/,
+    /(ui-smoke|product-workflow|framework-server-editing|framework-integration|accessibility(?:-(?:display|keyboard|tree))?|framework-benchmark|server-benchmark|structure-budget)\.spec\.ts/,
   timeout: 30_000,
   expect: {
     timeout: 5_000,

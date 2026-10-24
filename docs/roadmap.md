@@ -77,6 +77,40 @@ construction and successful data commits in product state.
   preparation PR is merged.
 - [x] Publish all ten packages and the `open-grid-v0.3.0` GitHub release.
 
+## 0.4.0 development
+
+The next development cycle targets complete server-backed read and edit workflows,
+with several implementation PRs contributing to one useful release. These are development changes and are not yet published as 0.4.0. See the
+[workflow review and acceptance criteria](reviews/0.4-workflow-review).
+
+- [x] Make server-owned cell edits safe under repeated edits, out-of-order saves,
+  failures, revision conflicts, retry, and navigation across React, Vue, and Svelte.
+- [x] Add asynchronous multi-cell save results and partial-failure recovery while
+  preserving existing synchronous edit/paste and local history contracts.
+- [x] Support server pagination when an exact row/page count is unavailable.
+- [x] Complete flat asynchronous server-list examples with retained data, request
+  cancellation, stale-response protection, retry, and accessible status feedback.
+- [x] Verify the complete workflows, public API compatibility, migration guidance,
+  package consumption, accessibility, and existing performance budgets.
+
+The original server read/edit scope has passed local automated gates. The scope
+was expanded on 2026-10-24; complete the following in order before release:
+
+- [x] Protect IME composition and composition-end keys from edit, focus, and shortcut actions.
+- [x] Add cross-framework custom editors with shared commit/cancel/validation semantics.
+- [x] Add serializable number/date-range and set filters, UI controls, and server integration.
+- [x] Define query-scoped server-wide selection, exclusions, and a real bulk-action example.
+- [x] Verify the expanded workflows on Chromium, Firefox, and WebKit, then rerun local automated release gates.
+
+Release preparation still
+requires a reviewed source revision, the source-bound manual UI/accessibility
+review, version/release metadata, protected CI, and publication.
+
+TypeScript upgrades and security maintenance continue independently of the feature scope.
+
+Prepare 1.0 beta and release-candidate builds when its feature scope and public API
+stability commitments are ready; individual small PRs do not require minor releases.
+
 ## Performance Direction
 
 Release decisions use only Open Grid-owned measurements. Deterministic bundle, DOM,

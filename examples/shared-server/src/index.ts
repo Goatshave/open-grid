@@ -1,5 +1,6 @@
 import {
   createExportFile,
+  createColumnFilterMatcher,
   type ColumnFiltersState,
   type ExpandedState,
   type ExportFile,
@@ -279,8 +280,8 @@ export function filterServerSideTickets(rows: readonly ServerSideTicket[], colum
       return currentRows;
     }
 
-    const filterValue = String(filter.value).toLowerCase();
-    return currentRows.filter((row) => String(row[filter.id] ?? "").toLowerCase().includes(filterValue));
+    const matches = createColumnFilterMatcher(filter.value);
+    return currentRows.filter((row) => matches(row[filter.id]));
   }, [...rows]);
 }
 

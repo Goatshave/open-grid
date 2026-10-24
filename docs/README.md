@@ -11,6 +11,7 @@ as the source-tree index when browsing the repository directly.
 - [Package selection](packages.md)
 - [Localization](localization.md)
 - [Custom rendering](custom-rendering.md)
+- [Typed filters](filters.md)
 - [Product composition](composition.md)
 - [Persisted preferences](preferences.md)
 - [Project overview](https://github.com/Goatshave/open-grid#readme)
@@ -37,6 +38,7 @@ as the source-tree index when browsing the repository directly.
 - [API stability](api-stability.md)
 - [Performance contract and evidence](performance.md)
 - [Roadmap](roadmap.md)
+- [0.4 workflow review and delivery scope](reviews/0.4-workflow-review.md)
 - [Release process](release.md)
 - [Benchmark applications and commands](https://github.com/Goatshave/open-grid/tree/main/benchmarks#readme)
 

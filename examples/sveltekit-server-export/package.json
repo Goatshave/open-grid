@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.17.0"
+  },
   "scripts": {
     "dev": "vite dev --host 127.0.0.1",
     "build": "svelte-kit sync && vite build",
@@ -10,13 +13,13 @@
   },
   "dependencies": {
     "@open-grid/example-shared-server": "workspace:*",
-    "@sveltejs/adapter-node": "^5.5.7",
-    "@sveltejs/kit": "^2.70.3",
+    "@sveltejs/adapter-node": "^6.0.0",
+    "@sveltejs/kit": "^3.1.0",
     "svelte": "^5.57.2"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
-    "typescript": "^5.7.2",
+    "typescript": "^6.0.3",
     "vite": "^8.3.4"
   }
 }

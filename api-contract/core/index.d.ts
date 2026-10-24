@@ -1,3 +1,30 @@
+type ColumnFilterType = "text" | "number-range" | "date-range" | "set";
+type ColumnFilterOptionValue = string | number | boolean | null;
+interface ColumnFilterOption {
+    value: ColumnFilterOptionValue;
+    label?: string;
+}
+interface NumberRangeFilter {
+    type: "number-range";
+    min?: number;
+    max?: number;
+}
+interface DateRangeFilter {
+    type: "date-range";
+    from?: string;
+    to?: string;
+}
+interface SetFilter {
+    type: "set";
+    values: readonly ColumnFilterOptionValue[];
+}
+type TypedColumnFilterValue = NumberRangeFilter | DateRangeFilter | SetFilter;
+/** Calendar dates are ISO YYYY-MM-DD, independent of the host's timezone. */
+declare function isISOCalendarDate(value: unknown): value is string;
+declare function isTypedColumnFilterValue(value: unknown): value is TypedColumnFilterValue;
+/** Compiles once per query; the same serializable contract can run on a server. */
+declare function createColumnFilterMatcher(filter: unknown): (value: unknown) => boolean;
+
 type ColumnId = string;
 type RowId = string;
 type Updater<T> = T | ((previous: T) => T);
@@ -234,6 +261,18 @@ interface CellEditOption {
     label?: string;
     disabled?: boolean;
 }
+/** A mounted custom editor owns its draft, focus, popup, and blur behavior. */
+interface CellEditorContext<TData, TValue = unknown> {
+    grid: Grid<TData>;
+    row: Row<TData>;
+    column: Column<TData, TValue>;
+    value: TValue | undefined;
+    validationMessage: string | null;
+    isActive: () => boolean;
+    /** Strings use the column parser; typed values go directly through validation. */
+    commit: (value: unknown, sourceEvent?: unknown) => CellEditEvent<TData> | null;
+    cancel: (sourceEvent?: unknown) => CellEditEvent<TData> | null;
+}
 type AccessorKey<TData> = Extract<keyof TData, string>;
 type SortFn<TData, TValue = unknown> = (a: Row<TData>, b: Row<TData>, columnId: ColumnId) => number;
 type FilterFn<TData, TValue = unknown> = (value: TValue | undefined, filterValue: unknown, row: Row<TData>, column: Column<TData, TValue>) => boolean;
@@ -271,6 +310,8 @@ interface ColumnDef<TData, TValue = unknown> {
     validateEditValue?: (value: unknown, context: CellEditValidationContext<TData, TValue>) => CellEditValidationResult;
     sortFn?: SortFn<TData, TValue>;
     filterFn?: FilterFn<TData, TValue>;
+    filterType?: ColumnFilterType;
+    filterOptions?: readonly ColumnFilterOption[];
     groupingValue?: (context: GroupingValueContext<TData, TValue>) => unknown;
     aggregationFn?: AggregationFn<TData, TValue>;
     size?: number;
@@ -402,6 +443,9 @@ interface GridOptions<TData> {
     manualPagination?: boolean;
     pageCount?: number;
     rowCount?: number;
+    /** Unknown-total manual pagination. Exact row/page counts take precedence. */
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
     editHistoryLimit?: number;
 }
 interface Grid<TData> {
@@ -586,6 +630,97 @@ interface ServerRequestCoordinator<TKey, TInput, TData> {
 }
 declare function createServerRequestCoordinator<TKey, TInput, TData>(options: ServerRequestCoordinatorOptions<TKey, TInput, TData>): ServerRequestCoordinator<TKey, TInput, TData>;
 
+type ServerMutationFailure = "error" | "validation-error" | "conflict";
+type ServerMutationStatus = "idle" | "queued" | "saving" | "success" | ServerMutationFailure;
+interface ServerMutationContext<TKey, TData> {
+    readonly key: TKey;
+    readonly mutationId: number;
+    /** Stable across retries. The transport/server must enforce idempotency. */
+    readonly operationId: string;
+    readonly previousData: TData | undefined;
+}
+interface ServerMutationState<TInput, TData> {
+    readonly status: ServerMutationStatus;
+    readonly mutationId: number | null;
+    readonly operationId: string | null;
+    readonly input: TInput | undefined;
+    readonly data: TData | undefined;
+    readonly error: unknown;
+    readonly pendingCount: number;
+}
+type ServerMutationResult<TData> = {
+    readonly status: "success";
+    readonly mutationId: number;
+    readonly operationId: string;
+    readonly data: TData;
+    readonly isCurrent: boolean;
+} | {
+    readonly status: ServerMutationFailure;
+    readonly mutationId: number;
+    readonly operationId: string;
+    readonly error: unknown;
+    readonly isCurrent: boolean;
+} | {
+    readonly status: "cancelled";
+    readonly mutationId: number;
+    readonly operationId: string;
+    readonly isCurrent: false;
+};
+interface ServerMutationCoordinatorOptions<TKey, TInput, TData> {
+    getKey: (input: TInput) => TKey;
+    mutate: (input: TInput, context: ServerMutationContext<TKey, TData>) => TData | Promise<TData>;
+    classifyError?: (error: unknown) => ServerMutationFailure;
+    createOperationId?: () => string;
+    onListenerError?: (error: unknown) => void;
+}
+interface ServerMutationCoordinator<TKey, TInput, TData> {
+    run: (input: TInput) => Promise<ServerMutationResult<TData>>;
+    runAll: (inputs: readonly TInput[]) => Promise<ServerMutationResult<TData>[]>;
+    retry: (key: TKey) => Promise<ServerMutationResult<TData>> | null;
+    retryFailed: () => Promise<ServerMutationResult<TData>[]>;
+    getState: (key: TKey) => ServerMutationState<TInput, TData>;
+    getStates: () => ReadonlyMap<TKey, ServerMutationState<TInput, TData>>;
+    isCurrent: (key: TKey, mutationId: number) => boolean;
+    subscribe: (listener: (key: TKey, state: ServerMutationState<TInput, TData>) => void) => () => void;
+    /** Forget settled work, optionally replacing the acknowledged server value. */
+    reset: (key: TKey, data?: TData) => boolean;
+    /** Discard queued writes; an already-started server write is not rolled back. */
+    dispose: () => void;
+}
+/** Serializes writes per key. Products continue to own transport and row data. */
+declare function createServerMutationCoordinator<TKey, TInput, TData>(options: ServerMutationCoordinatorOptions<TKey, TInput, TData>): ServerMutationCoordinator<TKey, TInput, TData>;
+
+type ServerSelection<TQuery> = {
+    readonly mode: "explicit";
+    readonly queryKey: string;
+    readonly query: Readonly<TQuery>;
+    readonly ids: readonly RowId[];
+} | {
+    readonly mode: "all-matching";
+    readonly queryKey: string;
+    readonly query: Readonly<TQuery>;
+    readonly excludedIds: readonly RowId[];
+};
+interface ServerSelectionController<TQuery> {
+    getState: () => ServerSelection<TQuery>;
+    /** Returns true when a new selection universe cleared previous selections. */
+    setQuery: (query: TQuery) => boolean;
+    setRowSelected: (rowId: RowId, selected: boolean) => void;
+    getIsRowSelected: (rowId: RowId) => boolean;
+    selectAllMatching: () => void;
+    clear: () => void;
+    getGridState: (loadedRowIds: readonly RowId[]) => Pick<GridState, "rowSelection" | "allRowsSelected">;
+    /** Apply checkbox changes only to the loaded rows, without inferring all-matching. */
+    setGridState: (loadedRowIds: readonly RowId[], state: Pick<GridState, "rowSelection" | "allRowsSelected">) => void;
+    subscribe: (listener: () => void) => () => void;
+    dispose: () => void;
+}
+/** Separate from GridState: loaded row models never stand for all remote matches. */
+declare function createServerSelection<TQuery>(options: {
+    query: TQuery;
+    getQueryKey: (query: Readonly<TQuery>) => string;
+}): ServerSelectionController<TQuery>;
+
 declare const sortingReducers: {
     set: (previous: SortingState, updater: Updater<SortingState>) => SortingState;
     toggleColumn: (previous: SortingState, columnId: ColumnId, desc?: boolean, multi?: boolean) => SortingState;
@@ -673,4 +808,4 @@ declare function getOrderableLeafColumns<TData>(columns: readonly Column<TData, 
 declare const defaultState: GridState;
 declare function mergeState(...states: Array<Partial<GridState> | undefined>): GridState;
 
-export { type AccessorColumnOptions, type AccessorFnColumnDef, type AccessorKey, type AccessorKeyColumnDef, type AggregationContext, type AggregationFn, type AnyColumnDef, type BuiltInAggregationFn, type CellContext, type CellCoordinate, type CellEditEvent, type CellEditEventParams, type CellEditHistoryAction, type CellEditHistoryState, type CellEditOption, type CellEditParserContext, type CellEditPhase, type CellEditValidationContext, type CellEditValidationResult, type CellEditValidationState, type CellEditingState, type CellFillOptions, type CellInteractionEvent, type CellInteractionEventParams, type CellRange, type CellRangeSelectionState, type ClipboardCellContext, type ClipboardCopyOptions, type ClipboardPasteCellContext, type ClipboardPasteCommittedCell, type ClipboardPasteOptions, type ClipboardPasteResult, type ClipboardPasteSkippedCell, type ClipboardPasteSkippedReason, type ClipboardPasteValidationError, type Column, type ColumnDef, type ColumnFilter, type ColumnFiltersState, type ColumnHelper, type ColumnId, type ColumnLayout, type ColumnMovePosition, type ColumnOrderState, type ColumnPinningPosition, type ColumnPinningState, type ColumnResizeEvent, type ColumnResizeEventParams, type ColumnResizePhase, type ColumnSizingState, type ColumnVisibilityState, type DisplayColumnDef, type ExpandedState, type ExportCellContext, type ExportFile, type ExportFileOptions, type ExportRowScope, type ExportTextFormat, type ExportTextOptions, type FilterFn, type FitColumnsToWidthOptions, type FocusDirection, type Grid, type GridCacheDiagnostics, type GridCacheDiagnosticsEntry, type GridCacheKey, type GridOptions, type GridSelector, type GridSelectorListener, type GridSelectorSubscriptionOptions, type GridState, type GroupColumnDef, type GroupFooterMode, type GroupingState, type GroupingValueContext, type Header, type HeaderContext, type HeaderGroup, type MoveFocusOptions, type PaginationState, type Row, type RowId, type RowInteractionEvent, type RowInteractionEventParams, type RowModel, type RowSelectionCleanupScope, type RowSelectionState, type ServerRequestContext, type ServerRequestCoordinator, type ServerRequestCoordinatorOptions, type ServerRequestListener, type ServerRequestResult, type ServerRequestState, type ServerRequestStatus, type SortDirection, type SortFn, type SortingRule, type SortingState, type Updater, columnOrderReducers, columnPinningReducers, columnSizingReducers, columnVisibilityReducers, createColumnHelper, createExportFile, createGrid, createServerRequestCoordinator, defaultState, expandedReducers, filterReducers, fitColumnsToWidth, focusReducers, getExportFileExtension, getExportMimeType, getOrderableLeafColumns, getRowIdsForSelectionCleanup, groupingReducers, mergeState, orderLeafColumns, paginationReducers, rowSelectionReducers, sortingReducers };
+export { type AccessorColumnOptions, type AccessorFnColumnDef, type AccessorKey, type AccessorKeyColumnDef, type AggregationContext, type AggregationFn, type AnyColumnDef, type BuiltInAggregationFn, type CellContext, type CellCoordinate, type CellEditEvent, type CellEditEventParams, type CellEditHistoryAction, type CellEditHistoryState, type CellEditOption, type CellEditParserContext, type CellEditPhase, type CellEditValidationContext, type CellEditValidationResult, type CellEditValidationState, type CellEditingState, type CellEditorContext, type CellFillOptions, type CellInteractionEvent, type CellInteractionEventParams, type CellRange, type CellRangeSelectionState, type ClipboardCellContext, type ClipboardCopyOptions, type ClipboardPasteCellContext, type ClipboardPasteCommittedCell, type ClipboardPasteOptions, type ClipboardPasteResult, type ClipboardPasteSkippedCell, type ClipboardPasteSkippedReason, type ClipboardPasteValidationError, type Column, type ColumnDef, type ColumnFilter, type ColumnFilterOption, type ColumnFilterOptionValue, type ColumnFilterType, type ColumnFiltersState, type ColumnHelper, type ColumnId, type ColumnLayout, type ColumnMovePosition, type ColumnOrderState, type ColumnPinningPosition, type ColumnPinningState, type ColumnResizeEvent, type ColumnResizeEventParams, type ColumnResizePhase, type ColumnSizingState, type ColumnVisibilityState, type DateRangeFilter, type DisplayColumnDef, type ExpandedState, type ExportCellContext, type ExportFile, type ExportFileOptions, type ExportRowScope, type ExportTextFormat, type ExportTextOptions, type FilterFn, type FitColumnsToWidthOptions, type FocusDirection, type Grid, type GridCacheDiagnostics, type GridCacheDiagnosticsEntry, type GridCacheKey, type GridOptions, type GridSelector, type GridSelectorListener, type GridSelectorSubscriptionOptions, type GridState, type GroupColumnDef, type GroupFooterMode, type GroupingState, type GroupingValueContext, type Header, type HeaderContext, type HeaderGroup, type MoveFocusOptions, type NumberRangeFilter, type PaginationState, type Row, type RowId, type RowInteractionEvent, type RowInteractionEventParams, type RowModel, type RowSelectionCleanupScope, type RowSelectionState, type ServerMutationContext, type ServerMutationCoordinator, type ServerMutationCoordinatorOptions, type ServerMutationFailure, type ServerMutationResult, type ServerMutationState, type ServerMutationStatus, type ServerRequestContext, type ServerRequestCoordinator, type ServerRequestCoordinatorOptions, type ServerRequestListener, type ServerRequestResult, type ServerRequestState, type ServerRequestStatus, type ServerSelection, type ServerSelectionController, type SetFilter, type SortDirection, type SortFn, type SortingRule, type SortingState, type TypedColumnFilterValue, type Updater, columnOrderReducers, columnPinningReducers, columnSizingReducers, columnVisibilityReducers, createColumnFilterMatcher, createColumnHelper, createExportFile, createGrid, createServerMutationCoordinator, createServerRequestCoordinator, createServerSelection, defaultState, expandedReducers, filterReducers, fitColumnsToWidth, focusReducers, getExportFileExtension, getExportMimeType, getOrderableLeafColumns, getRowIdsForSelectionCleanup, groupingReducers, isISOCalendarDate, isTypedColumnFilterValue, mergeState, orderLeafColumns, paginationReducers, rowSelectionReducers, sortingReducers };

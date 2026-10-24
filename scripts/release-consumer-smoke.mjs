@@ -50,7 +50,18 @@ try {
     "--input-type=module",
     "--eval",
     [
-      'await import("@open-grid/core")',
+      'const { createGrid, createServerMutationCoordinator, createColumnFilterMatcher, createServerSelection } = await import("@open-grid/core")',
+      'const remoteGrid = createGrid({ data: [], columns: [], manualPagination: true, hasNextPage: true })',
+      'if (remoteGrid.getPageCount() !== -1 || !remoteGrid.getCanNextPage()) throw new Error("Installed unknown-total pagination contract failed")',
+      'const saves = createServerMutationCoordinator({ getKey: () => "cell", mutate: (value) => value })',
+      'const saved = await saves.run("installed mutation")',
+      'if (saved.status !== "success" || saved.data !== "installed mutation") throw new Error("Installed mutation contract failed")',
+      'saves.dispose()',
+      'if (!createColumnFilterMatcher({ type: "number-range", min: 1, max: 2 })(2)) throw new Error("Installed typed filter contract failed")',
+      'const selected = createServerSelection({ query: { status: "Open" }, getQueryKey: (query) => query.status })',
+      'selected.selectAllMatching(); selected.setRowSelected("excluded", false)',
+      'if (selected.getIsRowSelected("excluded") || !selected.getIsRowSelected("another")) throw new Error("Installed server selection contract failed")',
+      'selected.dispose()',
       'await import("@open-grid/primitives")',
       'await import("@open-grid/virtual")',
       'await import("@open-grid/theme/tokens")',
@@ -166,7 +177,7 @@ function writeConsumerFiles(directory) {
     include: ["src/consumer.tsx"],
   }, null, 2)}\n`);
   writeFileSync(join(directory, "src", "consumer.tsx"), `
-import { createColumnHelper, createGrid, type CellContext } from "@open-grid/core";
+import { createColumnHelper, createGrid, createServerMutationCoordinator, createServerSelection, type CellContext, type CellEditorContext, type ServerMutationState, type TypedColumnFilterValue } from "@open-grid/core";
 import { getGridProps } from "@open-grid/primitives";
 import { DataGrid as ReactDataGrid, parseGridPreferences, type GridPreferencesMigration } from "@open-grid/react-ui";
 import { createSvelteDataGridRenderer, type DataGridProps as SvelteDataGridProps } from "@open-grid/svelte-ui";
@@ -178,14 +189,20 @@ const rows: Row[] = [{ id: "1", name: "Installed" }];
 const column = createColumnHelper<Row>();
 const columns = [column.accessor("name", { header: "Name" })];
 const grid = createGrid({ columns, data: rows, getRowId: (row) => row.id });
+const remoteGrid = createGrid({ columns, data: rows, manualPagination: true, hasNextPage: true, hasPreviousPage: false });
+getGridProps(remoteGrid);
+export const typedFilter: TypedColumnFilterValue = { type: "set", values: ["Installed"] };
+createServerSelection({ query: { filter: typedFilter }, getQueryKey: (query) => JSON.stringify(query) });
+const saves = createServerMutationCoordinator<string, Row, Row>({ getKey: (row) => row.id, mutate: (row) => Promise.resolve(row) });
+export const saveState: ServerMutationState<Row, Row> = saves.getState("1");
 getGridProps(grid, { ariaLabel: "External consumer" });
 createOpenGridThemeStyle({ accent: "#087f5b" });
 const migrations: readonly GridPreferencesMigration[] = [{ fromVersion: 0, toVersion: 1, migrate: () => ({ version: 1, density: "standard", state: {} }) }];
 parseGridPreferences('{"version":0}', { migrations });
-export const reactGrid = <ReactDataGrid columns={columns} data={rows} getRowId={(row) => row.id} localization={{ noRows: "No external rows" }} renderToolbar={({ rows }) => <span>{rows.length}</span>} renderCell={({ value }) => <strong>{String(value)}</strong>} />;
+export const reactGrid = <ReactDataGrid columns={columns} data={rows} getRowId={(row) => row.id} localization={{ noRows: "No external rows", pageStatusUnknown: (page) => "Page " + page }} renderToolbar={({ rows }) => <span>{rows.length}</span>} renderCell={({ value }) => <strong>{String(value)}</strong>} renderEditor={(context) => <button onClick={() => context.commit(context.value)}>Save</button>} />;
 export const VueGrid = createDataGrid<Row>();
-export const vueGridProps: VueDataGridProps<Row> = { options: { columns, data: rows, getRowId: (row) => row.id }, localization: { noRows: "No external rows" }, renderToolbar: ({ rows }) => String(rows.length), renderCell: ({ value }) => String(value) };
-export const svelteGridProps: SvelteDataGridProps<Row> = { options: { columns, data: rows, getRowId: (row) => row.id }, localization: { noRows: "No external rows" }, renderCell: createSvelteDataGridRenderer<CellContext<Row, unknown>>({}) };
+export const vueGridProps: VueDataGridProps<Row> = { options: { columns, data: rows, getRowId: (row) => row.id }, localization: { noRows: "No external rows" }, renderToolbar: ({ rows }) => String(rows.length), renderCell: ({ value }) => String(value), renderEditor: (context) => context.isActive() ? String(context.value) : null };
+export const svelteGridProps: SvelteDataGridProps<Row> = { options: { columns, data: rows, getRowId: (row) => row.id }, localization: { noRows: "No external rows" }, renderCell: createSvelteDataGridRenderer<CellContext<Row, unknown>>({}), renderEditor: createSvelteDataGridRenderer<CellEditorContext<Row>>({}) };
 `);
   writeFileSync(join(directory, "index.html"), '<div id="app"></div><script type="module" src="/src/main.ts"></script>\n');
   writeFileSync(join(directory, "src", "main.ts"), 'import App from "./App.svelte"; new App({ target: document.getElementById("app")! });\n');
@@ -197,12 +214,12 @@ export const svelteGridProps: SvelteDataGridProps<Row> = { options: { columns, d
   interface Row { id: string; name: string }
   const column = createColumnHelper<Row>();
   const options: GridOptions<Row> = {
-    columns: [column.accessor("name", { header: "Name" })],
+    columns: [column.accessor("name", { header: "Name", filterType: "set", filterOptions: [{ value: "Installed" }] })],
     data: [{ id: "1", name: "Installed" }],
     getRowId: (row) => row.id,
   };
 </script>
-<DataGrid ariaLabel="External Svelte consumer" localization={{ noRows: "No external rows" }} renderEmptyState={({ visibleColumns }) => \`No rows in \${visibleColumns.length} columns\`} {options} />
+<DataGrid ariaLabel="External Svelte consumer" localization={{ noRows: "No external rows" }} columnFilterControls renderEmptyState={({ visibleColumns }) => \`No rows in \${visibleColumns.length} columns\`} {options} />
 `);
   writeFileSync(join(directory, "vite.config.mjs"), `
 import { svelte } from "@sveltejs/vite-plugin-svelte";

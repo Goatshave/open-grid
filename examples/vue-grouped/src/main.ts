@@ -40,7 +40,9 @@ import {
   TriangleAlert,
   Undo2,
 } from "@lucide/vue";
-import { computed, createApp, defineComponent, h, ref } from "vue";
+import { computed, createApp, defineComponent, h, onBeforeUnmount, ref } from "vue";
+
+import { createExampleCellEditController } from "@open-grid/example-shared-server/cell-edit-client";
 
 interface Forecast extends Record<string, string | number> {
   id: string;
@@ -397,48 +399,18 @@ const App = defineComponent({
         truncated: result.truncated,
       };
     };
-    const commitServerOwnedCellEdit = (event: CellEditEvent<Forecast>) => {
-      if (event.phase !== "commit" || event.defaultPrevented) {
-        return;
-      }
-
-      const value = typeof event.value === "number" ? event.value : String(event.value ?? "");
-
-      if (event.column.id === "city" && isKeyboardPasteCommit(event)) {
-        event.preventDefault();
-        serverEditStatus.value = `Server paste: saving ${event.row.id} ${event.column.id}`;
-
-        void commitForecastEditToServer(event.row.id, event.column.id, value).then(() => {
-          rows.value = rows.value.map((row) => (row.id === event.row.id ? { ...row, [event.column.id]: value } : row));
-          gridState.value = {
-            ...gridState.value,
-            focusedCell: { rowId: event.row.id, columnId: event.column.id },
-            editingCell: null,
-            cellSelectionRange: null,
-          };
-          serverEditStatus.value = `Server paste: saved ${event.row.id} ${event.column.id} = ${value}`;
-        });
-        return;
-      }
-
-      if (event.column.id !== "city" || !isDirectEnterEditCommit(event)) {
-        rows.value = rows.value.map((row) => (row.id === event.row.id ? { ...row, [event.column.id]: value } : row));
-        return;
-      }
-
-      event.preventDefault();
-      serverEditStatus.value = `Server edit: saving ${event.row.id} ${event.column.id}`;
-
-      void commitForecastEditToServer(event.row.id, event.column.id, value).then(() => {
-        rows.value = rows.value.map((row) => (row.id === event.row.id ? { ...row, [event.column.id]: value } : row));
-        gridState.value = {
-          ...gridState.value,
-          focusedCell: { rowId: event.row.id, columnId: event.column.id },
-          editingCell: null,
-        };
-        serverEditStatus.value = `Server edit: saved ${event.row.id} ${event.column.id} = ${value}`;
-      });
-    };
+    const cellEdits = createExampleCellEditController<Forecast>({
+      getMode: (event) => event.column.id !== "city" ? null : isKeyboardPasteCommit(event) ? "paste" : isDirectEnterEditCommit(event) ? "edit" : null,
+      save: ({ rowId, columnId, value }) => commitForecastEditToServer(rowId, columnId, value),
+      apply: ({ rowId, columnId, value }) => { rows.value = rows.value.map((row) => row.id === rowId ? { ...row, [columnId]: value } : row); },
+      finish: ({ rowId, columnId }, mode) => {
+        if (gridState.value.focusedCell?.rowId !== rowId || gridState.value.focusedCell.columnId !== columnId) return;
+        gridState.value = { ...gridState.value, editingCell: null, ...(mode === "paste" ? { cellSelectionRange: null } : {}) };
+      },
+      status: (message) => { serverEditStatus.value = message; },
+    });
+    onBeforeUnmount(() => cellEdits.dispose());
+    const commitServerOwnedCellEdit = (event: CellEditEvent<Forecast>) => cellEdits.handle(event);
     const gridOptions = computed<GridOptions<Forecast>>(() => ({
       ...baseGridOptions,
       data: rows.value,
@@ -500,7 +472,7 @@ const App = defineComponent({
     };
 
     return () =>
-      h("main", { class: "app-shell", "data-og-theme": productTheme.value }, [
+      h("main", { class: "app-shell", "data-og-theme": productTheme.value, onInputCapture: (event: Event) => { if (event.target instanceof Element && event.target.closest(".og-grid__cell-editor")) cellEdits.invalidateEditor(); } }, [
         h("section", { class: "toolbar", "aria-label": "Forecast grid summary" }, [
           h("div", { class: "toolbar__identity" }, [
             h("span", { class: "product-mark", "aria-hidden": "true" }, [h(TableProperties, { size: 19 })]),

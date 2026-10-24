@@ -120,6 +120,8 @@ The public package set is:
 - `@open-grid/theme`
 
 All 16 example packages under `examples/*`, including the runnable Next.js, Nuxt, and SvelteKit server-export apps, are intentionally private and are not part of the publish set.
+The SvelteKit 3 example requires Node 22.17+ and uses its own TypeScript 6 dependency;
+the root Node engine, library tooling, and public framework peer ranges are unchanged.
 
 ## Release Plan
 
@@ -161,7 +163,7 @@ pnpm release:publish-dry-run -- --version 0.1.0 --json
 pnpm release:publish-dry-run -- --version 0.1.0 --repository-url git+https://github.com/OWNER/REPO.git --markdown
 ```
 
-`pnpm release:publish-dry-run` validates the resolved release version and npm dist-tag before running child release gates, creates publish-ready staged tarballs, reads the dependency-aware publish order from `pnpm release:plan`, and runs `npm publish --dry-run --access public` for every tarball in that order. Passing `--repository-url` stages tarballs with public repository metadata and verifies that every packed manifest has the matching repository URL and package directory before the npm dry-run command executes. Passing `--out-dir` reuses or writes a persistent staged tarball directory, and explicit `--out-dir` values must be non-empty before release gates run. When release planning or staging validation fails under `--json`, the dry-run output preserves the child `failures` entries and stops before later release gates or npm dry-run commands run, so CI can report the original blocker. Use `--markdown` when the final dry-run publish order, exact npm dry-run commands, or preserved failures need to be pasted into release approval notes. The guarded `pnpm release:publish -- --dry-run --json` entrypoint preserves release-plan and release-stage failures the same way before staging, reading tarballs, or running npm dry-runs. Non-JSON failure output reports the release version, npm tag, repository URL when supplied, output directory, and provenance flag before the failure list. It does not publish to npm. Use this gate to verify the final publish command shape before approving a release candidate.
+`pnpm release:publish-dry-run` validates the resolved release version and npm dist-tag before running child release gates, creates publish-ready staged tarballs, reads the dependency-aware publish order from `pnpm release:plan`, and runs `npm publish --dry-run --access public` for every tarball in that order. Passing `--repository-url` stages tarballs with public repository metadata and verifies that every packed manifest has the matching repository URL and package directory before the npm dry-run command executes. Passing `--out-dir` writes to a persistent staged tarball directory that must be empty or absent; existing tarballs are not reused. Explicit `--out-dir` values must be non-empty before release gates run. When release planning or staging validation fails under `--json`, the dry-run output preserves the child `failures` entries and stops before later release gates or npm dry-run commands run, so CI can report the original blocker. Use `--markdown` when the final dry-run publish order, exact npm dry-run commands, or preserved failures need to be pasted into release approval notes. The guarded `pnpm release:publish -- --dry-run --json` entrypoint preserves release-plan and release-stage failures the same way before staging, reading tarballs, or running npm dry-runs. Non-JSON failure output reports the release version, npm tag, repository URL when supplied, output directory, and provenance flag before the failure list. It does not publish to npm. Use this gate to verify the final publish command shape before approving a release candidate.
 
 ## External Consumer Smoke
 
@@ -174,8 +176,9 @@ pnpm release:consumer-smoke -- --version 0.1.0 --tarball-dir .release/0.1.0 --js
 ```
 
 The command installs all ten tarballs into a temporary external project, imports every
-public package through ESM, typechecks a strict TypeScript consumer, and builds the
-published Svelte component and CSS with Vite. It removes its temporary workspace on
+public package through ESM, exercises installed mutation and unknown-total pagination
+contracts, typechecks a strict TypeScript consumer, and builds the published Svelte
+component and CSS with Vite. It removes its temporary workspace on
 completion unless `--keep-temp` is supplied. Release Verification and Release Publish
 reuse staged tarballs and require this check to pass.
 

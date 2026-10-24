@@ -64,6 +64,28 @@ that the same advisory in a maintained example still fails the audit. The fixtur
 retains Vite 5 to verify the Svelte 4 lower bound. VitePress uses patched Vite 6.4.5
 and maintained examples use patched Vite 8.3.4.
 
+## Expanded 0.4 review on 2026-10-24
+
+The final development audit identified three additional advisories. They are fixed
+in maintained examples without adding audit exceptions:
+
+- The private SvelteKit export app now uses Kit 3.1.0 and adapter-node 6.0.0 for
+  [enhanced-form redirect](https://github.com/advisories/GHSA-pfhg-q3qv-9q6r)
+  and [prerendered cache-control injection](https://github.com/advisories/GHSA-27mw-82g8-phjj)
+  fixes. Following the [Kit 3 migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3),
+  its adapter configuration moves to the Vite plugin, its tsconfig extends
+  `$app/tsconfig`, and only this private example moves to TypeScript 6. It requires
+  Node 22.17+. The old Kit 2 cookie override is removed so Kit 3 receives its
+  required cookie 2.x API. Public grid framework peer ranges and the root TypeScript toolchain
+  are unchanged.
+- A version-scoped override upgrades serialize-javascript 7.x below 7.1.3 to 7.1.3
+  for [serialized function-body escaping](https://github.com/advisories/GHSA-m5mm-p8h7-m29v).
+  This removes the affected Nuxt build-tool dependency path.
+
+The pre-existing dated compatibility/upstream exceptions remain visible in the
+policy. A passing policy audit means no unreviewed blocked paths; it does not mean
+the raw audit contains no advisories.
+
 ## Reporting
 
 Report vulnerabilities through the private GitHub channel described in

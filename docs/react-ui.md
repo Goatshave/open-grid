@@ -126,7 +126,7 @@ surface without changing row or column virtualization semantics.
 - Pass `getRowClassName` to derive a product class from the core `Row`; the first-publish example marks non-grouped high-risk rows and changes `--og-surface` through semantic theme tokens so the treatment follows light and dark modes.
 - Pass `getHeaderClassName` to derive a product class from the core `HeaderContext`, including the grid, column, and rendered header. The first-publish example marks the risk header without replacing its sorting, pinning, resizing, grouping, or menu behavior.
 - Pass `getCellClassName` to derive a class from the core `CellContext`, including the grid, row, column, and value. The first-publish example combines it with `className` and assigns explicit Paid, Sent, Draft, Overdue, low, medium, and high classes to render text-preserving semantic markers with light, dark, and forced-colors treatment while retaining the standard editor, selection, focus, and virtualization behavior. Shared smoke metadata binds those row/value/class expectations to automated and manual release evidence.
-- Pass `columnFilterControls` to render a per-column search row. Inputs update core `columnFilters`, reset the page index, follow pinned and virtualized columns, and contribute to shared WAI-ARIA row coordinates.
+- Pass `columnFilterControls` to render per-column text, numeric/calendar range, and set controls according to column metadata; see [typed filters](filters). Inputs update core `columnFilters`, reset the page index, follow pinned and virtualized columns, and contribute to shared WAI-ARIA row coordinates.
 - Pass `paginationControls` to render first/previous/next/last navigation, a live page status, and a rows-per-page select. Configure the select with `pageSizeOptions`; page transitions use bounded core APIs and reset the virtual scroller to the first row.
 - Pass `loading` to mark the grid busy and show an accessible overlay while preserving the current rows. Use `loadingState` for product-owned status content.
 - Pass `error` to supersede loading and show an accessible alert while preserving the current rows. Use `errorState` for product-owned content and `onRetry` to render and handle the retry button.
@@ -242,3 +242,5 @@ surface without changing row or column virtualization semantics.
 ## Styling
 
 The component uses semantic CSS variables from `@open-grid/theme`. Product apps can override surface, border, text, accent, danger, sizing, radius, shadow, and motion variables on the `.og-grid` root through CSS or the `style` prop. `@open-grid/theme/tokens` provides `createOpenGridThemeStyle` for validated product-owned values; cast its framework-neutral result to React `CSSProperties`. Set `data-og-theme="dark"` on the grid or an ancestor for bundled dark defaults; the surrounding product shell remains application-owned.
+
+For 0.4 custom edit components, see the shared [custom editor contract](custom-rendering#custom-editors-0-4-development).

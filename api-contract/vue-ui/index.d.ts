@@ -1,7 +1,7 @@
 import * as vue from 'vue';
 import { DefineComponent, PropType, VNodeChild, VNode } from 'vue';
-import { GridOptions, Grid, Row, Column, HeaderContext, CellContext, CellFillOptions, ClipboardPasteResult, ClipboardPasteOptions, ExportFile } from '@open-grid/core';
-export { AccessorColumnOptions, AccessorFnColumnDef, AccessorKey, AccessorKeyColumnDef, AnyColumnDef, CellContext, CellCoordinate, CellEditEvent, CellEditEventParams, CellEditHistoryAction, CellEditHistoryState, CellEditOption, CellEditParserContext, CellEditPhase, CellEditValidationContext, CellEditValidationResult, CellEditValidationState, CellEditingState, CellFillOptions, CellInteractionEvent, CellInteractionEventParams, CellRange, CellRangeSelectionState, ClipboardCellContext, ClipboardCopyOptions, ClipboardPasteCellContext, ClipboardPasteCommittedCell, ClipboardPasteOptions, ClipboardPasteResult, ClipboardPasteSkippedCell, ClipboardPasteSkippedReason, ClipboardPasteValidationError, Column, ColumnDef, ColumnFilter, ColumnFiltersState, ColumnHelper, ColumnId, ColumnMovePosition, ColumnOrderState, ColumnPinningPosition, ColumnPinningState, ColumnResizeEvent, ColumnResizeEventParams, ColumnResizePhase, ColumnSizingState, ColumnVisibilityState, DisplayColumnDef, ExpandedState, ExportFile, ExportFileOptions, FilterFn, FitColumnsToWidthOptions, Grid, GridCacheDiagnostics, GridCacheDiagnosticsEntry, GridCacheKey, GridOptions, GridState, GroupColumnDef, GroupingState, Header, HeaderContext, HeaderGroup, MoveFocusOptions, PaginationState, Row, RowId, RowInteractionEvent, RowInteractionEventParams, RowModel, RowSelectionCleanupScope, RowSelectionState, SortFn, SortingRule, SortingState, Updater, fitColumnsToWidth } from '@open-grid/core';
+import { GridOptions, Grid, Row, Column, HeaderContext, CellEditorContext, CellContext, CellFillOptions, ClipboardPasteResult, ClipboardPasteOptions, ExportFile } from '@open-grid/core';
+export { AccessorColumnOptions, AccessorFnColumnDef, AccessorKey, AccessorKeyColumnDef, AnyColumnDef, CellContext, CellCoordinate, CellEditEvent, CellEditEventParams, CellEditHistoryAction, CellEditHistoryState, CellEditOption, CellEditParserContext, CellEditPhase, CellEditValidationContext, CellEditValidationResult, CellEditValidationState, CellEditingState, CellEditorContext, CellFillOptions, CellInteractionEvent, CellInteractionEventParams, CellRange, CellRangeSelectionState, ClipboardCellContext, ClipboardCopyOptions, ClipboardPasteCellContext, ClipboardPasteCommittedCell, ClipboardPasteOptions, ClipboardPasteResult, ClipboardPasteSkippedCell, ClipboardPasteSkippedReason, ClipboardPasteValidationError, Column, ColumnDef, ColumnFilter, ColumnFiltersState, ColumnHelper, ColumnId, ColumnMovePosition, ColumnOrderState, ColumnPinningPosition, ColumnPinningState, ColumnResizeEvent, ColumnResizeEventParams, ColumnResizePhase, ColumnSizingState, ColumnVisibilityState, DisplayColumnDef, ExpandedState, ExportFile, ExportFileOptions, FilterFn, FitColumnsToWidthOptions, Grid, GridCacheDiagnostics, GridCacheDiagnosticsEntry, GridCacheKey, GridOptions, GridState, GroupColumnDef, GroupingState, Header, HeaderContext, HeaderGroup, MoveFocusOptions, PaginationState, Row, RowId, RowInteractionEvent, RowInteractionEventParams, RowModel, RowSelectionCleanupScope, RowSelectionState, SortFn, SortingRule, SortingState, Updater, fitColumnsToWidth } from '@open-grid/core';
 import { ColumnVirtualizationPrimitiveOptions, GridLocalizationOverrides, GridDensity, RowVirtualizationPrimitiveOptions, GridLocalization } from '@open-grid/primitives';
 export { DEFAULT_GRID_LOCALIZATION, GRID_PREFERENCES_VERSION, GridDensity, GridLocalization, GridLocalizationOverrides, GridPreferences, GridPreferencesMigration, GridPreferencesOptions, GridPreferencesParseOptions, GridPreferencesState, GridPreferencesStorageEnvironmentLike, GridPreferencesStorageLike, createGridLocalization, createGridPreferences, getBrowserGridPreferencesStorage, migrateGridPreferences, parseGridPreferences, readGridPreferences, removeGridPreferences, serializeGridPreferences, writeGridPreferences } from '@open-grid/primitives';
 export { createColumnHelper, useGrid } from '@open-grid/vue';
@@ -30,6 +30,7 @@ interface DataGridProps<TData> {
     renderErrorState?: (context: DataGridErrorRenderContext<TData>) => VNodeChild;
     renderHeader?: (context: HeaderContext<TData, unknown>) => VNodeChild;
     renderCell?: (context: CellContext<TData, unknown>) => VNodeChild;
+    renderEditor?: (context: CellEditorContext<TData>) => VNodeChild;
     onGridReady?: GridReadyHandler<TData>;
     getRowClassName?: (row: Row<TData>) => string | undefined;
     getHeaderClassName?: (context: HeaderContext<TData, unknown>) => string | undefined;
@@ -150,6 +151,10 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
     };
     renderHeader: {
         type: PropType<(context: HeaderContext<unknown, unknown>) => VNodeChild>;
+        default: undefined;
+    };
+    renderEditor: {
+        type: PropType<(context: CellEditorContext<unknown>) => VNodeChild>;
         default: undefined;
     };
     renderCell: {
@@ -307,6 +312,10 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
         type: PropType<(context: HeaderContext<unknown, unknown>) => VNodeChild>;
         default: undefined;
     };
+    renderEditor: {
+        type: PropType<(context: CellEditorContext<unknown>) => VNodeChild>;
+        default: undefined;
+    };
     renderCell: {
         type: PropType<(context: CellContext<unknown, unknown>) => VNodeChild>;
         default: undefined;
@@ -418,6 +427,7 @@ declare const DataGrid: DefineComponent<vue.ExtractPropTypes<{
     renderErrorState: (context: DataGridErrorRenderContext<unknown>) => VNodeChild;
     renderHeader: (context: HeaderContext<unknown, unknown>) => VNodeChild;
     renderCell: (context: CellContext<unknown, unknown>) => VNodeChild;
+    renderEditor: (context: CellEditorContext<unknown>) => VNodeChild;
     onGridReady: GridReadyHandler<unknown>;
     getRowClassName: (row: Row<unknown>) => string | undefined;
     getHeaderClassName: (context: HeaderContext<unknown, unknown>) => string | undefined;
