@@ -56,6 +56,7 @@ export default defineConfig({
           { text: "Packages", link: "/packages" },
           { text: "Localization", link: "/localization" },
           { text: "Custom rendering", link: "/custom-rendering" },
+          { text: "Typed filters", link: "/filters" },
           { text: "Product composition", link: "/composition" },
           { text: "Server data", link: "/server-data" },
           { text: "Persisted preferences", link: "/preferences" },

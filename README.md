@@ -116,6 +116,16 @@ examples/svelte-server-tree     Svelte reference grid with server-owned lazy tre
 examples/svelte-grouped         Styled Svelte reference grid with grouped headers, pinned columns, quick and column filters, page row-selection controls, pagination, loading, and error/retry controls, design-system-composable header action menus, product-owned column management, and virtualization
 ```
 
+## 0.4 development
+
+The working 0.4 scope adds IME-safe input, custom editors, serializable numeric/calendar
+and set filters, ordered server saves, unknown-total pagination, and query-scoped
+remote selection with idempotent bulk-action examples. These additions are not yet
+published in the 0.3 packages. See [the accepted scope](docs/reviews/0.4-workflow-review.md),
+[custom editors](docs/custom-rendering.md), [typed filters](docs/filters.md), and
+[server integration](docs/server-data.md). Cross-framework integration is checked in
+Chromium, Firefox, and WebKit with `pnpm e2e:integration`.
+
 ## Current Foundation
 
 The first implementation includes:

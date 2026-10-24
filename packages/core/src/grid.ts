@@ -1236,6 +1236,8 @@ export function createGrid<TData>(options: GridOptions<TData>): Grid<TData> {
       if (typeof currentOptions.pageCount === "number") {
         return normalizePaginationPageCount(currentOptions.pageCount);
       }
+      if (currentOptions.manualPagination && currentOptions.rowCount === undefined &&
+        typeof currentOptions.hasNextPage === "boolean") return -1;
 
       return normalizePaginationPageCount(
         Math.ceil(grid.getRowCount() / normalizePaginationPageSize(resolvedState.pagination.pageSize)),
@@ -1245,14 +1247,17 @@ export function createGrid<TData>(options: GridOptions<TData>): Grid<TData> {
       typeof currentOptions.rowCount === "number"
         ? normalizePaginationRowCount(currentOptions.rowCount)
         : getPrePagination().rows.length,
-    getCanPreviousPage: () => normalizePaginationPageIndex(resolvedState.pagination.pageIndex) > 0,
-    getCanNextPage: () => normalizePaginationPageIndex(resolvedState.pagination.pageIndex) < grid.getPageCount() - 1,
+    getCanPreviousPage: () => normalizePaginationPageIndex(resolvedState.pagination.pageIndex) > 0 &&
+      (grid.getPageCount() !== -1 || currentOptions.hasPreviousPage !== false),
+    getCanNextPage: () => grid.getPageCount() === -1 ? currentOptions.hasNextPage === true :
+      normalizePaginationPageIndex(resolvedState.pagination.pageIndex) < grid.getPageCount() - 1,
     firstPage: () =>
       updatePartialState<PaginationState>("pagination", (previous) => paginationReducers.setPageIndex(previous, 0)),
     previousPage: () =>
       updatePartialState<PaginationState>("pagination", (previous) =>
         paginationReducers.setPageIndex(
           previous,
+          grid.getPageCount() === -1 ? (grid.getCanPreviousPage() ? Math.max(0, normalizePaginationPageIndex(previous.pageIndex) - 1) : normalizePaginationPageIndex(previous.pageIndex)) :
           Math.max(0, Math.min(grid.getPageCount() - 1, normalizePaginationPageIndex(previous.pageIndex)) - 1),
         ),
       ),
@@ -1260,12 +1265,13 @@ export function createGrid<TData>(options: GridOptions<TData>): Grid<TData> {
       updatePartialState<PaginationState>("pagination", (previous) =>
         paginationReducers.setPageIndex(
           previous,
+          grid.getPageCount() === -1 ? normalizePaginationPageIndex(previous.pageIndex) + (grid.getCanNextPage() ? 1 : 0) :
           Math.min(grid.getPageCount() - 1, normalizePaginationPageIndex(previous.pageIndex) + 1),
         ),
       ),
     lastPage: () =>
       updatePartialState<PaginationState>("pagination", (previous) =>
-        paginationReducers.setPageIndex(previous, grid.getPageCount() - 1),
+        paginationReducers.setPageIndex(previous, grid.getPageCount() === -1 ? normalizePaginationPageIndex(previous.pageIndex) : grid.getPageCount() - 1),
       ),
     setSorting: (updater: Updater<SortingState>) =>
       updatePartialState<SortingState>("sorting", (previous) => sortingReducers.set(previous, updater)),

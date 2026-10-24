@@ -40,8 +40,10 @@ import {
   TriangleAlert,
   Undo2,
 } from "lucide-react";
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
+
+import { createExampleCellEditController } from "@open-grid/example-shared-server/cell-edit-client";
 
 interface Invoice extends Record<string, string | number> {
   id: string;
@@ -87,7 +89,7 @@ interface ColumnManagementItem {
 }
 
 interface ServerEditStatus {
-  phase: "idle" | "pending" | "committed";
+  phase: "idle" | "pending" | "committed" | "error";
   message: string;
 }
 
@@ -603,51 +605,22 @@ function App() {
     writeGridPreferences(gridPreferencesStorage, gridPreferencesKey, gridState, nextDensity, gridPreferencesOptions);
   };
 
-  const commitServerOwnedCellEdit = (event: CellEditEvent<InvoiceTreeRow>) => {
-    if (event.phase !== "commit" || event.defaultPrevented) {
-      return;
-    }
-
-    const value = typeof event.value === "number" ? event.value : String(event.value ?? "");
-
-    if (event.column.id === "customer" && isKeyboardPasteCommit(event)) {
-      event.preventDefault();
-      setServerEditStatus({ phase: "pending", message: `Server paste: saving ${event.row.id} ${event.column.id}` });
-
-      void commitInvoiceEditToServer(event.row.id, event.column.id, value).then(() => {
-        setRows((previousRows) => previousRows.map((row) => (row.id === event.row.id ? { ...row, [event.column.id]: value } : row)));
-        setGridState((previous) => ({
-          ...previous,
-          focusedCell: { rowId: event.row.id, columnId: event.column.id },
-          editingCell: null,
-          cellSelectionRange: null,
-        }));
-        setServerEditStatus({ phase: "committed", message: `Server paste: saved ${event.row.id} ${event.column.id} = ${value}` });
-      });
-      return;
-    }
-
-    if (event.column.id !== "customer" || !isDirectEnterEditCommit(event)) {
-      setRows((previousRows) => previousRows.map((row) => (row.id === event.row.id ? { ...row, [event.column.id]: value } : row)));
-      return;
-    }
-
-    event.preventDefault();
-    setServerEditStatus({ phase: "pending", message: `Server edit: saving ${event.row.id} ${event.column.id}` });
-
-    void commitInvoiceEditToServer(event.row.id, event.column.id, value).then(() => {
-      setRows((previousRows) => previousRows.map((row) => (row.id === event.row.id ? { ...row, [event.column.id]: value } : row)));
-      setGridState((previous) => ({
-        ...previous,
-        focusedCell: { rowId: event.row.id, columnId: event.column.id },
-        editingCell: null,
-      }));
-      setServerEditStatus({ phase: "committed", message: `Server edit: saved ${event.row.id} ${event.column.id} = ${value}` });
-    });
-  };
+  const cellEdits = useRef<ReturnType<typeof createExampleCellEditController<InvoiceTreeRow>> | null>(null);
+  useEffect(() => () => { cellEdits.current?.dispose(); cellEdits.current = null; }, []);
+  const getCellEdits = () => cellEdits.current ??= createExampleCellEditController<InvoiceTreeRow>({
+    getMode: (event) => event.column.id !== "customer" ? null : isKeyboardPasteCommit(event) ? "paste" : isDirectEnterEditCommit(event) ? "edit" : null,
+    save: ({ rowId, columnId, value }) => commitInvoiceEditToServer(rowId, columnId, value),
+    apply: ({ rowId, columnId, value }) => setRows((previous) => previous.map((row) => row.id === rowId ? { ...row, [columnId]: value } : row)),
+    finish: ({ rowId, columnId }, mode) => setGridState((previous) => {
+      if (previous.focusedCell?.rowId !== rowId || previous.focusedCell.columnId !== columnId) return previous;
+      return { ...previous, editingCell: null, ...(mode === "paste" ? { cellSelectionRange: null } : {}) };
+    }),
+    status: (message, phase) => setServerEditStatus({ message, phase }),
+  });
+  const commitServerOwnedCellEdit = (event: CellEditEvent<InvoiceTreeRow>) => getCellEdits().handle(event);
 
   return (
-    <main className="app-shell" data-og-theme={productTheme}>
+    <main className="app-shell" data-og-theme={productTheme} onInputCapture={(event) => { if (event.target instanceof Element && event.target.closest(".og-grid__cell-editor")) cellEdits.current?.invalidateEditor(); }}>
       <section className="toolbar" aria-label="Invoice grid summary">
         <div className="toolbar__identity">
           <span className="product-mark" aria-hidden="true"><TableProperties size={19} /></span>

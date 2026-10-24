@@ -1,4 +1,4 @@
-import type { CellContext, CellFillOptions, ClipboardPasteOptions, ClipboardPasteResult, Column, Grid, GridOptions, HeaderContext, Row } from "@open-grid/core";
+import type { CellContext, CellEditorContext, CellFillOptions, ClipboardPasteOptions, ClipboardPasteResult, Column, Grid, GridOptions, HeaderContext, Row } from "@open-grid/core";
 import type { ColumnVirtualizationPrimitiveOptions, GridDensity, GridLocalizationOverrides, RowVirtualizationPrimitiveOptions } from "@open-grid/primitives";
 import type { SvelteComponentTyped } from "svelte";
 
@@ -17,6 +17,7 @@ export interface DataGridProps<TData = unknown> {
   renderLoadingState?: (context: DataGridRenderContext<TData>) => SvelteDataGridRenderValue<DataGridRenderContext<TData>>;
   renderErrorState?: (context: DataGridErrorRenderContext<TData>) => SvelteDataGridRenderValue<DataGridErrorRenderContext<TData>>;
   renderHeader?: (context: HeaderContext<TData, unknown>) => SvelteDataGridRenderValue<HeaderContext<TData, unknown>>;
+  renderEditor?: (context: CellEditorContext<TData>) => SvelteDataGridRenderValue<CellEditorContext<TData>>;
   renderCell?: (context: CellContext<TData, unknown>) => SvelteDataGridRenderValue<CellContext<TData, unknown>>;
   onGridReady?: GridReadyHandler<TData>;
   getRowClassName?: (row: Row<TData>) => string | undefined;

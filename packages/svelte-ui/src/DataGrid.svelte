@@ -1,6 +1,8 @@
 <script lang="ts">
+  import ColumnFilter from "./ColumnFilter.svelte";
   import type {
     CellContext,
+  CellEditorContext,
     CellCoordinate,
     CellFillOptions,
     ClipboardPasteOptions,
@@ -52,8 +54,6 @@
     focusElement,
     getColumnById,
     getColumnFilterCellProps,
-    getColumnFilterInputProps,
-    getColumnFilterText,
     getColumnIndexById,
     getColumnLayoutById,
     getColumnLayoutTotalWidth,
@@ -102,7 +102,6 @@
     getGridProps,
     getGridDensityProps,
     getGridDensityRowHeight,
-    getNextColumnFilters,
     getPaginationButtonProps,
     getPaginationButtonText,
     getPaginationPageSizeOptions,
@@ -316,6 +315,7 @@
   export let renderLoadingState: ((context: DataGridRenderContext<unknown>) => SvelteDataGridRenderValue<DataGridRenderContext<unknown>>) | undefined = undefined;
   export let renderErrorState: ((context: DataGridErrorRenderContext<unknown>) => SvelteDataGridRenderValue<DataGridErrorRenderContext<unknown>>) | undefined = undefined;
   export let renderHeader: ((context: HeaderContext<unknown, unknown>) => SvelteDataGridRenderValue<HeaderContext<unknown, unknown>>) | undefined = undefined;
+  export let renderEditor: ((context: CellEditorContext<unknown>) => SvelteDataGridRenderValue<CellEditorContext<unknown>>) | undefined = undefined;
   export let renderCell: ((context: CellContext<unknown, unknown>) => SvelteDataGridRenderValue<CellContext<unknown, unknown>>) | undefined = undefined;
   export let onGridReady: ((grid: Grid<unknown>) => void | (() => void)) | undefined = undefined;
   export let getRowClassName: ((row: Row<unknown>) => string | undefined) | undefined = undefined;
@@ -422,6 +422,7 @@
   let renderContext: DataGridRenderContext<unknown> = { grid, rows: [], visibleColumns: [] };
   let canPreviousPage = grid.getCanPreviousPage();
   let canNextPage = grid.getCanNextPage();
+  let unknownPageCount = grid.getPageCount() === -1;
   let allPageRowsSelected = rowSelectionControls ? grid.getIsAllPageRowsSelected() : false;
   let somePageRowsSelected = rowSelectionControls ? grid.getIsSomePageRowsSelected() : false;
   let selectedRowCount = rowSelectionControls ? grid.getSelectedRowModel().rows.length : 0;
@@ -451,9 +452,10 @@
     ...(densitySizingEnabled ? getGridDensityProps(resolvedDensity) : {}),
   });
   $: resolvedPageSizeOptions = ($state.pagination.pageSize, pageSizeOptions, getPaginationPageSizeOptions(pageSizeOptions, $state.pagination.pageSize));
-  $: paginationPageText = ($state.pagination, resolvedLocalization, getPaginationPageText(grid, resolvedLocalization));
-  $: canPreviousPage = ($state.pagination.pageIndex, grid.getCanPreviousPage());
-  $: canNextPage = ($state.pagination, grid.getCanNextPage());
+  $: paginationPageText = (options, $state.pagination, resolvedLocalization, getPaginationPageText(grid, resolvedLocalization));
+  $: canPreviousPage = (options, $state.pagination.pageIndex, grid.getCanPreviousPage());
+  $: canNextPage = (options, $state.pagination, grid.getCanNextPage());
+  $: unknownPageCount = (options, $state.pagination, grid.getPageCount() === -1);
   $: allPageRowsSelected = ($state.rowSelection, allRows, rowSelectionControls ? grid.getIsAllPageRowsSelected() : false);
   $: somePageRowsSelected = ($state.rowSelection, allRows, rowSelectionControls ? grid.getIsSomePageRowsSelected() : false);
   $: selectedRowCount = ($state.rowSelection, allRows, rowSelectionControls ? grid.getSelectedRowModel().rows.length : 0);
@@ -682,14 +684,6 @@
   const getColumnLabel = (column: Column<unknown, unknown>) => {
     return getColumnHeaderText(column);
   };
-  const handleColumnFilterInput = (column: Column<unknown, unknown>, event: Event) => {
-    const value = event.currentTarget instanceof HTMLInputElement ? event.currentTarget.value : "";
-    grid.setState((previous) => ({
-      ...previous,
-      columnFilters: getNextColumnFilters(previous.columnFilters, column.id, value),
-      pagination: { ...previous.pagination, pageIndex: 0 },
-    }));
-  };
   const resetPaginationScroll = () => {
     if (scrollerElement) {
       scrollElementToPosition(scrollerElement, { scrollTop: 0, scrollLeft: scrollerElement.scrollLeft });
@@ -731,6 +725,27 @@
   const getCellContent = (row: Row<unknown>, column: Column<unknown, unknown>): unknown => {
     const context = { grid, row, column, value: row.getValue(column.id) } as CellContext<unknown, unknown>;
     return renderCell?.(context) ?? column.columnDef.cell?.(context) ?? getCellValue(row, column);
+  };
+  const getEditorContent = (row: Row<unknown>, column: Column<unknown, unknown>) => {
+    const session = grid.getState().editingCell;
+    const isActive = () => grid.getState().editingCell === session && grid.getIsCellEditing(row.id, column.id);
+    return renderEditor?.({
+    grid, row, column, value: row.getValue(column.id), validationMessage: editValidationMessage, isActive,
+    commit: (value, sourceEvent) => {
+      if (!isActive()) return null;
+      const result = grid.commitCellEdit(typeof value === "string" ? parseCellEditValue(grid, row, column, value) : value, sourceEvent);
+      editValidationMessage = getCellEditValidationMessage(result);
+      if (result && !result.defaultPrevented) scheduleFocusedCellRestore();
+      return result;
+    },
+    cancel: (sourceEvent) => {
+      if (!isActive()) return null;
+      const result = grid.cancelCellEdit(sourceEvent);
+      editValidationMessage = null;
+      if (result && !result.defaultPrevented) scheduleFocusedCellRestore();
+      return result;
+    },
+    });
   };
   const getGroupLabel = (row: Row<unknown>, column: Column<unknown, unknown>) =>
     getGroupRowLabel(row, column, { fallback: getCellValue(row, column) }, resolvedLocalization);
@@ -1882,14 +1897,7 @@
                 style={getColumnStyle(layout.size, layout, $state.columnSizing, beforeSpacerSize, afterSpacerSize)}
               >
                 {#if column.getCanFilter()}
-                  <input
-                    {...getColumnFilterInputProps(column, {
-                      label: getColumnHeaderText(column),
-                      value: getColumnFilterText($state.columnFilters, column.id),
-                    }, resolvedLocalization)}
-                    class="og-grid__filter-input"
-                    on:input={(event) => handleColumnFilterInput(column, event)}
-                  />
+                  <ColumnFilter {grid} {column} filters={$state.columnFilters} localization={resolvedLocalization} />
                 {/if}
               </div>
             {/each}
@@ -1963,7 +1971,7 @@
                     {...getCellLayoutProps({ invalid: Boolean(editing && editValidationMessage), pinnedEdge: layout.pinnedEdge })}
                     class={["og-grid__cell", getCellClassName?.({ grid, row, column, value: row.getValue(column.id) })].filter(Boolean).join(" ")}
                     role="gridcell"
-                    tabindex={isCellCoordinateEqual($state.focusedCell, { rowId: row.id, columnId: column.id }) ? 0 : -1}
+                    tabindex={!editing && isCellCoordinateEqual($state.focusedCell, { rowId: row.id, columnId: column.id }) ? 0 : -1}
                     style={getColumnStyle(layout.size, layout, $state.columnSizing, beforeSpacerSize, afterSpacerSize)}
                     on:focus={() => grid.setFocusedCell({ rowId: row.id, columnId: column.id })}
                     on:pointerdown={(event) => handleCellPointerDown({ rowId: row.id, columnId: column.id }, event)}
@@ -1980,7 +1988,13 @@
                       ></span>
                     {/if}
                     {#if editing}
-                      {#if column.columnDef.editOptions}
+                      {@const customEditor = (editValidationMessage, getEditorContent(row, column))}
+                      {#if customEditor != null}
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <div class="og-grid__custom-editor" on:keydown|stopPropagation on:click|stopPropagation on:dblclick|stopPropagation on:pointerdown|stopPropagation>
+                          <RenderValue value={customEditor} />
+                        </div>
+                      {:else if column.columnDef.editOptions}
                         <select
                           {...getCellEditorProps(column, { invalid: Boolean(editValidationMessage) }, resolvedLocalization)}
                           use:focusEditor
@@ -2130,11 +2144,11 @@
 {#if paginationControls}
   <nav {...getPaginationProps(resolvedLocalization)} class="og-grid__pagination">
     <div class="og-grid__pagination-buttons">
-      <button {...getPaginationButtonProps({ action: "first", disabled: !canPreviousPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.firstPage())}>{getPaginationButtonText("first")}</button>
-      <button {...getPaginationButtonProps({ action: "previous", disabled: !canPreviousPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.previousPage())}>{getPaginationButtonText("previous")}</button>
+      <button {...getPaginationButtonProps({ action: "first", disabled: loading || !canPreviousPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.firstPage())}>{getPaginationButtonText("first")}</button>
+      <button {...getPaginationButtonProps({ action: "previous", disabled: loading || !canPreviousPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.previousPage())}>{getPaginationButtonText("previous")}</button>
       <span {...getPaginationStatusProps()} class="og-grid__pagination-status">{paginationPageText}</span>
-      <button {...getPaginationButtonProps({ action: "next", disabled: !canNextPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.nextPage())}>{getPaginationButtonText("next")}</button>
-      <button {...getPaginationButtonProps({ action: "last", disabled: !canNextPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.lastPage())}>{getPaginationButtonText("last")}</button>
+      <button {...getPaginationButtonProps({ action: "next", disabled: loading || !canNextPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.nextPage())}>{getPaginationButtonText("next")}</button>
+      <button {...getPaginationButtonProps({ action: "last", disabled: loading || unknownPageCount || !canNextPage }, resolvedLocalization)} class="og-grid__pagination-button" on:click={() => runPaginationAction(() => grid.lastPage())}>{getPaginationButtonText("last")}</button>
     </div>
     <select {...getPaginationPageSizeSelectProps($state.pagination.pageSize, resolvedLocalization)} class="og-grid__pagination-size" on:change={handlePageSizeChange}>
       {#each resolvedPageSizeOptions as pageSize (pageSize)}

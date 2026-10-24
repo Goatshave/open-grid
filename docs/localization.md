@@ -68,3 +68,11 @@ mutate global state, so different grids can use different languages safely durin
 `DEFAULT_GRID_LOCALIZATION` contains the complete English contract.
 `createGridLocalization(overrides)` returns a frozen resolved dictionary and leaves
 the default dictionary unchanged.
+
+## 0.4 filter and pagination labels
+
+`pageStatusUnknown(page)` labels pagination without an exact total. Typed filter
+controls use `filterRangeStartLabel(label)`, `filterRangeEndLabel(label)`, and
+`clearColumnFilterLabel(label)` alongside existing `filterColumnLabel`, `clear`,
+and option labels. The new callbacks are optional in complete localization objects;
+instance overrides merge with defaults. See [typed filters](filters).

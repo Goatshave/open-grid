@@ -1,16 +1,16 @@
 {
   "schemaVersion": 2,
   "applications": [
-    { "id": "package-core", "distDirectory": "packages/core/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 24000 } },
-    { "id": "package-primitives", "distDirectory": "packages/primitives/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 15000 } },
+    { "id": "package-core", "distDirectory": "packages/core/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 27000 } },
+    { "id": "package-primitives", "distDirectory": "packages/primitives/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 16000 } },
     { "id": "package-virtual", "distDirectory": "packages/virtual/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 3500 } },
     { "id": "package-theme", "distDirectory": "packages/theme/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 2000 } },
     { "id": "package-react", "distDirectory": "packages/react/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 768 } },
-    { "id": "package-react-ui", "distDirectory": "packages/react-ui/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 22800 } },
+    { "id": "package-react-ui", "distDirectory": "packages/react-ui/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 24000 } },
     { "id": "package-vue", "distDirectory": "packages/vue/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 640 } },
-    { "id": "package-vue-ui", "distDirectory": "packages/vue-ui/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 17500 } },
+    { "id": "package-vue-ui", "distDirectory": "packages/vue-ui/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 18500 } },
     { "id": "package-svelte", "distDirectory": "packages/svelte/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 700 } },
-    { "id": "package-svelte-ui", "distDirectory": "packages/svelte-ui/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 21000 } },
+    { "id": "package-svelte-ui", "distDirectory": "packages/svelte-ui/dist", "includeExtensions": [".js", ".css", ".svelte"], "limits": { "totalGzipBytes": 23000 } },
     {
       "id": "open-grid-react",
       "distDirectory": "benchmarks/open-grid-react/dist",

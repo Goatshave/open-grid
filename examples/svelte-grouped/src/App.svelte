@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
+  import { createExampleCellEditController } from "@open-grid/example-shared-server/cell-edit-client";
   import { createGrid, type Grid, type Row } from "@open-grid/core";
   import { createOpenGridThemeCssText } from "@open-grid/theme/tokens";
   import {
@@ -338,49 +340,20 @@
     return typeof keyboardEvent?.key === "string" && keyboardEvent.key.toLowerCase() === "v" && (keyboardEvent.metaKey === true || keyboardEvent.ctrlKey === true);
   }
 
-  function commitServerOwnedCellEdit(event: CellEditEvent<Forecast>) {
-    if (event.phase !== "commit" || event.defaultPrevented) {
-      return;
-    }
-
-    const value = typeof event.value === "number" ? event.value : String(event.value ?? "");
-
-    if (event.column.id === "city" && isKeyboardPasteCommit(event)) {
-      event.preventDefault();
-      serverEditStatus = `Server paste: saving ${event.row.id} ${event.column.id}`;
-
-      void commitForecastEditToServer(event.row.id, event.column.id, value).then(() => {
-        rows = rows.map((row) => (row.id === event.row.id ? { ...row, [event.column.id]: value } : row));
-        managedGridState = {
-          ...managedGridState,
-          focusedCell: { rowId: event.row.id, columnId: event.column.id },
-          editingCell: null,
-          cellSelectionRange: null,
-        };
-        serverEditStatus = `Server paste: saved ${event.row.id} ${event.column.id} = ${value}`;
-        gridKey += 1;
-      });
-      return;
-    }
-
-    if (event.column.id !== "city" || !isDirectEnterEditCommit(event)) {
-      rows = rows.map((row) => (row.id === event.row.id ? { ...row, [event.column.id]: value } : row));
-      return;
-    }
-
-    event.preventDefault();
-    serverEditStatus = `Server edit: saving ${event.row.id} ${event.column.id}`;
-
-    void commitForecastEditToServer(event.row.id, event.column.id, value).then(() => {
-      rows = rows.map((row) => (row.id === event.row.id ? { ...row, [event.column.id]: value } : row));
-      managedGridState = {
-        ...managedGridState,
-        focusedCell: { rowId: event.row.id, columnId: event.column.id },
-        editingCell: null,
-      };
-      serverEditStatus = `Server edit: saved ${event.row.id} ${event.column.id} = ${value}`;
-      gridKey += 1;
-    });
+  const cellEdits = createExampleCellEditController<Forecast>({
+    getMode: (event) => event.column.id !== "city" ? null : isKeyboardPasteCommit(event) ? "paste" : isDirectEnterEditCommit(event) ? "edit" : null,
+    save: ({ rowId, columnId, value }) => commitForecastEditToServer(rowId, columnId, value),
+    apply: ({ rowId, columnId, value }) => { rows = rows.map((row) => row.id === rowId ? { ...row, [columnId]: value } : row); },
+    finish: ({ rowId, columnId }, mode) => {
+      if (managedGridState.focusedCell?.rowId !== rowId || managedGridState.focusedCell.columnId !== columnId) return;
+      managedGridState = { ...managedGridState, editingCell: null, ...(mode === "paste" ? { cellSelectionRange: null } : {}) };
+    },
+    status: (message) => { serverEditStatus = message; },
+  });
+  onDestroy(() => cellEdits.dispose());
+  function commitServerOwnedCellEdit(event: CellEditEvent<Forecast>) { cellEdits.handle(event); }
+  function trackEditorInput(event: Event) {
+    if (event.target instanceof Element && event.target.closest(".og-grid__cell-editor")) cellEdits.invalidateEditor();
   }
 
   function toggleManagedColumn(columnId: string, visible: boolean) {
@@ -511,7 +484,7 @@
   }
 </script>
 
-<main class="app-shell" data-og-theme={productTheme}>
+<main class="app-shell" data-og-theme={productTheme} on:input|capture={trackEditorInput}>
   <section class="toolbar" aria-label="Forecast grid summary">
     <div class="toolbar__identity">
       <span class="product-mark" aria-hidden="true"><TableProperties size={19} /></span>

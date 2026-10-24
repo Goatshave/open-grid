@@ -2,7 +2,16 @@ export { createColumnHelper } from "./column-helper";
 export { fitColumnsToWidth } from "./column-fit";
 export { createExportFile, getExportFileExtension, getExportMimeType } from "./export";
 export { createGrid } from "./grid";
+export { createColumnFilterMatcher, isISOCalendarDate, isTypedColumnFilterValue } from "./column-filter";
+export type { ColumnFilterType, ColumnFilterOption, ColumnFilterOptionValue, NumberRangeFilter, DateRangeFilter, SetFilter, TypedColumnFilterValue } from "./column-filter";
 export { createServerRequestCoordinator } from "./server-request";
+export { createServerMutationCoordinator } from "./server-mutation";
+export { createServerSelection } from "./server-selection";
+export type { ServerSelection, ServerSelectionController } from "./server-selection";
+export type {
+  ServerMutationContext, ServerMutationCoordinator, ServerMutationCoordinatorOptions,
+  ServerMutationFailure, ServerMutationResult, ServerMutationState, ServerMutationStatus,
+} from "./server-mutation";
 export type {
   ServerRequestContext,
   ServerRequestCoordinator,
@@ -44,6 +53,7 @@ export type {
   AggregationFn,
   BuiltInAggregationFn,
   CellContext,
+  CellEditorContext,
   CellCoordinate,
   CellEditEvent,
   CellEditHistoryAction,

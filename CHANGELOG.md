@@ -4,6 +4,38 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Keep IME composition and composition-end keys out of grid edit, shortcut, and
+  navigation actions, including React native events and the legacy 229 signal.
+- Add typed custom editor contexts and `renderEditor` across React, Vue, and Svelte,
+  preserving parser/validation/server approval and fencing expired edit sessions.
+- Add serializable inclusive numeric/calendar ranges and exact set filters,
+  localized built-in controls, server matching, and custom-filter precedence.
+- Add query-scoped explicit/all-matching server selection with exclusions and
+  immutable request snapshots, plus idempotent bulk actions in the HTTP examples.
+- Require Chromium, Firefox, and WebKit integration regressions, including editor
+  draft/validation, typed filters, remote selection, and clipboard adapter routing.
+- Resolve new SvelteKit and serialize-javascript advisories in private export
+  examples; migrate only the SvelteKit app to Kit 3, adapter-node 6 and TypeScript 6
+  with Node 22.17+, retaining public grid peer compatibility.
+
+- Serialize server-owned reference cell saves per key and fence older completions,
+  editor cleanup, and focus changes so repeated saves preserve the newest intent.
+- Initialize React's built-in draft only for a new editing session, preserving
+  newer unsaved text when an earlier acknowledgement updates the row.
+- Add an opt-in framework-neutral mutation coordinator with retained acknowledgement
+  data, classified errors, idempotent retry identifiers, partial batch results, and
+  cleanup that does not claim to roll back active server writes.
+- Support unknown-total manual pagination through explicit next/previous availability,
+  accessible unknown totals, localized page-only labels, and disabled last-page actions.
+- Adopt actual local HTTP reads and revision-checked writes in the React/Vue/Svelte
+  server-list examples, including retained data after read failures, save retry,
+  conflict recovery, and partial paste recovery. Keep server export results current
+  with accepted edits and protect them from older read responses.
+- Add cross-framework save-order, draft/focus, HTTP recovery, and accessibility
+  regressions; remove the parent cell's extra tab stop while its editor is active.
+- Allocate measured 0.4 feature costs in the core, primitive, and renderer bundle
+  ceilings; record baseline/current byte counts in the performance policy and keep
+  all runtime workload budgets unchanged.
 - Update vulnerable development dependencies and enforce a path-scoped dependency
   security audit in CI, with dated exceptions for legacy compatibility fixtures
   and reviewed upstream issues.

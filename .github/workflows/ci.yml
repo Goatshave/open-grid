@@ -81,11 +81,26 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright Chromium
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
 
       - name: Run React, Vue, and Svelte smoke tests
         run: pnpm e2e:smoke
+
+      - name: Verify remote reads, edits, and recovery across frameworks
+        run: pnpm e2e:server-data
+
+      - name: Verify Chromium, Firefox, and WebKit integration workflows
+        run: pnpm e2e:integration
+
+      - name: Retain failed browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-failure-diagnostics
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
 
   required-gate:
     name: Required Gate

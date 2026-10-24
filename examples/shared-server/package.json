@@ -68,6 +68,22 @@
     "./framework-standalone-examples/shared": {
       "types": "./src/framework-standalone-examples/shared.ts",
       "import": "./src/framework-standalone-examples/shared.ts"
+    },
+    "./cell-edit-client": {
+      "types": "./src/cell-edit-client.ts",
+      "import": "./src/cell-edit-client.ts"
+    },
+    "./ticket-client": {
+      "types": "./src/ticket-client.ts",
+      "import": "./src/ticket-client.ts"
+    },
+    "./ticket-api": {
+      "types": "./src/ticket-api.ts",
+      "import": "./src/ticket-api.ts"
+    },
+    "./ticket-api-server": {
+      "types": "./src/ticket-api-server.ts",
+      "import": "./src/ticket-api-server.ts"
     }
   },
   "scripts": {

@@ -1135,3 +1135,7 @@
   padding: 0 16px;
   color: var(--og-text-muted);
 }
+
+.og-grid__filter-controls { display: flex; gap: 4px; align-items: center; width: 100%; min-width: 0; }
+.og-grid__filter-controls .og-grid__filter-input { min-width: 0; flex: 1; width: 0; }
+.og-grid__filter-controls button { min-height: 24px; font: inherit; }

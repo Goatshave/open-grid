@@ -1,4 +1,5 @@
 import type { CellCoordinate, Column, ColumnFiltersState, ColumnId, ColumnLayout, ColumnPinningPosition, FocusDirection, Grid, GridState, MoveFocusOptions, Row } from "@open-grid/core";
+import { isTypedColumnFilterValue, type TypedColumnFilterValue } from "@open-grid/core";
 
 export type PrimitiveProps = Record<string, string | number | boolean | undefined>;
 
@@ -17,6 +18,9 @@ export interface GridLocalization {
   retry: string;
   filterPlaceholder: string;
   filterColumnLabel: (label: string) => string;
+  filterRangeStartLabel?: (label: string) => string;
+  filterRangeEndLabel?: (label: string) => string;
+  clearColumnFilterLabel?: (label: string) => string;
   searchGridRowsLabel: string;
   searchRowsPlaceholder: string;
   searchAllRowsLabel: string;
@@ -43,6 +47,7 @@ export interface GridLocalization {
   paginationLabel: string;
   paginationActionLabel: (action: PaginationAction) => string;
   pageStatus: (page: number, pageCount: number) => string;
+  pageStatusUnknown?: (page: number) => string;
   rowsPerPageLabel: string;
   pageSizeOption: (pageSize: number) => string;
   resizeColumnLabel: (columnId: string) => string;
@@ -75,6 +80,9 @@ export const DEFAULT_GRID_LOCALIZATION: Readonly<GridLocalization> = Object.free
   retry: "Retry",
   filterPlaceholder: "Filter",
   filterColumnLabel: (label) => `Filter ${label}`,
+  filterRangeStartLabel: (label) => `${label} from`,
+  filterRangeEndLabel: (label) => `${label} to`,
+  clearColumnFilterLabel: (label) => `Clear ${label}`,
   searchGridRowsLabel: "Search grid rows",
   searchRowsPlaceholder: "Search rows",
   searchAllRowsLabel: "Search all rows",
@@ -101,6 +109,7 @@ export const DEFAULT_GRID_LOCALIZATION: Readonly<GridLocalization> = Object.free
   paginationLabel: "Pagination",
   paginationActionLabel: (action) => ({ first: "First page", previous: "Previous page", next: "Next page", last: "Last page" })[action],
   pageStatus: (page, pageCount) => `Page ${page} of ${pageCount}`,
+  pageStatusUnknown: (page) => `Page ${page}`,
   rowsPerPageLabel: "Rows per page",
   pageSizeOption: (pageSize) => `${pageSize} rows`,
   resizeColumnLabel: (columnId) => `Resize ${columnId} column`,
@@ -440,7 +449,13 @@ export interface HeaderKeyboardMoveEventLike {
   shiftKey?: boolean | undefined;
 }
 
-export interface GridKeyboardShortcutEventLike {
+export interface GridKeyboardCompositionEventLike {
+  isComposing?: boolean;
+  keyCode?: number;
+  nativeEvent?: { isComposing?: boolean; keyCode?: number };
+}
+
+export interface GridKeyboardShortcutEventLike extends GridKeyboardCompositionEventLike {
   key: string;
   ctrlKey?: boolean | undefined;
   metaKey?: boolean | undefined;
@@ -1086,6 +1101,53 @@ export function getColumnFilterText(filters: ColumnFiltersState, columnId: Colum
   return value == null ? "" : String(value);
 }
 
+export interface ColumnFilterControl {
+  part: "text" | "min" | "max" | "from" | "to" | "values";
+  type: "search" | "number" | "date" | "select";
+  label: string;
+  value: string | readonly string[];
+  invalid: boolean;
+  options: readonly { value: string; label: string }[];
+}
+
+export function getColumnFilterControls<TData>(column: Column<TData, unknown>, filters: ColumnFiltersState,
+  localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): ColumnFilterControl[] {
+  const kind = column.columnDef.filterType ?? "text";
+  const current = filters.find((filter) => filter.id === column.id)?.value;
+  const raw = current && typeof current === "object" ? current as Record<string, unknown> : {};
+  const label = localization.filterColumnLabel(getColumnHeaderText(column));
+  const invalid = kind !== "text" && current != null && current !== "" && !isTypedColumnFilterValue(current);
+  const make = (part: ColumnFilterControl["part"], type: ColumnFilterControl["type"], controlLabel: string, value: ColumnFilterControl["value"]): ColumnFilterControl =>
+    ({ part, type, label: controlLabel, value, invalid, options: [] });
+  if (kind === "text") return [make("text", "search", label, current == null ? "" : String(current))];
+  if (kind === "set") return [{ ...make("values", "select", label, Array.isArray(raw.values) ? raw.values.map((value) => JSON.stringify(value)) : []),
+    options: (column.columnDef.filterOptions ?? []).map((option) => ({ value: JSON.stringify(option.value), label: option.label ?? (option.value == null ? localization.blankGroupValue : String(option.value)) })) }];
+  const parts = kind === "number-range" ? ["min", "max"] as const : ["from", "to"] as const;
+  return parts.map((part, index) => make(part, kind === "number-range" ? "number" : "date",
+    index === 0 ? (localization.filterRangeStartLabel?.(label) ?? `${label} from`) : (localization.filterRangeEndLabel?.(label) ?? `${label} to`),
+    raw[part] == null ? "" : String(raw[part])));
+}
+
+export function getNextColumnFilterControlValue<TData>(filters: ColumnFiltersState, column: Column<TData, unknown>,
+  part: ColumnFilterControl["part"], value: string | readonly string[]): ColumnFiltersState {
+  if (part === "text") return getNextColumnFilters(filters, column.id, String(value));
+  const current = filters.find((filter) => filter.id === column.id)?.value;
+  const kind = column.columnDef.filterType;
+  const raw = current && typeof current === "object" && "type" in current && current.type === kind ? current : {};
+  if (part === "values") {
+    if (kind !== "set" || !Array.isArray(value)) return filters;
+    let selected: unknown[];
+    try { selected = value.map((item) => JSON.parse(item)); } catch { return filters; }
+    const filter = { type: "set", values: selected };
+    return isTypedColumnFilterValue(filter) ? getNextColumnFilters(filters, column.id, selected.length ? filter : "") : filters;
+  }
+  if (!(kind === "number-range" && ["min", "max"].includes(part)) && !(kind === "date-range" && ["from", "to"].includes(part))) return filters;
+  const filter: Record<string, unknown> = { ...raw, type: kind };
+  if (value === "") delete filter[part];
+  else filter[part] = kind === "number-range" ? Number(value) : String(value);
+  return getNextColumnFilters(filters, column.id, Object.keys(filter).length === 1 ? "" : filter as unknown as TypedColumnFilterValue);
+}
+
 export function getQuickFilterProps(localization: GridLocalization = DEFAULT_GRID_LOCALIZATION): PrimitiveProps {
   return {
     role: "search",
@@ -1563,7 +1625,7 @@ function normalizeColumnVisibilityCounts(visibleCount: number, totalCount: numbe
 export function getNextColumnFilters(
   filters: ColumnFiltersState,
   columnId: ColumnId,
-  value: string,
+  value: unknown,
 ): ColumnFiltersState {
   const existingIndex = filters.findIndex((filter) => filter.id === columnId);
 
@@ -1619,6 +1681,10 @@ export function getPaginationPageText<TData>(
 ): string {
   const pageCount = grid.getPageCount();
   const rawPageIndex = grid.getState().pagination.pageIndex;
+  if (pageCount === -1) {
+    const page = (Number.isFinite(rawPageIndex) ? Math.max(0, Math.floor(rawPageIndex)) : 0) + 1;
+    return (localization.pageStatusUnknown ?? ((value: number) => `Page ${value}`))(page);
+  }
   const pageIndex = Math.min(
     Number.isFinite(rawPageIndex) ? Math.max(0, Math.floor(rawPageIndex)) : 0,
     pageCount - 1,
@@ -1821,6 +1887,7 @@ export function isHeaderActionMenuTabCloseAction(
 }
 
 export function getGridKeyboardShortcutAction(event: GridKeyboardShortcutEventLike): GridKeyboardShortcutAction | null {
+  if (getIsGridKeyboardComposing(event)) return null;
   const key = event.key.toLowerCase();
 
   if ((event.ctrlKey || event.metaKey) && !event.altKey) {
@@ -1846,6 +1913,7 @@ export function getGridKeyboardShortcutAction(event: GridKeyboardShortcutEventLi
 }
 
 export function getGridKeyboardEditAction(event: GridKeyboardShortcutEventLike): GridKeyboardEditAction | null {
+  if (getIsGridKeyboardComposing(event)) return null;
   if (event.key === "Enter") {
     return "start-edit";
   }
@@ -1856,7 +1924,14 @@ export function getGridKeyboardEditAction(event: GridKeyboardShortcutEventLike):
   return null;
 }
 
-export function getCellEditorKeyboardAction(event: { key: string }): CellEditorKeyboardAction | null {
+/** Includes the legacy 229 guard for composition-end key events and React wrappers. */
+export function getIsGridKeyboardComposing(event: GridKeyboardCompositionEventLike): boolean {
+  return event.isComposing === true || event.keyCode === 229 ||
+    event.nativeEvent?.isComposing === true || event.nativeEvent?.keyCode === 229;
+}
+
+export function getCellEditorKeyboardAction(event: { key: string } & GridKeyboardCompositionEventLike): CellEditorKeyboardAction | null {
+  if (getIsGridKeyboardComposing(event)) return null;
   if (event.key === "Enter") {
     return "commit-edit";
   }
@@ -1868,6 +1943,7 @@ export function getCellEditorKeyboardAction(event: { key: string }): CellEditorK
 }
 
 export function getGridKeyboardFocusMove(event: GridKeyboardShortcutEventLike): GridKeyboardFocusMove | null {
+  if (getIsGridKeyboardComposing(event)) return null;
   const options: MoveFocusOptions = event.shiftKey ? { extendSelection: true } : {};
 
   if (event.key === "ArrowUp") {
@@ -2469,7 +2545,7 @@ export function getCellProps<TData>(
     "data-row-id": row.id,
     "data-column-id": column.id,
     "data-pinned": column.getIsPinned() || undefined,
-    tabIndex: focused ? 0 : -1,
+    tabIndex: focused && !options.editing ? 0 : -1,
     "data-focused": focused || undefined,
     "data-editing": options.editing || undefined,
     "aria-selected": options.rangeSelected || undefined,

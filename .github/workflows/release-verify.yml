@@ -227,11 +227,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright Chromium
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
 
       - name: End-to-end tests
         run: pnpm e2e
+
+      - name: Verify Chromium, Firefox, and WebKit integration workflows
+        run: pnpm e2e:integration
 
   required-gate:
     name: Release Gate
