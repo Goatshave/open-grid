@@ -13,6 +13,21 @@ const columns: ColumnDef<Person>[] = [
 ];
 
 describe("useGrid", () => {
+  it("exposes safe special-name row indexes and selection through the adapter", () => {
+    const ids = ["__proto__", "constructor", "toString", "hasOwnProperty"];
+    let grid: Grid<Person> | undefined;
+    function Harness() {
+      grid = useGrid<Person>({ data: ids.map((id) => ({ id, name: id })), columns, getRowId: (row) => row.id });
+      const indexed = useGridSelector(grid, (current) => Object.keys(current.getCoreRowModel().rowsById).join(","));
+      return createElement("output", null, indexed);
+    }
+    expect(renderToStaticMarkup(createElement(Harness))).toBe(`<output>${ids.join(",")}</output>`);
+    grid!.toggleRowSelected("__proto__");
+    expect(grid!.getSelectedRowModel().rows.map((row) => row.id)).toEqual(["__proto__"]);
+    grid!.setOptions((previous) => ({ ...previous, data: previous.data.filter((row) => row.id !== "constructor") }));
+    expect(grid!.getCoreRowModel().rowsById.constructor).toBeUndefined();
+  });
+
   it("creates a grid and exposes selected state during server rendering", () => {
     const data: Person[] = [
       { id: "1", name: "Mina" },

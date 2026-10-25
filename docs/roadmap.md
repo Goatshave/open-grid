@@ -111,6 +111,18 @@ TypeScript upgrades and security maintenance continue independently of the featu
 Prepare 1.0 beta and release-candidate builds when its feature scope and public API
 stability commitments are ready; individual small PRs do not require minor releases.
 
+## 1.0 production-readiness plan
+
+The [1.0 execution roadmap](roadmap-1.0) defines the commercial-product adoption
+target, current capability gaps, ordered milestones, P0/P1 acceptance criteria,
+and beta/rc release gates. It is a development plan, not a claim that these features
+are implemented. The working plan is written in Korean for maintainer review.
+
+The target includes advanced editing and filtering, a reusable server data layer,
+row/detail/span interactions, pivoting, XLSX export, cross-framework parity,
+accessibility, measured performance, stable APIs, and real product integrations.
+Follow the task IDs and completion evidence in that plan before expanding scope.
+
 ## Performance Direction
 
 Release decisions use only Open Grid-owned measurements. Deterministic bundle, DOM,

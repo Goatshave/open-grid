@@ -1,4 +1,5 @@
 import type { GridState, RowId, RowSelectionState } from "./types";
+import { getOwnRowFlag } from "./row-state";
 
 export type ServerSelection<TQuery> =
   | { readonly mode: "explicit"; readonly queryKey: string; readonly query: Readonly<TQuery>; readonly ids: readonly RowId[] }
@@ -98,7 +99,8 @@ export function createServerSelection<TQuery>(options: {
       if (ids.some((id) => typeof id !== "string" || !id)) throw new TypeError("selection row IDs must be non-empty strings");
       let changed = false;
       for (const id of ids) {
-        const checked = gridState.allRowsSelected ? gridState.rowSelection[id] !== false : gridState.rowSelection[id] === true;
+        const flag = getOwnRowFlag(gridState.rowSelection, id);
+        const checked = gridState.allRowsSelected ? flag !== false : flag === true;
         const contained = state.mode === "explicit" ? checked : !checked;
         if (selected.has(id) === contained) continue;
         if (contained) selected.add(id); else selected.delete(id);

@@ -37,6 +37,11 @@ examples and the complete validation commands.
 
 ## Pull Requests
 
+Use `<type>/<short-kebab-case>` branch names. Choose `feat/`, `fix/`, `docs/`,
+`refactor/`, `perf/`, `test/`, or `chore/` for the primary change, for example
+`docs/1.0-roadmap` or `fix/row-identity-index`. Keep commit and PR titles aligned
+with the corresponding conventional type.
+
 - Keep one logical change per pull request.
 - Add or update tests for behavior changes.
 - Update the relevant README or `docs/` file when a public API, workflow, or

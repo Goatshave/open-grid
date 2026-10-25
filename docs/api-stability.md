@@ -16,6 +16,30 @@ declaration snapshots fail the check. An intentional public change requires
 `pnpm api:update`, tests for the new behavior, relevant guide updates, and an
 `Unreleased` changelog entry.
 
+## Row IDs and row-model dictionaries
+
+Row IDs are string keys, including names such as `__proto__`, `constructor`,
+`toString`, and `hasOwnProperty`. Supply unique, stable IDs through `getRowId` when
+product data can be reordered, inserted, removed, or loaded from a server. The
+position-based fallback remains available; duplicate-ID validation is a separate
+development task.
+
+`RowModel.rowsById` remains a `Record<RowId, Row<TData>>` and now has a null
+prototype. Every indexed row is an enumerable own property; absent IDs return
+`undefined`, including names that otherwise come from `Object.prototype`. Lazy
+indexes remain cached. Do not call methods such as `rowsById.hasOwnProperty(...)`
+or `rowsById.toString()`; those names may be row IDs. Use bracket access,
+`Object.hasOwn(rowsById, id)`, and `Object.keys/values/entries(rowsById)` instead.
+
+Selection and expansion records retain their ordinary object representation.
+Only own boolean flags affect the grid; inherited flags are ignored. To construct
+flags for arbitrary IDs, use computed keys (`{ [rowId]: true }`) or
+`Object.fromEntries(...)` instead of an object-literal `__proto__` setter.
+
+JSON projection retains enumerable ID keys. Raw row models can contain cyclic
+`leafRows` references, so project them into product data/metadata before JSON
+serialization. The index fix does not make raw row models JSON payloads.
+
 ## Version policy
 
 - Versions below 1.0 are usable public releases, not automatically alpha software.

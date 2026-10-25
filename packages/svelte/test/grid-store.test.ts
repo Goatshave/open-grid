@@ -19,6 +19,22 @@ const data: Person[] = [
 ];
 
 describe("createGridStore", () => {
+  it("keeps special row IDs safe through store options and selection", () => {
+    const ids = ["__proto__", "constructor", "toString", "hasOwnProperty"];
+    const options = writable<GridOptions<Person>>({ data: ids.map((id) => ({ id, name: id, age: 20 })), columns, getRowId: (row) => row.id });
+    const adapter = createGridStore(options);
+    let latest = get(adapter.state);
+    const unsubscribe = adapter.state.subscribe((state) => { latest = state; });
+    try {
+      expect(Object.keys(adapter.grid.getCoreRowModel().rowsById)).toEqual(ids);
+      adapter.grid.toggleRowSelected("__proto__");
+      expect(Object.hasOwn(latest.rowSelection, "__proto__")).toBe(true);
+      expect(adapter.grid.getSelectedRowModel().rows.map((row) => row.id)).toEqual(["__proto__"]);
+      options.update((previous) => ({ ...previous, data: previous.data.filter((row) => row.id !== "constructor") }));
+      expect(adapter.grid.getCoreRowModel().rowsById.constructor).toBeUndefined();
+    } finally { unsubscribe(); adapter.dispose(); }
+  });
+
   it("syncs grid state into a readable store", () => {
     const adapter = createGridStore<Person>({
       data,
