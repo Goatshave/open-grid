@@ -9,14 +9,14 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
-    "@lucide/svelte": "^1.57.0",
+    "@lucide/svelte": "^1.61.0",
     "@open-grid/core": "workspace:*",
     "@open-grid/svelte": "workspace:*",
     "@open-grid/svelte-ui": "workspace:*",
     "@open-grid/theme": "workspace:*",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
     "svelte": "^5.57.2",
-    "vite": "^8.3.4",
+    "vite": "^8.3.5",
     "@open-grid/example-shared-server": "workspace:*"
   },
   "devDependencies": {
