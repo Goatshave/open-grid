@@ -1,52 +1,46 @@
+import { isISOCalendarDate } from "@open-grid/core";
+import { TicketEditor } from "./TicketEditor";
 import "@open-grid/theme/css";
 import "@open-grid/vue-ui/css";
 import "./styles.css";
 import {
   createChunkedServerCsvExport,
   createServerSideTicketExportColumns,
-  createServerSideTickets,
   createStreamingServerCsvResponse,
-  getServerSideTicketRows,
-  queryServerSideTickets,
   type ServerCsvExportColumn,
   type ServerSideTicket,
-  type ServerSideTicketQuery,
 } from "@open-grid/example-shared-server";
 import {
   createColumnHelper,
   createDataGrid,
   downloadExportFile,
   type AnyColumnDef,
-  type ColumnFiltersState,
   type GridOptions,
-  type GridState,
-  type PaginationState,
-  type SortingState,
 } from "@open-grid/vue-ui";
-import { computed, createApp, defineComponent, h, ref } from "vue";
+import { computed, createApp, defineComponent, h, onBeforeUnmount, ref, shallowRef } from "vue";
+
+import { createTicketClient, getTicketPaginationLocalization, getTicketSaveSummary } from "@open-grid/example-shared-server/ticket-client";
 
 const column = createColumnHelper<ServerSideTicket>();
-const allTickets = createServerSideTickets("VUE", { valueBase: 1_200, valueStep: 97, openedMonth: "2026-07" });
 
 const columns: AnyColumnDef<ServerSideTicket>[] = [
   column.accessor("id", { header: "Ticket", size: 120 }),
-  column.accessor("account", { header: "Account", size: 190 }),
+  column.accessor("account", { header: "Account", size: 280, enableEditing: true, validateEditValue: (value) => String(value).trim().length >= 3 || "Account must be at least 3 characters" }),
   column.accessor("owner", { header: "Owner", size: 120 }),
-  column.accessor("status", { header: "Status", size: 120 }),
+  column.accessor("status", { header: "Status", filterType: "set", filterOptions: ["Backlog", "Open", "Waiting", "Resolved"].map((value) => ({ value })), size: 180 }),
   column.accessor("priority", { header: "Priority", size: 110 }),
   column.accessor("value", {
-    header: "Value",
+    header: "Value", filterType: "number-range",
     size: 120,
     cell: ({ value }) => `$${Number(value ?? 0).toLocaleString()}`,
   }),
-  column.accessor("openedAt", { header: "Opened", size: 130 }),
+  column.accessor("openedAt", { header: "Opened", filterType: "date-range", size: 280, enableEditing: true, validateEditValue: (value) => isISOCalendarDate(value) || "Use an ISO calendar date" }),
 ];
 
 const serverExportColumns: ServerCsvExportColumn<ServerSideTicket>[] = createServerSideTicketExportColumns();
 const ServerGrid = createDataGrid<ServerSideTicket>();
 
-async function exportTicketsFromServer(query: Pick<ServerSideTicketQuery, "columnFilters" | "sorting">) {
-  const rows = getServerSideTicketRows(allTickets, query);
+async function exportTicketsFromServer(rows: ServerSideTicket[]) {
 
   return createChunkedServerCsvExport({
     rows,
@@ -77,54 +71,50 @@ async function* createDelayedServerRows(rows: ServerSideTicket[], onCancel: () =
 const App = defineComponent({
   name: "VueServerSideGridExample",
   setup() {
-    const sorting = ref<SortingState>([]);
-    const columnFilters = ref<ColumnFiltersState>([]);
-    const pagination = ref<PaginationState>({ pageIndex: 0, pageSize: 25 });
+    const client = createTicketClient();
+    const remote = shallowRef(client.getSnapshot());
+    const unsubscribe = client.subscribe(() => { remote.value = client.getSnapshot(); });
+    onBeforeUnmount(() => { unsubscribe(); client.dispose(); });
+    void client.start();
+    const sorting = computed(() => remote.value.requested.sorting);
+    const columnFilters = computed(() => remote.value.requested.columnFilters);
+    const pagination = computed(() => remote.value.requested.pagination);
     const exportStatus = ref("Server export idle");
     const streamStatus = ref("Streaming export idle");
     const streamingActive = ref(false);
     const streamReader = ref<ReadableStreamDefaultReader<Uint8Array> | null>(null);
     const streamProgress = ref(0);
     const streamCancelRequested = ref(false);
-    const serverResult = computed(() =>
-      queryServerSideTickets(allTickets, {
-        sorting: sorting.value,
-        columnFilters: columnFilters.value,
-        pagination: pagination.value,
-      }),
-    );
+    const serverResult = computed(() => remote.value.page);
     const accountFilter = computed(() => String(columnFilters.value.find((filter) => filter.id === "account")?.value ?? ""));
-
-    const setAccountFilter = (value: string) => {
-      columnFilters.value = value ? [{ id: "account", value }] : [];
-      pagination.value = { ...pagination.value, pageIndex: 0 };
-    };
-
-    const handleStateChange = (state: GridState) => {
-      sorting.value = state.sorting;
-      columnFilters.value = state.columnFilters;
-      pagination.value = state.pagination;
-    };
+    const setAccountFilter = client.setAccountFilter;
+    const handleStateChange = client.onStateChange;
 
     const handleServerExport = async () => {
       exportStatus.value = "Exporting server CSV...";
-      const result = await exportTicketsFromServer({
-        sorting: sorting.value,
-        columnFilters: columnFilters.value,
-      });
-      const downloaded = downloadExportFile(result.file);
-      exportStatus.value = downloaded ? `Exported ${result.rowCount} server rows` : "Server export unavailable";
+      try {
+        const result = await exportTicketsFromServer(await client.exportRows({ sorting: sorting.value, columnFilters: columnFilters.value }));
+        const downloaded = downloadExportFile(result.file);
+        exportStatus.value = downloaded ? `Exported ${result.rowCount} server rows` : "Server export unavailable";
+      } catch (error) {
+        exportStatus.value = error instanceof Error ? `Server export failed: ${error.message}` : "Server export failed";
+      }
     };
 
     const handleStreamingExport = async () => {
-      if (streamReader.value) {
+      if (streamingActive.value) {
         return;
       }
 
-      const rows = getServerSideTicketRows(allTickets, {
-        sorting: sorting.value,
-        columnFilters: columnFilters.value,
-      });
+      streamingActive.value = true;
+      streamStatus.value = "Loading server rows for streaming export...";
+      let rows: ServerSideTicket[];
+      try { rows = await client.exportRows({ sorting: sorting.value, columnFilters: columnFilters.value }); }
+      catch (error) {
+        streamStatus.value = error instanceof Error ? `Streaming export failed: ${error.message}` : "Streaming export failed";
+        streamingActive.value = false;
+        return;
+      }
       let streamedRows = 0;
       let cancelled = false;
       let streamedBytes = 0;
@@ -200,30 +190,15 @@ const App = defineComponent({
     return () => {
       const result = serverResult.value;
       const serverPageIndex = result.pageIndex;
-      const gridOptions: GridOptions<ServerSideTicket> = {
-        data: result.rows,
-        columns,
-        getRowId: (row) => row.id,
-        state: {
-          sorting: sorting.value,
-          columnFilters: columnFilters.value,
-          pagination: pagination.value,
-        },
-        onStateChange: handleStateChange,
-        manualSorting: true,
-        manualFiltering: true,
-        manualPagination: true,
-        rowCount: result.totalRows,
-        initialState: {
-          columnPinning: { left: ["id"], right: ["value"] },
-        },
-      };
+      const gridOptions: GridOptions<ServerSideTicket> = { ...client.gridOptions(columns), onStateChange: handleStateChange, onCellEdit: client.onCellEdit };
+      const state = remote.value;
+      const saveSummary = getTicketSaveSummary(state);
 
-      return h("main", { class: "app-shell" }, [
+      return h("main", { class: "app-shell", onInputCapture: client.onEditorInput }, [
         h("section", { class: "toolbar", "aria-label": "Vue server-side grid controls" }, [
           h("div", [
             h("h1", "Vue server-side tickets"),
-            h("p", `${result.totalRows} matching rows · page ${serverPageIndex + 1} of ${result.pageCount}`),
+            h("p", `${result.totalRows ?? "Unknown total"} matching rows · page ${serverPageIndex + 1}${result.pageCount === undefined ? "" : ` of ${result.pageCount}`}`),
           ]),
           h("label", { class: "filter-control" }, [
             "Account",
@@ -235,58 +210,47 @@ const App = defineComponent({
           ]),
           h("div", { class: "export-control" }, [
             h("button", { type: "button", onClick: handleServerExport }, "Export server CSV"),
-            h("span", { "data-testid": "vue-server-export-status" }, exportStatus.value),
+            h("span", { role: "status", "aria-live": "polite", "data-testid": "vue-server-export-status" }, exportStatus.value),
           ]),
           h("div", { class: "export-control" }, [
             h("button", { type: "button", disabled: streamingActive.value, onClick: handleStreamingExport }, "Preview streaming CSV"),
             h("button", { type: "button", disabled: !streamingActive.value, onClick: handleStreamingCancel }, "Cancel stream"),
-            h("span", { "data-testid": "vue-server-stream-status" }, streamStatus.value),
+            h("span", { role: "status", "aria-live": "polite", "data-testid": "vue-server-stream-status" }, streamStatus.value),
           ]),
+        ]),
+        h("section", { "aria-label": "Remote data controls" }, [
+          h("button", { type: "button", disabled: state.loading, onClick: () => void client.refresh() }, "Refresh tickets"),
+          h("button", { type: "button", disabled: state.loading, onClick: () => void client.failRefresh() }, "Simulate load failure"),
+          h("button", { type: "button", disabled: !state.error || state.loading, onClick: () => void client.retry() }, "Retry load"),
+          h("label", [h("input", { type: "checkbox", checked: state.unknownTotal, onChange: (event: Event) => void client.setUnknownTotal((event.target as HTMLInputElement).checked) }), "Hide total count"]),
+          h("p", { role: "status", "aria-live": "polite", "aria-atomic": "true", "data-testid": "remote-load-status" }, state.loading ? `Loading tickets; showing page ${serverPageIndex + 1}` : state.error ? `${state.error}; retained page ${serverPageIndex + 1}` : `Loaded page ${serverPageIndex + 1}`),
+        ]),
+        h("section", { "aria-label": "Server editing" }, [
+          h("button", { type: "button", onClick: () => client.setSaveScenario("fail-once") }, "Fail next save"),
+          h("button", { type: "button", onClick: () => client.setSaveScenario("conflict-once") }, "Conflict next save"),
+          h("button", { type: "button", onClick: () => client.setSaveScenario("validation") }, "Reject next save"),
+          h("button", { type: "button", disabled: !saveSummary.failed || saveSummary.pending > 0, onClick: () => void client.retryFailed() }, "Retry failed saves"),
+          h("button", { type: "button", disabled: saveSummary.pending > 0, onClick: () => void client.discardAndReload() }, "Discard edits and reload"),
+          h("p", { role: "status", "aria-live": "polite", "aria-atomic": "true", "data-testid": "server-save-summary" }, `Pending ${saveSummary.pending} · Saved ${saveSummary.saved} · Failed ${saveSummary.failed}`),
+          h("p", { role: "status", "aria-live": "polite", "data-testid": "server-save-message" }, state.saveMessage),
+          h("ul", [...state.saves].map(([key, save]) => h("li", { key }, [h("span", { role: ["error", "validation-error", "conflict"].includes(save.status) ? "alert" : undefined }, `${save.input?.rowId}: ${save.status}${save.error instanceof Error ? ` — ${save.error.message}` : ""}`)]))),
+        ]),
+        h("section", { "aria-label": "Server selection" }, [
+          h("button", { type: "button", disabled: state.loading || Boolean(state.error) || state.bulk.pending, onClick: () => client.selectAllMatching() }, "Select all matching tickets"),
+          h("button", { type: "button", onClick: () => client.clearSelection() }, "Clear server selection"),
+          h("button", { type: "button", disabled: state.loading || Boolean(state.error) || state.bulk.pending || saveSummary.pending > 0 || (state.selection.mode === "explicit" && !state.selection.ids.length), onClick: () => void client.resolveSelected() }, "Resolve selected tickets"),
+          h("button", { type: "button", disabled: !state.bulk.error || state.bulk.pending || state.loading, onClick: () => void client.retryBulk() }, "Retry bulk action"),
+          h("p", { role: "status", "data-testid": "server-selection-summary" }, state.selection.mode === "all-matching" ? `All matching tickets · ${state.selection.excludedIds.length} excluded` : `${state.selection.ids.length} tickets selected`),
+          h("p", { role: "status", "data-testid": "server-bulk-status" }, state.bulk.message),
         ]),
         h(ServerGrid, {
           options: gridOptions,
+          renderEditor: (context) => ["account", "openedAt"].includes(context.column.id) ? h(TicketEditor, { context }) : null,
+            localization: getTicketPaginationLocalization("Vue server pagination"), loading: state.loading, loadingState: "Refreshing tickets...", paginationControls: true, columnFilterControls: true, rowSelectionControls: true,
           columnPinningControls: true,
           style: { height: "500px" },
         }),
-        h("nav", { class: "pagination", "aria-label": "Vue server pagination" }, [
-          h(
-            "button",
-            {
-              type: "button",
-              disabled: serverPageIndex === 0,
-              onClick: () => {
-                pagination.value = { ...pagination.value, pageIndex: 0 };
-              },
-            },
-            "First",
-          ),
-          h(
-            "button",
-            {
-              type: "button",
-              disabled: serverPageIndex === 0,
-              onClick: () => {
-                pagination.value = { ...pagination.value, pageIndex: Math.max(0, serverPageIndex - 1) };
-              },
-            },
-            "Previous",
-          ),
-          h("span", `Page ${serverPageIndex + 1} / ${result.pageCount}`),
-          h(
-            "button",
-            {
-              type: "button",
-              disabled: serverPageIndex >= result.pageCount - 1,
-              onClick: () => {
-                pagination.value = {
-                  ...pagination.value,
-                  pageIndex: Math.min(result.pageCount - 1, serverPageIndex + 1),
-                };
-              },
-            },
-            "Next",
-          ),
-        ]),
+
       ]);
     };
   },

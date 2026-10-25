@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
+    "@open-grid/primitives": "workspace:*",
     "@open-grid/core": "workspace:*",
     "@open-grid/example-shared-server": "workspace:*",
     "@open-grid/react-ui": "workspace:*",

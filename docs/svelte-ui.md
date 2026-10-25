@@ -77,7 +77,7 @@ pnpm add @open-grid/core @open-grid/svelte @open-grid/svelte-ui @open-grid/theme
 - Pass `getRowClassName` to derive a product class from the core `Row`; the first-publish example marks non-grouped high-risk rows and changes `--og-surface` through semantic theme tokens so the treatment follows light and dark modes. The maintained Svelte declaration exposes this callback and the runtime `ariaLabel` prop.
 - Pass `getHeaderClassName` to derive a product class from the core `HeaderContext`, including the grid, column, and rendered header. The first-publish example marks the risk header without replacing its sorting, pinning, resizing, grouping, or menu behavior, and the maintained declaration covers the callback.
 - Pass `getCellClassName` to derive a class from the core `CellContext`, including the grid, row, column, and value. The first-publish example combines it with the forwarded root `class` prop and assigns low, medium, and high risk classes to render text-preserving semantic markers with light, dark, and forced-colors treatment while retaining the standard editor, selection, focus, and virtualization behavior. The maintained declaration covers the complete styling contract.
-- Pass `columnFilterControls={true}` to render a per-column search row. Inputs update core `columnFilters`, reset the page index, follow pinned and virtualized columns, and contribute to shared WAI-ARIA row coordinates.
+- Pass `columnFilterControls={true}` to render per-column text, numeric/calendar range, and set controls according to column metadata; see [typed filters](filters). Inputs update core `columnFilters`, reset the page index, follow pinned and virtualized columns, and contribute to shared WAI-ARIA row coordinates.
 - Pass `paginationControls={true}` to render first/previous/next/last navigation, a live page status, and a rows-per-page select. Configure the select with `pageSizeOptions`; page transitions use bounded core APIs and reset the virtual scroller to the first row.
 - Pass `loading={true}` to mark the grid busy and show an accessible overlay while preserving the current rows. Use `loadingState` for product-owned status content.
 - Pass `error={true}` to supersede loading and show an accessible alert while preserving the current rows. Use `errorState` for product-owned content and `onRetry` to render and handle the retry button.
@@ -191,3 +191,5 @@ pnpm add @open-grid/core @open-grid/svelte @open-grid/svelte-ui @open-grid/theme
 ## Current Scope
 
 This package intentionally starts with the shared styled grid surface. Keep future renderer hardening aligned with React and Vue UI behavior.
+
+For 0.4 custom edit components, see the shared [custom editor contract](custom-rendering#custom-editors-0-4-development).

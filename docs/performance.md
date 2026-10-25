@@ -58,6 +58,35 @@ server resource ceilings are 115,000 and 380,000 bytes, retaining roughly 9–11
 headroom. Timing, retained heap, DOM, workload, and required package bundle limits
 remain unchanged. Future increases still require measured attribution.
 
+## 0.4 workflow API allocation
+
+Using Node 22.19.0, tsup 8.5.1, and the same ES2022 builds, compare merged 0.3
+source `a686580311c1918c684154ab54eaa41e75f1630b` with the expanded 0.4 workflows.
+The additions are the mutation/remote-selection contracts, typed filters and their
+controls, custom editors, IME handling, React draft preservation, and the Vue/WebKit stable-content fix.
+
+| Package | 0.3 gzip bytes | 0.4 gzip bytes | Increase | Previous ceiling | 0.4 ceiling |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Core | 22,928 | 25,962 | 3,034 | 24,000 | 27,000 |
+| Primitives | 14,322 | 15,211 | 889 | 15,000 | 16,000 |
+| React UI | 22,265 | 23,059 | 794 | 22,800 | 24,000 |
+| Vue UI | 16,910 | 17,832 | 922 | 17,500 | 18,500 |
+| Svelte UI | 20,543 | 21,731 | 1,188 | 21,000 | 23,000 |
+
+The new ceilings retain roughly 4–6% headroom over the measured artifacts. The other
+five package ceilings and all DOM, heap, core scale, and server workload limits stay
+unchanged. Runtime exports remain ESM with `sideEffects: false`; application bundlers
+can omit unused headless helpers. The package budget intentionally measures every
+shipped runtime entry, including Svelte source components and renderer CSS.
+
+Reproduce the baseline by extracting that revision's `packages/` and
+`tsconfig.base.json` into a temporary workspace, resolving the same pinned tools,
+and using each package's production entry points and CSS/Svelte copy steps.
+Measure the shipped `.js`, `.css`, and `.svelte` files with Node's
+`gzipSync(bytes, { level: 9 })`, matching `pnpm benchmark:bundle:check`.
+Run `pnpm benchmark:bundle:run` for the complete current report. This policy
+allocation covers measured feature cost without relaxing runtime workload gates.
+
 ## Observational Measurements
 
 `pnpm benchmark:run` records React, Vue, and Svelte measurements for local diagnosis.

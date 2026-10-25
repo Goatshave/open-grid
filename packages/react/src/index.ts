@@ -79,6 +79,7 @@ export type {
   AccessorKeyColumnDef,
   AnyColumnDef,
   CellContext,
+  CellEditorContext,
   CellCoordinate,
   CellEditEvent,
   CellEditEventParams,

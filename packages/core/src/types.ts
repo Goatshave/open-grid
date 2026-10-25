@@ -309,6 +309,19 @@ export interface CellEditOption {
   disabled?: boolean;
 }
 
+/** A mounted custom editor owns its draft, focus, popup, and blur behavior. */
+export interface CellEditorContext<TData, TValue = unknown> {
+  grid: Grid<TData>;
+  row: Row<TData>;
+  column: Column<TData, TValue>;
+  value: TValue | undefined;
+  validationMessage: string | null;
+  isActive: () => boolean;
+  /** Strings use the column parser; typed values go directly through validation. */
+  commit: (value: unknown, sourceEvent?: unknown) => CellEditEvent<TData> | null;
+  cancel: (sourceEvent?: unknown) => CellEditEvent<TData> | null;
+}
+
 export type AccessorKey<TData> = Extract<keyof TData, string>;
 
 export type SortFn<TData, TValue = unknown> = (
@@ -364,6 +377,8 @@ export interface ColumnDef<TData, TValue = unknown> {
   validateEditValue?: (value: unknown, context: CellEditValidationContext<TData, TValue>) => CellEditValidationResult;
   sortFn?: SortFn<TData, TValue>;
   filterFn?: FilterFn<TData, TValue>;
+  filterType?: import("./column-filter").ColumnFilterType;
+  filterOptions?: readonly import("./column-filter").ColumnFilterOption[];
   groupingValue?: (context: GroupingValueContext<TData, TValue>) => unknown;
   aggregationFn?: AggregationFn<TData, TValue>;
   size?: number;
@@ -518,6 +533,9 @@ export interface GridOptions<TData> {
   manualPagination?: boolean;
   pageCount?: number;
   rowCount?: number;
+  /** Unknown-total manual pagination. Exact row/page counts take precedence. */
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
   editHistoryLimit?: number;
 }
 

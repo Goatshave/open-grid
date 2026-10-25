@@ -1,4 +1,5 @@
 import { createRowModel } from "./rows";
+import { createColumnFilterMatcher } from "./column-filter";
 import type {
   AggregationContext,
   BuiltInAggregationFn,
@@ -37,7 +38,8 @@ export function filterRows<TData>(
   const columnById = new Map(columns.map((column) => [column.id, column]));
   const filterRules = filters.flatMap((filter) => {
     const column = columnById.get(filter.id);
-    return column?.getCanFilter() ? [{ column, value: filter.value, normalizedValue: normalizeFilterValue(filter.value) }] : [];
+    return column?.getCanFilter() ? [{ column, value: filter.value, normalizedValue: normalizeFilterValue(filter.value),
+      ...(filter.value && typeof filter.value === "object" ? { matchesValue: createColumnFilterMatcher(filter.value) } : {}) }] : [];
   });
   const hasGlobalFilter = !isEmptyFilterValue(globalFilter);
   const globalColumns = hasGlobalFilter ? columns.filter((column) => column.getCanGlobalFilter()) : [];
@@ -191,9 +193,9 @@ function createRowFilter<TData>(
 
   if (!hasGlobalFilter) {
     if (filterRules.every((rule) => !rule.column.columnDef.filterFn)) {
-      const defaultRules = filterRules.map(({ column, normalizedValue }) => ({
+      const defaultRules = filterRules.map(({ column, normalizedValue, matchesValue }) => ({
         column,
-        matchesValue: createBoundedPrimitiveFilterMatcher(createDefaultFilterMatcher(normalizedValue)),
+        matchesValue: matchesValue ?? createBoundedPrimitiveFilterMatcher(createDefaultFilterMatcher(normalizedValue)),
       }));
       return (row) => {
         for (const { column, matchesValue } of defaultRules) {
@@ -219,12 +221,12 @@ function rowMatchesColumnFilters<TData>(
   row: Row<TData>,
   filterRules: readonly ResolvedFilterRule<TData>[],
 ): boolean {
-  for (const { column, value: filterValue, normalizedValue } of filterRules) {
+  for (const { column, value: filterValue, normalizedValue, matchesValue } of filterRules) {
     const value = getRowColumnValue(row, column);
 
     if (column.columnDef.filterFn) {
       if (!column.columnDef.filterFn(value, filterValue, row, column)) return false;
-    } else if (!defaultFilter(value, normalizedValue)) {
+    } else if (!(matchesValue?.(value) ?? defaultFilter(value, normalizedValue))) {
       return false;
     }
   }
@@ -272,6 +274,7 @@ interface ResolvedFilterRule<TData> {
   column: Column<TData, unknown>;
   value: unknown;
   normalizedValue: string;
+  matchesValue?: (value: unknown) => boolean;
 }
 
 function sortSiblingRows<TData>(

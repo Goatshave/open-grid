@@ -1,5 +1,7 @@
+import { ColumnFilter } from "./ColumnFilter";
 import type {
   CellContext,
+  CellEditorContext,
   CellCoordinate,
   CellEditEvent,
   CellFillOptions,
@@ -56,8 +58,6 @@ import {
   downloadBrowserExportFile,
   getColumnById,
   getColumnFilterCellProps,
-  getColumnFilterInputProps,
-  getColumnFilterText,
   getColumnIndexById,
   getColumnLayoutById,
   getColumnLayoutTotalWidth,
@@ -106,7 +106,6 @@ import {
   getGridProps,
   getGridDensityProps,
   getGridDensityRowHeight,
-  getNextColumnFilters,
   getPaginationButtonProps,
   getPaginationButtonText,
   getPaginationPageSizeOptions,
@@ -321,6 +320,7 @@ export interface DataGridProps<TData> extends GridOptions<TData> {
   renderErrorState?: (context: DataGridErrorRenderContext<TData>) => ReactNode;
   renderHeader?: (context: HeaderContext<TData, unknown>) => ReactNode;
   renderCell?: (context: CellContext<TData, unknown>) => ReactNode;
+  renderEditor?: (context: CellEditorContext<TData>) => ReactNode;
   onGridReady?: GridReadyHandler<TData>;
   getRowClassName?: (row: Row<TData>) => string | undefined;
   getHeaderClassName?: (context: HeaderContext<TData, unknown>) => string | undefined;
@@ -364,6 +364,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     renderErrorState,
     renderHeader: renderHeaderProp,
     renderCell: renderCellProp,
+    renderEditor: renderEditorProp,
     onGridReady,
     getRowClassName,
     getHeaderClassName,
@@ -1288,21 +1289,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                       )}
                     >
                       {column.getCanFilter() ? (
-                        <input
-                          {...getColumnFilterInputProps(column, {
-                            label: getColumnHeaderText(column),
-                            value: getColumnFilterText(grid.getState().columnFilters, column.id),
-                          }, localization)}
-                          className="og-grid__filter-input"
-                          onChange={(event) => {
-                            const value = event.currentTarget.value;
-                            grid.setState((previous) => ({
-                              ...previous,
-                              columnFilters: getNextColumnFilters(previous.columnFilters, column.id, value),
-                              pagination: { ...previous.pagination, pageIndex: 0 },
-                            }));
-                          }}
-                        />
+                        <ColumnFilter grid={grid} column={column} localization={localization} />
                       ) : null}
                     </div>
                   );
@@ -1400,6 +1387,7 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
                         onPointerDownFillHandle={(event) => startCellFillDrag({ rowId: row.id, columnId: column.id }, event)}
                         onToggleRowExpanded={() => grid.toggleRowExpanded(row.id)}
                         renderCell={renderCellProp}
+                        renderEditor={renderEditorProp}
                         onClickCell={(event) => {
                           if (cellClickSuppression.consume(event)) {
                             return;
@@ -1446,17 +1434,17 @@ export function DataGrid<TData>(props: DataGridProps<TData>) {
     {paginationControls ? (
       <nav {...getPaginationProps(localization)} className="og-grid__pagination">
         <div className="og-grid__pagination-buttons">
-          <button {...getPaginationButtonProps({ action: "first", disabled: !grid.getCanPreviousPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.firstPage())}>
+          <button {...getPaginationButtonProps({ action: "first", disabled: loading || !grid.getCanPreviousPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.firstPage())}>
             {getPaginationButtonText("first")}
           </button>
-          <button {...getPaginationButtonProps({ action: "previous", disabled: !grid.getCanPreviousPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.previousPage())}>
+          <button {...getPaginationButtonProps({ action: "previous", disabled: loading || !grid.getCanPreviousPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.previousPage())}>
             {getPaginationButtonText("previous")}
           </button>
           <span {...getPaginationStatusProps()} className="og-grid__pagination-status">{getPaginationPageText(grid, localization)}</span>
-          <button {...getPaginationButtonProps({ action: "next", disabled: !grid.getCanNextPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.nextPage())}>
+          <button {...getPaginationButtonProps({ action: "next", disabled: loading || !grid.getCanNextPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.nextPage())}>
             {getPaginationButtonText("next")}
           </button>
-          <button {...getPaginationButtonProps({ action: "last", disabled: !grid.getCanNextPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.lastPage())}>
+          <button {...getPaginationButtonProps({ action: "last", disabled: loading || grid.getPageCount() === -1 || !grid.getCanNextPage() }, localization)} className="og-grid__pagination-button" onClick={() => runPaginationAction(() => grid.lastPage())}>
             {getPaginationButtonText("last")}
           </button>
         </div>
@@ -1925,6 +1913,7 @@ interface BodyCellProps<TData> {
   onToggleRowExpanded: () => void;
   onClickCell: (event: MouseEvent<HTMLDivElement>) => void;
   renderCell: ((context: CellContext<TData, unknown>) => ReactNode) | undefined;
+  renderEditor: ((context: CellEditorContext<TData>) => ReactNode) | undefined;
 }
 
 function BodyCell<TData>(props: BodyCellProps<TData>) {
@@ -1958,22 +1947,32 @@ function BodyCell<TData>(props: BodyCellProps<TData>) {
     onToggleRowExpanded,
     onClickCell,
     renderCell: renderCellProp,
+    renderEditor: renderEditorProp,
   } = props;
   const previousValue = row.getValue(column.id);
+  const editSession = grid.getState().editingCell;
+  const isActiveEditor = () => grid.getState().editingCell === editSession && grid.getIsCellEditing(row.id, column.id);
   const [draftValue, setDraftValue] = useState(() => getCellEditText(previousValue));
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const cellElementRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null);
   const closingEditRef = useRef(false);
   const wasEditingRef = useRef(editing);
+  const initializedEditSessionRef = useRef<CellCoordinate | null>(null);
 
-  useEffect(() => {
-    if (editing) {
-      closingEditRef.current = false;
-      setValidationMessage(null);
-      setDraftValue(getCellEditText(previousValue));
+  useLayoutEffect(() => {
+    if (!editing) {
+      initializedEditSessionRef.current = null;
+      return;
     }
-  }, [editing, previousValue]);
+    // A server acknowledgement may update the row while this session has a newer
+    // unsaved draft. Seed from row data only when a new edit session starts.
+    if (initializedEditSessionRef.current === editSession) return;
+    initializedEditSessionRef.current = editSession;
+    closingEditRef.current = false;
+    setValidationMessage(null);
+    setDraftValue(getCellEditText(previousValue));
+  }, [editing, editSession, previousValue]);
 
   useLayoutEffect(() => {
     if (!editing) {
@@ -1998,10 +1997,24 @@ function BodyCell<TData>(props: BodyCellProps<TData>) {
   };
 
   const cancel = (sourceEvent?: unknown) => {
+    if (!isActiveEditor()) return null;
     const event = onCancelEdit(sourceEvent);
     setValidationMessage(null);
     closingEditRef.current = !event?.defaultPrevented;
+    return event;
   };
+
+  const customEditor = editing ? renderEditorProp?.({
+    grid, row, column, value: previousValue, validationMessage, isActive: isActiveEditor,
+    commit: (value, sourceEvent) => {
+      if (!isActiveEditor()) return null;
+      const event = onCommitEdit(typeof value === "string" ? parseCellEditValue(grid, row, column, value) : value, sourceEvent);
+      setValidationMessage(getCellEditValidationMessage(event));
+      closingEditRef.current = !event?.defaultPrevented;
+      return event;
+    },
+    cancel,
+  }) : null;
 
   const handleEditorKeyDown = (event: KeyboardEvent<HTMLInputElement | HTMLSelectElement>) => {
     stopEventPropagation(event);
@@ -2050,7 +2063,11 @@ function BodyCell<TData>(props: BodyCellProps<TData>) {
           onPointerDown={onPointerDownFillHandle}
         />
       ) : null}
-      {editing && column.columnDef.editOptions ? (
+      {editing && customEditor != null ? (
+        <div className="og-grid__custom-editor" onKeyDown={stopEventPropagation} onClick={stopEventPropagation} onDoubleClick={stopEventPropagation} onPointerDown={stopEventPropagation}>
+          {customEditor}
+        </div>
+      ) : editing && column.columnDef.editOptions ? (
         <select
           ref={(element) => {
             editorRef.current = element;
@@ -2251,6 +2268,7 @@ export type {
   CellInteractionEvent,
   CellInteractionEventParams,
   CellContext,
+  CellEditorContext,
   CellEditEvent,
   CellEditEventParams,
   CellEditHistoryAction,

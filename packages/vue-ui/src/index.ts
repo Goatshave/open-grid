@@ -1,6 +1,8 @@
+import { renderColumnFilter } from "./column-filter";
 import type {
   CellFillOptions,
   CellContext,
+  CellEditorContext,
   CellCoordinate,
   CellEditEvent,
   ClipboardPasteOptions,
@@ -58,8 +60,6 @@ import {
   focusHeaderActionMenuTriggerById,
   getColumnById,
   getColumnFilterCellProps,
-  getColumnFilterInputProps,
-  getColumnFilterText,
   getColumnIndexById,
   getColumnLayoutById,
   getColumnLayoutTotalWidth,
@@ -108,7 +108,6 @@ import {
   getGridProps,
   getGridDensityProps,
   getGridDensityRowHeight,
-  getNextColumnFilters,
   getPaginationButtonProps,
   getPaginationButtonText,
   getPaginationPageSizeOptions,
@@ -267,6 +266,7 @@ export interface DataGridProps<TData> {
   renderErrorState?: (context: DataGridErrorRenderContext<TData>) => VNodeChild;
   renderHeader?: (context: HeaderContext<TData, unknown>) => VNodeChild;
   renderCell?: (context: CellContext<TData, unknown>) => VNodeChild;
+  renderEditor?: (context: CellEditorContext<TData>) => VNodeChild;
   onGridReady?: GridReadyHandler<TData>;
   getRowClassName?: (row: Row<TData>) => string | undefined;
   getHeaderClassName?: (context: HeaderContext<TData, unknown>) => string | undefined;
@@ -408,6 +408,7 @@ export const DataGrid = defineComponent({
       type: Function as PropType<(context: HeaderContext<unknown, unknown>) => VNodeChild>,
       default: undefined,
     },
+    renderEditor: { type: Function as PropType<(context: CellEditorContext<unknown>) => VNodeChild>, default: undefined },
     renderCell: {
       type: Function as PropType<(context: CellContext<unknown, unknown>) => VNodeChild>,
       default: undefined,
@@ -1333,21 +1334,7 @@ export const DataGrid = defineComponent({
                             },
                             column.getCanFilter()
                               ? [
-                                  h("input", {
-                                    ...getColumnFilterInputProps(column, {
-                                      label: getColumnHeaderText(column),
-                                      value: getColumnFilterText(state.value.columnFilters, column.id),
-                                    }, localization),
-                                    class: "og-grid__filter-input",
-                                    onInput: (event: Event) => {
-                                      const value = getCellEditorEventValue(event);
-                                      grid.setState((previous) => ({
-                                        ...previous,
-                                        columnFilters: getNextColumnFilters(previous.columnFilters, column.id, value),
-                                        pagination: { ...previous.pagination, pageIndex: 0 },
-                                      }));
-                                    },
-                                  }),
+                                  renderColumnFilter(grid, column, localization),
                                 ]
                               : [],
                           ),
@@ -1426,12 +1413,14 @@ export const DataGrid = defineComponent({
                             },
                             (event) => {
                               shouldRestoreFocusedCell = true;
-                              grid.cancelCellEdit(event);
+                              const editEvent = grid.cancelCellEdit(event);
+                              return editEvent;
                             },
                             rangeDragHandlers,
                             props.getCellClassName,
                             localization,
                             props.renderCell,
+                            props.renderEditor,
                           ),
                         ];
                       }),
@@ -1457,11 +1446,11 @@ export const DataGrid = defineComponent({
       const paginationNode = props.paginationControls
         ? h("nav", { ...getPaginationProps(localization), class: "og-grid__pagination" }, [
             h("div", { class: "og-grid__pagination-buttons" }, [
-              h("button", { ...getPaginationButtonProps({ action: "first", disabled: !grid.getCanPreviousPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.firstPage()) }, getPaginationButtonText("first")),
-              h("button", { ...getPaginationButtonProps({ action: "previous", disabled: !grid.getCanPreviousPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.previousPage()) }, getPaginationButtonText("previous")),
+              h("button", { ...getPaginationButtonProps({ action: "first", disabled: props.loading || !grid.getCanPreviousPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.firstPage()) }, getPaginationButtonText("first")),
+              h("button", { ...getPaginationButtonProps({ action: "previous", disabled: props.loading || !grid.getCanPreviousPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.previousPage()) }, getPaginationButtonText("previous")),
               h("span", { ...getPaginationStatusProps(), class: "og-grid__pagination-status" }, getPaginationPageText(grid, localization)),
-              h("button", { ...getPaginationButtonProps({ action: "next", disabled: !grid.getCanNextPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.nextPage()) }, getPaginationButtonText("next")),
-              h("button", { ...getPaginationButtonProps({ action: "last", disabled: !grid.getCanNextPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.lastPage()) }, getPaginationButtonText("last")),
+              h("button", { ...getPaginationButtonProps({ action: "next", disabled: props.loading || !grid.getCanNextPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.nextPage()) }, getPaginationButtonText("next")),
+              h("button", { ...getPaginationButtonProps({ action: "last", disabled: props.loading || grid.getPageCount() === -1 || !grid.getCanNextPage() }, localization), class: "og-grid__pagination-button", onClick: () => runPaginationAction(() => grid.lastPage()) }, getPaginationButtonText("last")),
             ]),
             h(
               "select",
@@ -1882,14 +1871,31 @@ function renderCell<TData>(
   visibleColumns: readonly Column<TData, unknown>[],
   editDraft: { value: string },
   editValidationMessage: { value: string | null },
-  commitCellEdit: (value: unknown, event: KeyboardEvent | FocusEvent) => CellEditEvent<TData> | null,
-  cancelCellEdit: (event: KeyboardEvent) => void,
+  commitCellEdit: (value: unknown, event?: unknown) => CellEditEvent<TData> | null,
+  cancelCellEdit: (event?: unknown) => CellEditEvent<TData> | null,
   rangeDragHandlers: CellRangeDragHandlers,
   getCellClassName: ((context: CellContext<TData, unknown>) => string | undefined) | undefined,
   localization: GridLocalization,
   renderCellProp: ((context: CellContext<TData, unknown>) => VNodeChild) | undefined,
+  renderEditorProp: ((context: CellEditorContext<TData>) => VNodeChild) | undefined,
 ): RenderableValue {
   const editing = grid.getIsCellEditing(row.id, column.id);
+  const editSession = grid.getState().editingCell;
+  const isActiveEditor = () => grid.getState().editingCell === editSession && grid.getIsCellEditing(row.id, column.id);
+  const customEditor = editing ? renderEditorProp?.({
+    grid, row, column, value: row.getValue(column.id), validationMessage: editValidationMessage.value, isActive: isActiveEditor,
+    commit: (value, event) => {
+      if (!isActiveEditor()) return null;
+      const result = commitCellEdit(typeof value === "string" ? parseCellEditValue(grid, row, column, value) : value, event);
+      editValidationMessage.value = getCellEditValidationMessage(result);
+      return result;
+    },
+    cancel: (event) => {
+      if (!isActiveEditor()) return null;
+      editValidationMessage.value = null;
+      return cancelCellEdit(event);
+    },
+  }) : null;
   const rangeSelected = grid.getIsCellRangeSelected(row.id, column.id);
   const groupLabelCell = getIsGroupLabelCell(row, column, visibleColumns);
   const coordinate = { rowId: row.id, columnId: column.id };
@@ -1940,7 +1946,8 @@ function renderCell<TData>(
     },
     editing
       ? [
-          column.columnDef.editOptions
+          customEditor != null ? h("div", { class: "og-grid__custom-editor",
+            onKeydown: stopEventPropagation, onClick: stopEventPropagation, onDblclick: stopEventPropagation, onPointerdown: stopEventPropagation }, [customEditor]) : column.columnDef.editOptions
             ? h(
                 "select",
                 {
@@ -2029,11 +2036,13 @@ function renderCell<TData>(
               }),
           editValidationMessage.value ? h("span", { ...getCellValidationMessageProps(), class: "og-grid__cell-validation" }, editValidationMessage.value) : null,
         ]
-      : fillHandleVisible
-        ? [renderFillHandle(coordinate, rangeDragHandlers), renderCellProp?.({ grid, row, column, value: row.getValue(column.id) }) ?? renderCellValue(grid, row, column)]
-        : groupLabelCell
-          ? renderGroupCell(grid, row, column, localization, renderCellProp)
-          : renderCellProp?.({ grid, row, column, value: row.getValue(column.id) }) ?? renderCellValue(grid, row, column),
+      : [
+          // Keep the content node first and mounted when a range adds its fill handle.
+          // Replacing the pressed text node cancels WebKit's subsequent click.
+          groupLabelCell ? renderGroupCell(grid, row, column, localization, renderCellProp)
+            : renderCellProp?.({ grid, row, column, value: row.getValue(column.id) }) ?? renderCellValue(grid, row, column),
+          ...(fillHandleVisible ? [renderFillHandle(coordinate, rangeDragHandlers)] : []),
+        ],
   );
 }
 
@@ -2233,6 +2242,7 @@ export type {
   AccessorKeyColumnDef,
   AnyColumnDef,
   CellContext,
+  CellEditorContext,
   CellCoordinate,
   CellEditEvent,
   CellEditEventParams,

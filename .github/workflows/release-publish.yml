@@ -105,8 +105,8 @@ jobs:
       - name: Audit dependency security
         run: pnpm security:audit
 
-      - name: Install Playwright Chromium
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
 
       - name: Check
         run: pnpm check
@@ -164,6 +164,9 @@ jobs:
 
       - name: End-to-end tests
         run: pnpm e2e
+
+      - name: Verify Chromium, Firefox, and WebKit integration workflows
+        run: pnpm e2e:integration
 
       - name: Publish to npm
         run: pnpm release:publish -- --version "$RELEASE_VERSION" --tag "$NPM_TAG" --out-dir .release/"$RELEASE_VERSION" --repository-url "$REPOSITORY_URL" --provenance --confirm publish-open-grid --json
