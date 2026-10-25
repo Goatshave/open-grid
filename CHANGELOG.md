@@ -4,6 +4,10 @@ All notable Open Grid release changes should be documented here before a package
 
 ## Unreleased
 
+- Store row-model ID indexes in prototype-free dictionaries and use own selection/
+  expansion flags, so IDs such as `__proto__`, `constructor`, and `toString` work
+  through lookup, selection, tree expansion, export, and history. Use
+  `Object.hasOwn(index, id)` rather than inherited methods on `rowsById`.
 - Keep IME composition and composition-end keys out of grid edit, shortcut, and
   navigation actions, including React native events and the legacy 229 signal.
 - Add typed custom editor contexts and `renderEditor` across React, Vue, and Svelte,

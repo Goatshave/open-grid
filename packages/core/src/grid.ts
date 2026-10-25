@@ -18,6 +18,7 @@ import {
   sortingReducers,
 } from "./reducers";
 import { createCoreRowModel, createRowModel } from "./rows";
+import { getOwnRowFlag, setOwnRowFlag } from "./row-state";
 import { applyUpdater, mergeState, mergeStateFromBase } from "./state";
 import type {
   CellCoordinate,
@@ -478,7 +479,7 @@ export function createGrid<TData>(options: GridOptions<TData>): Grid<TData> {
         if (nextSelected) {
           delete rowSelection[rowId];
         } else {
-          rowSelection[rowId] = false;
+          setOwnRowFlag(rowSelection, rowId, false);
         }
       }
       return { ...previous, rowSelection };
@@ -1311,7 +1312,7 @@ export function createGrid<TData>(options: GridOptions<TData>): Grid<TData> {
       updatePartialState<ExpandedState>("expanded", (previous) =>
         expandedReducers.toggleRows(getGrouped().flatRows, previous, expanded),
       ),
-    getIsRowExpanded: (rowId: RowId) => !!resolvedState.expanded[rowId],
+    getIsRowExpanded: (rowId: RowId) => getOwnRowFlag(resolvedState.expanded, rowId) === true,
     resetExpanded: () => updatePartialState<ExpandedState>("expanded", expandedReducers.reset),
     setPagination: (updater: Updater<PaginationState>) =>
       updatePartialState<PaginationState>("pagination", (previous) => paginationReducers.set(previous, updater)),
@@ -1544,13 +1545,14 @@ function areGridStatesShallowEqual(left: GridState, right: GridState): boolean {
 }
 
 function getIsRowEffectivelySelected(state: Pick<GridState, "rowSelection" | "allRowsSelected">, rowId: RowId): boolean {
-  return state.allRowsSelected ? state.rowSelection[rowId] !== false : !!state.rowSelection[rowId];
+  const selected = getOwnRowFlag(state.rowSelection, rowId);
+  return state.allRowsSelected ? selected !== false : selected === true;
 }
 
 function hasSelectedRows(state: Pick<GridState, "rowSelection" | "allRowsSelected">): boolean {
   if (state.allRowsSelected) return true;
   for (const rowId in state.rowSelection) {
-    if (state.rowSelection[rowId]) return true;
+    if (getOwnRowFlag(state.rowSelection, rowId) === true) return true;
   }
   return false;
 }
@@ -1559,7 +1561,8 @@ function pruneSelectionExceptions(rowSelection: RowSelectionState, rowIds: reado
   const retainedRowIds = new Set(rowIds);
   const next: RowSelectionState = {};
   for (const rowId in rowSelection) {
-    if (retainedRowIds.has(rowId)) next[rowId] = rowSelection[rowId] ?? false;
+    const selected = getOwnRowFlag(rowSelection, rowId);
+    if (selected !== undefined && retainedRowIds.has(rowId)) setOwnRowFlag(next, rowId, selected);
   }
   return next;
 }

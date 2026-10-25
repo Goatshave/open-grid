@@ -1,6 +1,7 @@
 import { clampColumnSize, getLeafColumns } from "./columns";
 import { normalizePaginationPageIndex, normalizePaginationPageSize } from "./pipeline";
 import { applyUpdater } from "./state";
+import { getOwnRowFlag, setOwnRowFlag } from "./row-state";
 import type {
   CellCoordinate,
   Column,
@@ -110,7 +111,7 @@ export const expandedReducers = {
     rowId: RowId,
     expanded?: boolean,
   ): ExpandedState => {
-    const nextExpanded = expanded ?? !previous[rowId];
+    const nextExpanded = expanded ?? (getOwnRowFlag(previous, rowId) !== true);
     return normalizeExpanded(rows, {
       ...previous,
       [rowId]: nextExpanded,
@@ -122,11 +123,11 @@ export const expandedReducers = {
     expanded?: boolean,
   ): ExpandedState => {
     const expandableRows = rows.filter((row) => row.getCanExpand?.());
-    const nextExpanded = expanded ?? !expandableRows.every((row) => previous[row.id]);
+    const nextExpanded = expanded ?? !expandableRows.every((row) => getOwnRowFlag(previous, row.id) === true);
     const next: ExpandedState = { ...previous };
 
     for (const row of expandableRows) {
-      next[row.id] = nextExpanded;
+      setOwnRowFlag(next, row.id, nextExpanded);
     }
 
     return normalizeExpanded(rows, next);
@@ -151,10 +152,10 @@ function normalizePaginationState(state: PaginationState): PaginationState {
 export const rowSelectionReducers = {
   toggleRow: (previous: RowSelectionState, rowId: RowId, selected?: boolean): RowSelectionState => {
     const next = { ...previous };
-    const nextSelected = selected ?? !previous[rowId];
+    const nextSelected = selected ?? (getOwnRowFlag(previous, rowId) !== true);
 
     if (nextSelected) {
-      next[rowId] = true;
+      setOwnRowFlag(next, rowId, true);
     } else {
       delete next[rowId];
     }
@@ -163,11 +164,11 @@ export const rowSelectionReducers = {
   },
   toggleRows: (previous: RowSelectionState, rowIds: readonly RowId[], selected?: boolean): RowSelectionState => {
     const next = { ...previous };
-    const nextSelected = selected ?? !rowIds.every((rowId) => previous[rowId]);
+    const nextSelected = selected ?? !rowIds.every((rowId) => getOwnRowFlag(previous, rowId) === true);
 
     for (const rowId of rowIds) {
       if (nextSelected) {
-        next[rowId] = true;
+        setOwnRowFlag(next, rowId, true);
       } else {
         delete next[rowId];
       }
@@ -181,7 +182,7 @@ export const rowSelectionReducers = {
 
     for (const [rowId, selected] of Object.entries(previous)) {
       if (selected && retainedRowIds.has(rowId)) {
-        next[rowId] = true;
+        setOwnRowFlag(next, rowId, true);
       }
     }
 
@@ -407,7 +408,7 @@ function normalizeExpanded<TData>(
 
   for (const [rowId, isExpanded] of Object.entries(expanded)) {
     if (isExpanded === true && expandableRowIds.has(rowId)) {
-      next[rowId] = true;
+      setOwnRowFlag(next, rowId, true);
     }
   }
 

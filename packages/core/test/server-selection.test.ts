@@ -2,6 +2,18 @@ import { describe, expect, it } from "vitest";
 import { createServerSelection } from "../src";
 
 describe("query-scoped server selection", () => {
+  it("uses own selection flags for special IDs and ignores inherited exclusions", () => {
+    const selection = createServerSelection({ query: {}, getQueryKey: () => "all" });
+    selection.setGridState(["__proto__", "constructor"], {
+      rowSelection: Object.fromEntries([["__proto__", true]]), allRowsSelected: false,
+    });
+    expect(selection.getState()).toMatchObject({ mode: "explicit", ids: ["__proto__"] });
+    selection.setGridState(["constructor"], {
+      rowSelection: Object.create({ constructor: false }), allRowsSelected: true,
+    });
+    expect(selection.getState()).toMatchObject({ ids: ["__proto__", "constructor"] });
+  });
+
   const create = () => createServerSelection({ query: { filter: "open", page: 0, sort: "id" }, getQueryKey: (query) => query.filter });
   it("represents all matches compactly, retains exclusions on other pages, and projects only loaded IDs", () => {
     const selection = create(); selection.selectAllMatching();

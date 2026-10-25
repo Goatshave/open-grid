@@ -1,5 +1,6 @@
 import { createRowModel } from "./rows";
 import { createColumnFilterMatcher } from "./column-filter";
+import { getOwnRowFlag } from "./row-state";
 import type {
   AggregationContext,
   BuiltInAggregationFn,
@@ -564,7 +565,7 @@ export function expandRows<TData>(rowModel: RowModel<TData>, expanded: ExpandedS
       return;
     }
 
-    if (!expanded[row.id]) {
+    if (getOwnRowFlag(expanded, row.id) !== true) {
       return;
     }
 

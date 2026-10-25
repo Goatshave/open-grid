@@ -19,6 +19,22 @@ const data: Person[] = [
 ];
 
 describe("useGrid", () => {
+  it("keeps special row IDs safe through reactive options and selection", async () => {
+    const ids = ["__proto__", "constructor", "toString", "hasOwnProperty"];
+    const options = ref<GridOptions<Person>>({ data: ids.map((id) => ({ id, name: id, age: 20 })), columns, getRowId: (row) => row.id });
+    const scope = effectScope();
+    const adapter = scope.run(() => useGrid(options))!;
+    try {
+      expect(Object.keys(adapter.grid.getCoreRowModel().rowsById)).toEqual(ids);
+      adapter.grid.toggleRowSelected("__proto__");
+      expect(Object.hasOwn(adapter.state.value.rowSelection, "__proto__")).toBe(true);
+      expect(adapter.grid.getSelectedRowModel().rows.map((row) => row.id)).toEqual(["__proto__"]);
+      options.value = { ...options.value, data: options.value.data.filter((row) => row.id !== "constructor") };
+      await nextTick();
+      expect(adapter.grid.getCoreRowModel().rowsById.constructor).toBeUndefined();
+    } finally { scope.stop(); }
+  });
+
   it("syncs grid state and reactive option updates", async () => {
     const options = ref<GridOptions<Person>>({
       data,

@@ -84,7 +84,7 @@ export function createRowModel<TData>(
     };
   }
 
-  const rowsById: Record<RowId, Row<TData>> = {};
+  const rowsById: Record<RowId, Row<TData>> = Object.create(null);
   const flatRows: Row<TData>[] = includeSubRows ? [] : rows;
 
   const visit = (row: Row<TData>) => {
@@ -113,7 +113,7 @@ export function createRowModel<TData>(
 }
 
 function indexRowsById<TData>(rows: readonly Row<TData>[]): Record<RowId, Row<TData>> {
-  const rowsById: Record<RowId, Row<TData>> = {};
+  const rowsById: Record<RowId, Row<TData>> = Object.create(null);
   for (const row of rows) rowsById[row.id] = row;
   return rowsById;
 }
